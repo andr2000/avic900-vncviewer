@@ -64,7 +64,11 @@
 #if defined(WIN32) && !defined(__MINGW32__)
 #define LIBVNCSERVER_WORDS_BIGENDIAN
 #define rfbBool int
+#ifdef WINCE
+#include <stdint.h>
+#else
 #include <sys/timeb.h>
+#endif
 #include <winsock.h>
 #undef SOCKET
 #define SOCKET int

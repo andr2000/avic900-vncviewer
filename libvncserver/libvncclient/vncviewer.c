@@ -40,12 +40,17 @@ static rfbBool DummyPoint(rfbClient* client, int x, int y) {
 static void DummyRect(rfbClient* client, int x, int y, int w, int h) {
 }
 
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(WINCE)
+#ifdef WINCE
+#define strdup _strdup
+#include <winsock.h>
+#else
+#include <winsock2.h>
+#endif
 static char* NoPassword(rfbClient* client) {
   return strdup("");
 }
 #undef SOCKET
-#include <winsock2.h>
 #define close closesocket
 #else
 #include <stdio.h>
@@ -53,7 +58,7 @@ static char* NoPassword(rfbClient* client) {
 #endif
 
 static char* ReadPassword(rfbClient* client) {
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined (WINCE)
 	/* FIXME */
 	rfbClientErr("ReadPassword on MinGW32 NOT IMPLEMENTED\n");
 	return NoPassword(client);
@@ -276,13 +281,16 @@ rfbBool rfbInitClient(rfbClient* client,int* argc,char** argv) {
 
     for (i = 1; i < *argc; i++) {
       j = i;
+#ifndef WINCE
       if (strcmp(argv[i], "-listen") == 0) {
 	listenForIncomingConnections(client);
 	break;
       } else if (strcmp(argv[i], "-listennofork") == 0) {
 	listenForIncomingConnectionsNoFork(client, -1);
 	break;
-      } else if (strcmp(argv[i], "-play") == 0) {
+      } else 
+#endif
+	if (strcmp(argv[i], "-play") == 0) {
 	client->serverPort = -1;
 	j++;
       } else if (i+1<*argc && strcmp(argv[i], "-encodings") == 0) {

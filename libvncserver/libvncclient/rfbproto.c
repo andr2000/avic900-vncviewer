@@ -28,13 +28,15 @@
 #define _POSIX_SOURCE
 #define _XOPEN_SOURCE 600
 #endif
-#ifndef WIN32
+#if !defined(WIN32) && !defined(WINCE)
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <pwd.h>
 #endif
+#ifndef WINCE
 #include <errno.h>
+#endif
 #include <rfb/rfbclient.h>
 #ifdef WIN32
 #undef SOCKET
@@ -53,7 +55,9 @@
 #endif
 #include <jpeglib.h>
 #endif
+#ifndef WINCE
 #include <strings.h>
+#endif
 #include <stdarg.h>
 #include <time.h>
 
@@ -63,6 +67,10 @@
 
 #include "minilzo.h"
 #include "tls.h"
+
+#ifdef WINCE
+#define snprintf _snprintf
+#endif
 
 /*
  * rfbClientLog prints a time-stamped message to the log file (stderr).
@@ -75,15 +83,26 @@ rfbDefaultClientLog(const char *format, ...)
 {
     va_list args;
     char buf[256];
+#ifdef WINCE
+    SYSTEMTIME system_time;
+#else
     time_t log_clock;
+#endif
 
     if(!rfbEnableClientLogging)
       return;
 
     va_start(args, format);
 
+#ifdef WINCE
+    GetSystemTime(&system_time);
+    snprintf(buf, 255, "%d/%d/%d %d:%d:%d ",
+        system_time.wDay, system_time.wMonth, system_time.wYear,
+        system_time.wHour, system_time.wMinute, system_time.wSecond);
+#else
     time(&log_clock);
     strftime(buf, 255, "%d/%m/%Y %X ", localtime(&log_clock));
+#endif
     fprintf(stderr, "%s", buf);
 
     vfprintf(stderr, format, args);
@@ -395,7 +414,17 @@ ConnectToRFBServer(rfbClient* client,const char *hostname, int port)
       rfbClientLog("Could not open %s.\n",client->serverHost);
       return FALSE;
     }
+#ifdef WINCE
+#define _IOFBF  0               /* setvbuf should set fully buffered */
+#define _IOLBF  1               /* setvbuf should set line buffered */
+#define _IONBF  2               /* setvbuf should set unbuffered */
+
+#define BUFSIZ  1024            /* size of buffer used by setbuf */
+
+    setvbuf(rec->file,NULL,_IONBF, BUFSIZ);
+#else
     setbuf(rec->file,NULL);
+#endif
 
     if (fread(buffer,1,strlen(magic),rec->file) != strlen(magic) || strncmp(buffer,magic,strlen(magic))) {
       rfbClientLog("File %s was not recorded by vncrec.\n",client->serverHost);
@@ -491,9 +520,10 @@ rfbBool ConnectToRFBRepeater(rfbClient* client,const char *repeaterHost, int rep
   return TRUE;
 }
 
+#ifndef WINCE
 extern void rfbClientEncryptBytes(unsigned char* bytes, char* passwd);
 extern void rfbClientEncryptBytes2(unsigned char *where, const int length, unsigned char *key);
-
+#endif
 rfbBool
 rfbHandleAuthResult(rfbClient* client)
 {
@@ -624,6 +654,7 @@ ReadSupportedSecurityType(rfbClient* client, uint32_t *result, rfbBool subAuth)
     return TRUE;
 }
 
+#ifndef WINCE
 static rfbBool
 HandleVncAuth(rfbClient *client)
 {
@@ -661,6 +692,7 @@ HandleVncAuth(rfbClient *client)
 
     return TRUE;
 }
+#endif
 
 static void
 FreeUserCredential(rfbCredential *cred)
@@ -752,6 +784,7 @@ rfbPowM64(uint64_t b, uint64_t e, uint64_t m)
   return r;
 }
 
+#ifndef WINCE
 static rfbBool
 HandleMSLogonAuth(rfbClient *client)
 {
@@ -807,6 +840,7 @@ HandleMSLogonAuth(rfbClient *client)
 
   return TRUE;
 }
+#endif
 
 #ifdef LIBVNCSERVER_WITH_CLIENT_GCRYPT
 static rfbBool
@@ -1143,6 +1177,7 @@ InitialiseRFBConnection(rfbClient* client)
 
     break;
 
+#ifndef WINCE
   case rfbVncAuth:
     if (!HandleVncAuth(client)) return FALSE;
     break;
@@ -1150,7 +1185,7 @@ InitialiseRFBConnection(rfbClient* client)
   case rfbMSLogon:
     if (!HandleMSLogonAuth(client)) return FALSE;
     break;
-
+#endif
   case rfbARD:
 #ifndef LIBVNCSERVER_WITH_CLIENT_GCRYPT
     rfbClientLog("GCrypt support was not compiled in\n");
@@ -1181,9 +1216,11 @@ InitialiseRFBConnection(rfbClient* client)
             if (!rfbHandleAuthResult(client)) return FALSE;
         break;
 
+#ifndef WINCE
       case rfbVncAuth:
         if (!HandleVncAuth(client)) return FALSE;
         break;
+#endif
 
       default:
         rfbClientLog("Unknown sub authentication scheme from VNC server: %d\n",
@@ -1198,6 +1235,7 @@ InitialiseRFBConnection(rfbClient* client)
 
     switch (client->subAuthScheme) {
 
+#ifndef WINCE
       case rfbVeNCryptTLSNone:
       case rfbVeNCryptX509None:
         rfbClientLog("No sub authentication needed\n");
@@ -1213,6 +1251,7 @@ InitialiseRFBConnection(rfbClient* client)
       case rfbVeNCryptX509Plain:
         if (!HandlePlainAuth(client)) return FALSE;
         break;
+#endif
 
       default:
         rfbClientLog("Unknown sub authentication scheme from VNC server: %d\n",
@@ -2375,16 +2414,21 @@ HandleRFBServerMessage(rfbClient* client)
 #include "zlib.c"
 #include "tight.c"
 #include "zrle.c"
+#undef REALBPP
 #define REALBPP 24
 #include "zrle.c"
 #define REALBPP 24
 #define UNCOMP 8
 #include "zrle.c"
+#undef REALBPP
 #define REALBPP 24
+#undef UNCOMP
 #define UNCOMP -8
 #include "zrle.c"
 #undef BPP
+#ifndef WINCE
 #include "h264.c"
+#endif
 
 
 /*
@@ -2425,5 +2469,7 @@ PrintPixelFormat(rfbPixelFormat *format)
 #define rfbUseKey rfbClientUseKey
 #define rfbCPKey rfbClientCPKey
 
+#ifndef WINCE
 #include "vncauth.c"
 #include "d3des.c"
+#endif

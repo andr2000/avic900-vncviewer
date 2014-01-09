@@ -34,8 +34,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef WINCE
+#include <winsock.h>
+#else
 #include <sys/time.h>
 #include <unistd.h>
+#endif
 #include <rfb/rfbproto.h>
 #include <rfb/keysym.h>
 

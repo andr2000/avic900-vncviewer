@@ -18,7 +18,9 @@
  */
 
 #include <rfb/rfbclient.h>
+#ifndef WINCE
 #include <errno.h>
+#endif
 #include "tls.h"
 
 rfbBool HandleAnonTLSAuth(rfbClient* client) 
@@ -38,7 +40,9 @@ rfbBool HandleVeNCryptAuth(rfbClient* client)
 int ReadFromTLS(rfbClient* client, char *out, unsigned int n)
 {
   rfbClientLog("TLS is not supported.\n");
+#ifndef WINCE
   errno = EINTR;
+#endif
   return -1;
 }
 
@@ -46,7 +50,9 @@ int ReadFromTLS(rfbClient* client, char *out, unsigned int n)
 int WriteToTLS(rfbClient* client, char *buf, unsigned int n)
 {
   rfbClientLog("TLS is not supported.\n");
+#ifndef WINCE
   errno = EINTR;
+#endif
   return -1;
 }
 

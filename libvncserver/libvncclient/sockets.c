@@ -13,7 +13,6 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with this software; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
  *  USA.
  */
@@ -30,14 +29,22 @@
 # define _POSIX_SOURCE
 #endif
 #endif
+#ifndef WINCE
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#endif
 #include <assert.h>
 #include <rfb/rfbclient.h>
 #ifdef WIN32
 #undef SOCKET
+#ifdef WINCE
+#include <winsock.h>
+#include <winerror.h>
+#include "compat.h"
+#else
 #include <winsock2.h>
+#endif
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #define close closesocket
 #define read(sock,buf,len) recv(sock,buf,len,0)
@@ -105,7 +112,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	  diff.tv_sec--;
 	  diff.tv_usec+=1000000;
         }
-#ifndef __MINGW32__
+#if !defined(__MINGW32__) && !defined(WINCE)
         sleep (diff.tv_sec);
         usleep (diff.tv_usec);
 #else
@@ -149,9 +156,16 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
       if (i <= 0) {
 	if (i < 0) {
 #ifdef WIN32
+#ifdef WINCE
+	  DWORD errno;
+#endif
 	  errno=WSAGetLastError();
 #endif
+#ifdef WINCE
+	  if (errno == WSAEWOULDBLOCK || errno == WSATRY_AGAIN) {
+#else
 	  if (errno == EWOULDBLOCK || errno == EAGAIN) {
+#endif
 	    /* TODO:
 	       ProcessXtEvents();
 	    */
@@ -188,16 +202,23 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
       if (i <= 0) {
 	if (i < 0) {
 #ifdef WIN32
+#ifdef WINCE
+	  DWORD errno;
+#endif
 	  errno=WSAGetLastError();
 #endif
+#ifdef WINCE
+	  if (errno == WSAEWOULDBLOCK || errno == WSATRY_AGAIN) {
+#else
 	  if (errno == EWOULDBLOCK || errno == EAGAIN) {
+#endif
 	    /* TODO:
 	       ProcessXtEvents();
 	    */
 	    WaitForMessage(client, 100000);
 	    i = 0;
 	  } else {
-	    rfbClientErr("read (%s)\n",strerror(errno));
+	    rfbClientErr("read (%d: %s)\n",errno,strerror(errno));
 	    return FALSE;
 	  }
 	} else {
@@ -252,13 +273,29 @@ WriteToRFBServer(rfbClient* client, char *buf, int n)
     if (j <= 0) {
       if (j < 0) {
 #ifdef WIN32
-	 errno=WSAGetLastError();
+#ifdef WINCE
+	  DWORD errno;
 #endif
-	if (errno == EWOULDBLOCK ||
+	  errno=WSAGetLastError();
+#endif
+#ifdef WINCE
+	  if (errno == WSAEWOULDBLOCK ||
+#else
+	  if (errno == EWOULDBLOCK ||
+#endif
 #ifdef LIBVNCSERVER_ENOENT_WORKAROUND
+#ifdef WINCE
+		/* FIXME: is this correct for CE? */
+		errno == WSAHOST_NOT_FOUND ||
+#else
 		errno == ENOENT ||
 #endif
-		errno == EAGAIN) {
+#endif
+#ifdef WINCE
+	    errno == WSATRY_AGAIN) {
+#else
+	    errno == EAGAIN) {
+#endif
 	  FD_ZERO(&fds);
 	  FD_SET(client->sock,&fds);
 
@@ -319,6 +356,9 @@ ConnectClientToTcpAddr(unsigned int host, int port)
 
   sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock < 0) {
+#ifdef WINCE
+    DWORD errno;
+#endif
 #ifdef WIN32
     errno=WSAGetLastError();
 #endif
@@ -634,6 +674,9 @@ SetNonBlocking(int sock)
 #ifdef WIN32
   unsigned long block=1;
   if(ioctlsocket(sock, FIONBIO, &block) == SOCKET_ERROR) {
+#ifdef WINCE
+    DWORD errno;
+#endif
     errno=WSAGetLastError();
 #else
   int flags = fcntl(sock, F_GETFL);
@@ -807,6 +850,9 @@ int WaitForMessage(rfbClient* client,unsigned int usecs)
   num=select(client->sock+1, &fds, NULL, NULL, &timeout);
   if(num<0) {
 #ifdef WIN32
+#ifdef WINCE
+    DWORD errno;
+#endif
     errno=WSAGetLastError();
 #endif
     rfbClientLog("Waiting for message failed: %d (%s)\n",errno,strerror(errno));
