@@ -213,6 +213,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\getopt.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.cpp"
 				>
 				<FileConfiguration
