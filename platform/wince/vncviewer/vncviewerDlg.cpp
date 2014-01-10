@@ -5,6 +5,8 @@
 #include "vncviewer.h"
 #include "vncviewerDlg.h"
 
+#include "client_factory.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -41,7 +43,21 @@ BOOL CvncviewerDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	// TODO: Add extra initialization here
+	Client *cl = ClientFactory::GetInstance();
+	if (NULL == cl) {
+		return FALSE;
+	}
+
+	// go full screen
+	CRect rcDesktop;
+	rcDesktop.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
+	rcDesktop.right = rcDesktop.left + GetSystemMetrics(SM_CXVIRTUALSCREEN);
+	rcDesktop.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
+	rcDesktop.bottom = rcDesktop.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
+	MoveWindow(rcDesktop, FALSE);
+
+	// let's rock
+	cl->Start(static_cast<void *>(this));
 	
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
