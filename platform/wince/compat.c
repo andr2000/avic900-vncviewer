@@ -5,6 +5,8 @@
 #include "compat.h"
 #include "getopt.h"
 
+char exe_name[MAX_PATH + 1];
+
 char *
 strerror(int errno)
 {
@@ -21,7 +23,6 @@ args_to_asciiz(LPTSTR _lpCmdLine, int *argc, char ***argv)
 	int index;
 	/* TODO: these statics look weird, find a better solution */
 	static char lpCmdLine[MAX_PATH + 1];
-	static char exe_name[MAX_PATH + 1];
 	_TCHAR filename[MAX_PATH + 1];
 
 	wcstombs(lpCmdLine, _lpCmdLine, sizeof(lpCmdLine));
@@ -63,4 +64,13 @@ args_to_asciiz(LPTSTR _lpCmdLine, int *argc, char ***argv)
 	GetModuleFileName(NULL, filename, MAX_PATH);
 	wcstombs(exe_name, filename, sizeof(exe_name));
 	*argv[0] = exe_name;
+}
+
+char *
+get_exe_name(void) {
+	_TCHAR filename[MAX_PATH + 1];
+
+	GetModuleFileName(NULL, filename, MAX_PATH);
+	wcstombs(exe_name, filename, sizeof(exe_name));
+	return exe_name;
 }
