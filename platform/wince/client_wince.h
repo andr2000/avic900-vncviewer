@@ -18,7 +18,10 @@ public:
 	};
 protected:
 	rfbBool OnMallocFrameBuffer(rfbClient *client);
-	void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h);
+	void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
+private:
+	uint8_t *m_FrameBuffer;
+	HBITMAP m_hBmp;
 };
 
 #endif

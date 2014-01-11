@@ -62,7 +62,7 @@
 
 
 #if defined(WIN32) && !defined(__MINGW32__)
-#define LIBVNCSERVER_WORDS_BIGENDIAN
+//#define LIBVNCSERVER_WORDS_BIGENDIAN
 #define rfbBool int
 #ifdef WINCE
 #include <stdint.h>
