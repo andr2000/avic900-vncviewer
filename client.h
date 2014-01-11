@@ -26,16 +26,11 @@ protected:
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
 	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) = 0;
 private:
-	static const int NUM_VNC_PARAMS = 2;
-	struct vnc_params_t {
-		std::string host_name;
-		std::string exe_name;
-	};
+	static std::string VNC_PARAMS[];
 	int argc;
 	char **argv;
-	vnc_params_t m_Params;
 
-	void PrepareArgv();
+	void AllocateArgv(int count);
 	void DeleteArgv();
 	int ReadInitData();
 	void SetDefaultParams();

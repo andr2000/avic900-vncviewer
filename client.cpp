@@ -4,6 +4,11 @@
 
 Client *Client::m_Instance = NULL;
 
+std::string Client::VNC_PARAMS[] = {
+	/* this one MUST be the last */
+	"192.168.2.1:5901"
+};
+
 Client::Client() {
 	m_Private = NULL;
 	m_Client = NULL;
@@ -22,11 +27,6 @@ int Client::PollRFB(void *data) {
 	return context->Poll();
 }
 
-void Client::SetDefaultParams() {
-	m_Params.host_name = "192.168.2.1:5901";
-	m_Params.exe_name = get_exe_name();
-}
-
 int Client::ReadInitData() {
 	return -1;
 }
@@ -41,15 +41,24 @@ void Client::DeleteArgv() {
 	argc = 0;
 }
 
-void Client::PrepareArgv() {
+void Client::AllocateArgv(int count) {
 	DeleteArgv();
-	argc = NUM_VNC_PARAMS;
-	argv = new char *[NUM_VNC_PARAMS];
-	for (int i = 0; i < argc; i++) {
+	/* +1 for exe name */
+	count++;
+	argv = new char *[count];
+	for (int i = 0; i < count; i++) {
 		argv[i] = new char[MAX_PATH + 1];
 	}
-	strcpy(argv[0], m_Params.exe_name.c_str());
-	strcpy(argv[1], m_Params.host_name.c_str());
+	argc = count;
+	strcpy(argv[0], get_exe_name());
+}
+
+void Client::SetDefaultParams() {
+	DeleteArgv();
+	AllocateArgv(sizeof(VNC_PARAMS) / sizeof(VNC_PARAMS[0]));
+	for (int i = 1; i < argc; i++) {
+		strcpy(argv[i], VNC_PARAMS[i - 1].c_str());
+	}
 }
 
 int Client::Start(void *_private) {
@@ -65,8 +74,6 @@ int Client::Start(void *_private) {
 		return -1;
 	}
 	/* initialize it */
-	PrepareArgv();
-
 	m_Client->MallocFrameBuffer = MallocFrameBuffer;
 	m_Client->canHandleNewFBSize = FALSE;
 	m_Client->GotFrameBufferUpdate = GotFrameBufferUpdate;
