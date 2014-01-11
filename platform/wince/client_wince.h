@@ -17,11 +17,15 @@ public:
 		return m_Instance;
 	};
 protected:
+	void SetLogging();
 	rfbBool OnMallocFrameBuffer(rfbClient *client);
 	void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
 private:
 	uint8_t *m_FrameBuffer;
 	HBITMAP m_hBmp;
+
+	static const int LOG_BUF_SZ = 256;
+	static void Logger(const char *format, ...);
 };
 
 #endif

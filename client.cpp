@@ -83,6 +83,8 @@ int Client::Start(void *_private) {
 	m_Client->format.blueShift = 0;
 #endif
 
+	/* set logging options */
+	SetLogging();
 	/* and start */
 	if (!rfbInitClient(m_Client, &argc, argv)) {
 		/* rfbInitClient has already freed the client struct */
