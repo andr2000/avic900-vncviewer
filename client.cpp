@@ -77,6 +77,12 @@ int Client::Start(void *_private) {
 #endif
 	m_Client->listenPort = -1;
 	m_Client->listen6Port = -1;
+#if 1
+	m_Client->format.redShift = 16;
+	m_Client->format.greenShift = 8;
+	m_Client->format.blueShift = 0;
+#endif
+
 	/* and start */
 	if (!rfbInitClient(m_Client, &argc, argv)) {
 		/* rfbInitClient has already freed the client struct */
