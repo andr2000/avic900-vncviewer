@@ -23,6 +23,8 @@
  * rfbproto.c - functions to deal with client side of RFB protocol.
  */
 
+#include <rfb/rfbconfig.h>
+
 #ifdef __STRICT_ANSI__
 #define _BSD_SOURCE
 #define _POSIX_SOURCE
