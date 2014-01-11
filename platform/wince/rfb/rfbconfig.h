@@ -312,6 +312,7 @@
 #else
 #define LIBVNCSERVER_HAVE_STRINGS_H  1 
 #endif
+#endif
 
 /* Define to 1 if you have the <string.h> header file. */
 #ifndef LIBVNCSERVER_HAVE_STRING_H 
