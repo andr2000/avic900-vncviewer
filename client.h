@@ -17,34 +17,37 @@ public:
 	};
 
 	int Start(void *_private);
-protected:
-	enum input_event_type_t {
-		INPUT_EVT_MOUSE,
-		INPUT_EVT_MOVE,
-		INPUT_EVENT_KEYPAD
+
+	enum event_type_t {
+		EVT_MOUSE,
+		EVT_MOVE,
+		EVT_ACTION
 	};
-	enum input_event_state_t {
-		INPUT_EVT_UP,
-		INPUT_EVT_DOWN
+	enum event_args_t {
+		ARG_KEY_UP,
+		ARG_KEY_DOWN,
+		ARG_HOLD_ON,
+		ARG_HOLD_OFF
 	};
 	struct input_event_t {
-		input_event_type_t type;
-		input_event_state_t state;
+		event_type_t type;
+		event_args_t opts;
 		int x;
 		int y;
 	};
+	int PostEvent(input_event_t &evt);
+protected:
 	static Client *m_Instance;
 	void *m_Private;
 	rfbClient* m_Client;
 	Thread *m_Thread;
 	Mutex *m_Mutex;
 	/* message queue */
-	std::deque< input_event_t > m_InputQueue;
+	std::deque< input_event_t > m_MessageQueue;
 
 	virtual void SetLogging() = 0;
 	int Poll();
-	int PostInputEvent(input_event_t &evt);
-	int GetInputEvent(input_event_t &evt);
+	int GetEvent(input_event_t &evt);
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
 	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) = 0;
 private:
