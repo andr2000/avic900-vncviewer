@@ -29,6 +29,10 @@ BEGIN_MESSAGE_MAP(CvncviewerDlg, CDialog)
 	ON_WM_SIZE()
 #endif
 	//}}AFX_MSG_MAP
+	ON_WM_LBUTTONUP()
+	ON_WM_LBUTTONDOWN()
+	ON_WM_MOUSEMOVE()
+	ON_MESSAGE(WM_HOTKEY, OnHotKey)
 END_MESSAGE_MAP()
 
 
@@ -77,3 +81,29 @@ void CvncviewerDlg::OnSize(UINT /*nType*/, int /*cx*/, int /*cy*/)
 }
 #endif
 
+
+void CvncviewerDlg::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	CDialog::OnLButtonUp(nFlags, point);
+}
+
+void CvncviewerDlg::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	CDialog::OnLButtonDown(nFlags, point);
+}
+
+void CvncviewerDlg::OnMouseMove(UINT nFlags, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	CDialog::OnMouseMove(nFlags, point);
+}
+
+LRESULT CvncviewerDlg::OnHotKey(WPARAM, LPARAM)
+{
+	return 0;
+}
