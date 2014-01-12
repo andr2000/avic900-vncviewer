@@ -20,6 +20,7 @@ Client::Client() {
 }
 
 Client::~Client() {
+	m_MessageQueue.clear();
 	DeleteArgv();
 	if (m_Mutex) {
 		delete m_Mutex;
@@ -124,7 +125,7 @@ int Client::Poll() {
 		}
 	}
 	/* checki if there are input events */
-	while (GetInputEvent(evt)) {
+	while (GetEvent(evt)) {
 		/* send to the server */
 	}
 	return result;
@@ -138,20 +139,20 @@ void Client::GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h)
 	Client::GetInstance()->OnFrameBufferUpdate(client, x, y, w, h);
 }
 
-int Client::PostInputEvent(input_event_t &evt) {
+int Client::PostEvent(input_event_t &evt) {
 	m_Mutex->lock();
-	m_InputQueue.push_back(evt);
+	m_MessageQueue.push_back(evt);
 	m_Mutex->unlock();
 	return 0;
 }
 
-int Client::GetInputEvent(input_event_t &evt) {
+int Client::GetEvent(input_event_t &evt) {
 	int result = 0;
 
 	m_Mutex->lock();
-	if (m_InputQueue.size()) {
-		evt = m_InputQueue.front();
-		m_InputQueue.pop_front();
+	if (m_MessageQueue.size()) {
+		evt = m_MessageQueue.front();
+		m_MessageQueue.pop_front();
 		result = 1;
 	}
 	m_Mutex->unlock();
