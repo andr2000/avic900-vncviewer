@@ -23,23 +23,16 @@ public:
 		EVT_MOVE,
 		EVT_SET_RENDERING
 	};
-	enum event_args_t {
-		ARG_KEY_UP,
-		ARG_KEY_DOWN,
-		ARG_HOLD_ON,
-		ARG_HOLD_OFF
-	};
-	struct pointer_action_t {
-		int is_up;
-		int x;
-		int y;
-	};
 	struct event_t {
 		event_type_t what;
-		union data {
-			pointer_action_t point;
-			int rendering;
-		};
+		union event_data_t {
+			struct pointer_action_t {
+				int is_down;
+				int x;
+				int y;
+			} point;
+			int rendering_enabled;
+		} data;
 	};
 	int PostEvent(event_t &evt);
 protected:
@@ -50,6 +43,9 @@ protected:
 	Mutex *m_Mutex;
 	/* message queue */
 	std::deque< event_t > m_MessageQueue;
+	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
+	/* is rendering enabled */
+	int m_RenderingEnabled;
 
 	virtual void SetLogging() = 0;
 	int Poll();

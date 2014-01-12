@@ -1,27 +1,19 @@
-// vncviewerDlg.h : header file
-//
-
 #pragma once
 
-// CvncviewerDlg dialog
-class CvncviewerDlg : public CDialog
-{
-// Construction
-public:
-	CvncviewerDlg(CWnd* pParent = NULL);	// standard constructor
+class Client;
 
-// Dialog Data
+class CvncviewerDlg : public CDialog {
+public:
+	CvncviewerDlg(CWnd* pParent = NULL);
+	~CvncviewerDlg();
+
 	enum { IDD = IDD_VNCVIEWER_DIALOG };
 
 
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
-
-// Implementation
 protected:
-	HICON m_hIcon;
+	virtual void DoDataExchange(CDataExchange* pDX);
 
-	// Generated message map functions
+protected:
 	virtual BOOL OnInitDialog();
 #if defined(_DEVICE_RESOLUTION_AWARE) && !defined(WIN32_PLATFORM_WFSP)
 	afx_msg void OnSize(UINT /*nType*/, int /*cx*/, int /*cy*/);
@@ -31,5 +23,8 @@ public:
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	afx_msg LRESULT OnHotKey(WPARAM fsModifiers, LPARAM vk);
+private:
+	Client *vnc_client;
+public:
+	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 };

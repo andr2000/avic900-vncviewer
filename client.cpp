@@ -1,3 +1,4 @@
+#include <rfb/rfbclient.h>
 #include "client.h"
 #include "logger.h"
 #include "compat.h"
@@ -14,6 +15,7 @@ Client::Client() {
 	m_Client = NULL;
 	m_Thread = NULL;
 	m_Mutex = MutexFactory::GetNewMutex();
+	m_RenderingEnabled = 0;
 	argc = 0;
 	argv = NULL;
 	SetDefaultParams();
@@ -109,28 +111,6 @@ int Client::Start(void *_private) {
 	return m_Thread->Start();
 }
 
-int Client::Poll() {
-	int result;
-	event_t evt;
-
-	result = WaitForMessage(m_Client, 500);
-	if (result < 0) {
-		/* terminating due to error */
-		return result;
-	}
-	if (result) {
-		if (!HandleRFBServerMessage(m_Client)) {
-			/* terminating due to error */
-			return -1;
-		}
-	}
-	/* checki if there are input events */
-	while (GetEvent(evt)) {
-		/* send to the server */
-	}
-	return result;
-}
-
 rfbBool Client::MallocFrameBuffer(rfbClient *client) {
 	return Client::GetInstance()->OnMallocFrameBuffer(client);
 }
@@ -156,5 +136,48 @@ int Client::GetEvent(event_t &evt) {
 		result = 1;
 	}
 	m_Mutex->unlock();
+	return result;
+}
+
+int Client::Poll() {
+	int result, evt_count;
+	event_t evt;
+
+	result = WaitForMessage(m_Client, 500);
+	if (result < 0) {
+		/* terminating due to error */
+		return result;
+	}
+	if (result) {
+		if (!HandleRFBServerMessage(m_Client)) {
+			/* terminating due to error */
+			return -1;
+		}
+	}
+	/* checki if there are input events */
+	evt_count = 0;
+	while ((evt_count < MAX_EVT_PROCESS_AT_ONCE) && GetEvent(evt)) {
+		/* send to the server */
+		switch (evt.what) {
+		case EVT_MOUSE:
+		/* fall through */
+		case EVT_MOVE:
+		{
+			SendPointerEvent(m_Client, evt.data.point.x, evt.data.point.y,
+				evt.data.point.is_down ? rfbButton1Mask : 0);
+			DEBUGMSG(TRUE, (_T("Mouse event at %d:%d, is_down %d\r\n"),
+				evt.data.point.x, evt.data.point.y, evt.data.point.is_down));
+			break;
+		}
+		case EVT_SET_RENDERING:
+		{
+			m_RenderingEnabled = evt.data.rendering_enabled;
+			DEBUGMSG(TRUE, (_T("Set rendering to %d\r\n"), m_RenderingEnabled));
+			break;
+		}
+		default:
+			break;
+		}
+	}
 	return result;
 }

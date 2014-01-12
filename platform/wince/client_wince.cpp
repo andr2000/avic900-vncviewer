@@ -69,14 +69,16 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
 }
 
 void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
-	CDialog *dlg = static_cast<CDialog *>(m_Private);
-	HDC hDcMem, hDc;
+	if (m_RenderingEnabled) {
+		CDialog *dlg = static_cast<CDialog *>(m_Private);
+		HDC hDcMem, hDc;
 
-	hDc = GetDC(dlg->m_hWnd);
-	hDcMem = CreateCompatibleDC(hDc);
-	SelectObject(hDcMem, m_hBmp);
-	BitBlt(hDc, x, y, w, h, hDcMem, x, y, SRCCOPY);
-	DeleteDC(hDcMem);
-	ReleaseDC(NULL, hDc);
-	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
+		hDc = GetDC(dlg->m_hWnd);
+		hDcMem = CreateCompatibleDC(hDc);
+		SelectObject(hDcMem, m_hBmp);
+		BitBlt(hDc, x, y, w, h, hDcMem, x, y, SRCCOPY);
+		DeleteDC(hDcMem);
+		ReleaseDC(NULL, hDc);
+		DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
+	}
 }
