@@ -111,7 +111,7 @@ int Client::Start(void *_private) {
 
 int Client::Poll() {
 	int result;
-	input_event_t evt;
+	event_t evt;
 
 	result = WaitForMessage(m_Client, 500);
 	if (result < 0) {
@@ -139,14 +139,14 @@ void Client::GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h)
 	Client::GetInstance()->OnFrameBufferUpdate(client, x, y, w, h);
 }
 
-int Client::PostEvent(input_event_t &evt) {
+int Client::PostEvent(event_t &evt) {
 	m_Mutex->lock();
 	m_MessageQueue.push_back(evt);
 	m_Mutex->unlock();
 	return 0;
 }
 
-int Client::GetEvent(input_event_t &evt) {
+int Client::GetEvent(event_t &evt) {
 	int result = 0;
 
 	m_Mutex->lock();
