@@ -21,7 +21,7 @@ public:
 	enum event_type_t {
 		EVT_MOUSE,
 		EVT_MOVE,
-		EVT_ACTION
+		EVT_SET_RENDERING
 	};
 	enum event_args_t {
 		ARG_KEY_UP,
@@ -29,13 +29,19 @@ public:
 		ARG_HOLD_ON,
 		ARG_HOLD_OFF
 	};
-	struct input_event_t {
-		event_type_t type;
-		event_args_t opts;
+	struct pointer_action_t {
+		int is_up;
 		int x;
 		int y;
 	};
-	int PostEvent(input_event_t &evt);
+	struct event_t {
+		event_type_t what;
+		union data {
+			pointer_action_t point;
+			int rendering;
+		};
+	};
+	int PostEvent(event_t &evt);
 protected:
 	static Client *m_Instance;
 	void *m_Private;
@@ -43,11 +49,11 @@ protected:
 	Thread *m_Thread;
 	Mutex *m_Mutex;
 	/* message queue */
-	std::deque< input_event_t > m_MessageQueue;
+	std::deque< event_t > m_MessageQueue;
 
 	virtual void SetLogging() = 0;
 	int Poll();
-	int GetEvent(input_event_t &evt);
+	int GetEvent(event_t &evt);
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
 	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) = 0;
 private:
