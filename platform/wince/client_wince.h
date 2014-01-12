@@ -23,16 +23,9 @@ protected:
 private:
 	uint8_t *m_FrameBuffer;
 	HBITMAP m_hBmp;
-	int m_OrigScreenRotation;
-	int m_RotationNeeded;
 
 	static const int LOG_BUF_SZ = 256;
 	static void Logger(const char *format, ...);
-	int RotateScreen(int angle);
-	int GetScreenRotation(int &angle);
-	int RotationNeeded(int wnd_width, int wnd_height, int cl_width, int cl_height);
-	void RotationSet();
-	void RotationRestore();
 };
 
 #endif
