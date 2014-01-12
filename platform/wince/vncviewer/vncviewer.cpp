@@ -9,6 +9,7 @@
 #define new DEBUG_NEW
 #endif
 
+const wchar_t *CvncviewerApp::APP_TITLE = TEXT("Avic VNC viewer");
 
 // CvncviewerApp
 
@@ -20,10 +21,15 @@ END_MESSAGE_MAP()
 CvncviewerApp::CvncviewerApp()
 	: CWinApp()
 {
-	// TODO: add construction code here,
-	// Place all significant initialization in InitInstance
+	hMutex = NULL;
 }
 
+CvncviewerApp::~CvncviewerApp()
+{
+	if (hMutex) {
+		CloseHandle(hMutex);
+	}
+}
 
 // The one and only CvncviewerApp object
 CvncviewerApp theApp;
@@ -32,7 +38,9 @@ CvncviewerApp theApp;
 
 BOOL CvncviewerApp::InitInstance()
 {
-    // SHInitExtraControls should be called once during your application's initialization to initialize any
+	static const wchar_t *APP_NAME = TEXT("avic_vncviewer");
+
+	// SHInitExtraControls should be called once during your application's initialization to initialize any
     // of the Windows Mobile specific controls such as CAPEDIT and SIPPREF.
     SHInitExtraControls();
 
@@ -42,25 +50,27 @@ BOOL CvncviewerApp::InitInstance()
 		return FALSE;
 	}
 
-	// Standard initialization
-	// If you are not using these features and wish to reduce the size
-	// of your final executable, you should remove from the following
-	// the specific initialization routines you do not need
-	// Change the registry key under which our settings are stored
-	// TODO: You should modify this string to be something appropriate
-	// such as the name of your company or organization
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
-
 	CvncviewerDlg dlg;
+
+	/* allow only single instance */
+	hMutex = CreateMutex(NULL, FALSE, APP_NAME);
+	if (!hMutex) {
+		MessageBox(NULL, TEXT("Failed to create named mutex\r\n") \
+			TEXT("Unable to check if single instance is running... Will exit now"),
+			TEXT("Error"), MB_OK);
+		return FALSE;
+	}
+	if (ERROR_ALREADY_EXISTS == GetLastError()) {
+		HWND hWnd = FindWindow(0, APP_TITLE);
+		DEBUGMSG(TRUE, (_T("Found running instance, will exit now\r\n")));
+		SetForegroundWindow(hWnd);
+		return FALSE;
+	}
+
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
 	if (nResponse == IDOK)
 	{
-		// TODO: Place code here to handle when the dialog is
-		//  dismissed with OK
 	}
-
-	// Since the dialog has been closed, return FALSE so that we exit the
-	//  application, rather than start the application's message pump.
 	return FALSE;
 }

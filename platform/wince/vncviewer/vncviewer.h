@@ -19,7 +19,11 @@ class CvncviewerApp : public CWinApp
 {
 public:
 	CvncviewerApp();
+	~CvncviewerApp();
 	
+	static const wchar_t *APP_TITLE;
+private:
+	HANDLE hMutex;
 // Overrides
 public:
 	virtual BOOL InitInstance();

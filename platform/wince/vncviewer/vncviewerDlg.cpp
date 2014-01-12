@@ -42,6 +42,8 @@ BOOL CvncviewerDlg::OnInitDialog()
 	int i;
 	CDialog::OnInitDialog();
 
+	SetWindowText(CvncviewerApp::APP_TITLE);
+
 	vnc_client = ClientFactory::GetInstance();
 	if (NULL == vnc_client) {
 		MessageBox(_T("Failed to intstaniate VNC client\r\nShit happens"),
