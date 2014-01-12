@@ -13,6 +13,7 @@ Client::Client() {
 	m_Private = NULL;
 	m_Client = NULL;
 	m_Thread = NULL;
+	m_Mutex = MutexFactory::GetNewMutex();
 	argc = 0;
 	argv = NULL;
 	SetDefaultParams();
@@ -20,6 +21,9 @@ Client::Client() {
 
 Client::~Client() {
 	DeleteArgv();
+	if (m_Mutex) {
+		delete m_Mutex;
+	}
 }
 
 int Client::PollRFB(void *data) {
@@ -106,6 +110,7 @@ int Client::Start(void *_private) {
 
 int Client::Poll() {
 	int result;
+	input_event_t evt;
 
 	result = WaitForMessage(m_Client, 500);
 	if (result < 0) {
@@ -118,6 +123,10 @@ int Client::Poll() {
 			return -1;
 		}
 	}
+	/* checki if there are input events */
+	while (GetInputEvent(evt)) {
+		/* send to the server */
+	}
 	return result;
 }
 
@@ -127,4 +136,24 @@ rfbBool Client::MallocFrameBuffer(rfbClient *client) {
 
 void Client::GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h) {
 	Client::GetInstance()->OnFrameBufferUpdate(client, x, y, w, h);
+}
+
+int Client::PostInputEvent(input_event_t &evt) {
+	m_Mutex->lock();
+	m_InputQueue.push_back(evt);
+	m_Mutex->unlock();
+	return 0;
+}
+
+int Client::GetInputEvent(input_event_t &evt) {
+	int result = 0;
+
+	m_Mutex->lock();
+	if (m_InputQueue.size()) {
+		evt = m_InputQueue.front();
+		m_InputQueue.pop_front();
+		result = 1;
+	}
+	m_Mutex->unlock();
+	return result;
 }
