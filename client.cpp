@@ -2,6 +2,7 @@
 #include "client.h"
 #include "logger.h"
 #include "compat.h"
+#include "INIReader.h"
 
 Client *Client::m_Instance = NULL;
 
@@ -35,7 +36,22 @@ int Client::PollRFB(void *data) {
 }
 
 int Client::ReadInitData() {
-	return -1;
+	std::string filepath = get_exe_name();
+	std::string host;
+	size_t pos;
+
+	pos = filepath.find_last_of(".");
+	if (std::string::npos == pos) {
+		return -1;
+	}
+	INIReader ini(filepath.substr(0, pos) + ".ini");
+	pos = 0;
+	host = ini.Get("General", "Host", "192.168.2.1:5901");
+	pos++;
+	AllocateArgv(pos);
+	/* this MUST be the last */
+	strcpy(argv[pos], host.c_str());
+	return 0;
 }
 
 void Client::DeleteArgv() {
