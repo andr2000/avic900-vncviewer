@@ -627,5 +627,9 @@
 		</Filter>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="vncviewerppc.rc"
+		/>
 	</Globals>
 </VisualStudioProject>
