@@ -1,7 +1,7 @@
 #include "mutex_wince.h"
 
 Mutex_WinCE::Mutex_WinCE() {
-	m_Mutex = CreateMutex(0, FALSE, 0);;
+	m_Mutex = CreateMutex(0, FALSE, 0);
 }
 
 Mutex_WinCE::~Mutex_WinCE() {
