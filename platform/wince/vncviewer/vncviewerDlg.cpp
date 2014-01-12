@@ -39,11 +39,15 @@ END_MESSAGE_MAP()
 
 BOOL CvncviewerDlg::OnInitDialog()
 {
+	int i;
 	CDialog::OnInitDialog();
 
 	vnc_client = ClientFactory::GetInstance();
 	if (NULL == vnc_client) {
-		return FALSE;
+		MessageBox(_T("Failed to intstaniate VNC client\r\nShit happens"),
+			_T("Error"), MB_OK);
+		PostMessage(WM_CLOSE);
+		return TRUE;
 	}
 
 	/* go full screen */
@@ -60,7 +64,21 @@ BOOL CvncviewerDlg::OnInitDialog()
 	evt.data.rendering_enabled = 1;
 	vnc_client->PostEvent(evt);
 	/* let's rock */
-	vnc_client->Start(static_cast<void *>(this));
+	for (i = 0; i < CONNECT_MAX_TRY; i++) {
+		if (0 == vnc_client->Start(static_cast<void *>(this))) {
+			break;
+		}
+		if (IDCANCEL == MessageBox(_T("Failed to connect to the server\r\nRetry?"),
+			_T("Error"), MB_RETRYCANCEL)) {
+				PostMessage(WM_CLOSE);
+				return FALSE;
+		}
+	}
+	if (i == CONNECT_MAX_TRY) {
+		MessageBox(_T("Was not able to connect to the VNC server\r\nTerminating now"),
+			_T("Error"), MB_OK);
+		PostMessage(WM_CLOSE);
+	}
 	return TRUE;
 }
 

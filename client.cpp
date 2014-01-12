@@ -122,8 +122,11 @@ int Client::Start(void *_private) {
 		return -1;
 	}
 	/* start worker thread */
-	m_Thread = ThreadFactory::GetNewThread();
-	m_Thread->SetWorker(PollRFB, static_cast<void *>(this));
+	if (NULL == m_Thread) {
+		/* m_Thread will be non-null if we try to reconnect  */
+		m_Thread = ThreadFactory::GetNewThread();
+		m_Thread->SetWorker(PollRFB, static_cast<void *>(this));
+	}
 	return m_Thread->Start();
 }
 
