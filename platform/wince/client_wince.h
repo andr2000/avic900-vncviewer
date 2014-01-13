@@ -16,6 +16,9 @@ public:
 		m_Instance = new Client_WinCE();
 		return m_Instance;
 	};
+	void *GetDrawingContext() {
+		return static_cast<void *>(m_hBmp);
+	};
 protected:
 	void SetLogging();
 	rfbBool OnMallocFrameBuffer(rfbClient *client);

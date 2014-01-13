@@ -26,6 +26,9 @@ public:
 private:
 	static const int CONNECT_MAX_TRY = 3;
 	Client *vnc_client;
+	bool m_RenderingEnabled;
 public:
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
+	afx_msg void OnPaint();
 };
