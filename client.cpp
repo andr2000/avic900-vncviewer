@@ -16,7 +16,6 @@ Client::Client() {
 	m_Client = NULL;
 	m_Thread = NULL;
 	m_Mutex = MutexFactory::GetNewMutex();
-	m_RenderingEnabled = 0;
 	argc = 0;
 	argv = NULL;
 	SetDefaultParams();
@@ -186,12 +185,6 @@ int Client::Poll() {
 				evt.data.point.is_down ? rfbButton1Mask : 0);
 			DEBUGMSG(TRUE, (_T("Mouse event at %d:%d, is_down %d\r\n"),
 				evt.data.point.x, evt.data.point.y, evt.data.point.is_down));
-			break;
-		}
-		case EVT_SET_RENDERING:
-		{
-			m_RenderingEnabled = evt.data.rendering_enabled;
-			DEBUGMSG(TRUE, (_T("Set rendering to %d\r\n"), m_RenderingEnabled));
 			break;
 		}
 		default:

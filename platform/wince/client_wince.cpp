@@ -65,20 +65,18 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
 		&bm_info, DIB_RGB_COLORS, reinterpret_cast<void**>(&m_FrameBuffer),
 		NULL, NULL);
 	client->frameBuffer = m_FrameBuffer;
+
 	return TRUE;
 }
 
 void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
-	if (m_RenderingEnabled) {
-		CDialog *dlg = static_cast<CDialog *>(m_Private);
-		HDC hDcMem, hDc;
+	CDialog *dlg = static_cast<CDialog *>(m_Private);
+	RECT ps;
 
-		hDc = GetDC(dlg->m_hWnd);
-		hDcMem = CreateCompatibleDC(hDc);
-		SelectObject(hDcMem, m_hBmp);
-		BitBlt(hDc, x, y, w, h, hDcMem, x, y, SRCCOPY);
-		DeleteDC(hDcMem);
-		ReleaseDC(NULL, hDc);
-		DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
-	}
+	ps.left = x;
+	ps.top = y;
+	ps.right = x + w;
+	ps.bottom = y + h;
+	dlg->InvalidateRect(&ps, FALSE);
+	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
 }

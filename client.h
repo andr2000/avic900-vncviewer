@@ -20,8 +20,7 @@ public:
 
 	enum event_type_t {
 		EVT_MOUSE,
-		EVT_MOVE,
-		EVT_SET_RENDERING
+		EVT_MOVE
 	};
 	struct event_t {
 		event_type_t what;
@@ -31,10 +30,10 @@ public:
 				int x;
 				int y;
 			} point;
-			int rendering_enabled;
 		} data;
 	};
 	int PostEvent(event_t &evt);
+	virtual void *GetDrawingContext() = 0;
 protected:
 	static Client *m_Instance;
 	void *m_Private;
@@ -44,8 +43,6 @@ protected:
 	/* message queue */
 	std::deque< event_t > m_MessageQueue;
 	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
-	/* is rendering enabled */
-	int m_RenderingEnabled;
 
 	virtual void SetLogging() = 0;
 	int Poll();
