@@ -5,7 +5,6 @@
 
 Client_Gtk::Client_Gtk() : Client() {
 	m_FrameBuffer = NULL;
-	m_DrawingArea = NULL;
 }
 
 Client_Gtk::~Client_Gtk() {

@@ -107,11 +107,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/client_gtk.h</locationURI>
 		</link>
 		<link>
-			<name>compat.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/compat.c</locationURI>
-		</link>
-		<link>
 			<name>compat.h</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/compat.h</locationURI>
@@ -332,19 +327,9 @@
 			<locationURI>PROJECT_LOC/Debug/libvncclient/minilzo.d</locationURI>
 		</link>
 		<link>
-			<name>vncviewer/Debug/libvncclient/minilzo.o</name>
-			<type>1</type>
-			<locationURI>PROJECT_LOC/Debug/libvncclient/minilzo.o</locationURI>
-		</link>
-		<link>
 			<name>vncviewer/Debug/libvncclient/rfbproto.d</name>
 			<type>1</type>
 			<locationURI>PROJECT_LOC/Debug/libvncclient/rfbproto.d</locationURI>
-		</link>
-		<link>
-			<name>vncviewer/Debug/libvncclient/rfbproto.o</name>
-			<type>1</type>
-			<locationURI>PROJECT_LOC/Debug/libvncclient/rfbproto.o</locationURI>
 		</link>
 		<link>
 			<name>vncviewer/Debug/libvncclient/sockets.d</name>
