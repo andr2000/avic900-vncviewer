@@ -97,7 +97,7 @@ int Client::Start(void *_private, std::string &exe, std::string &ini) {
 		SetDefaultParams();
 	}
 	/* get new RFB client */
-	m_Client = rfbGetClient(8, 3, 4);
+	m_Client = rfbGetClient(5, 3, 2);
 	if (NULL == m_Client) {
 		return -1;
 	}
@@ -105,18 +105,16 @@ int Client::Start(void *_private, std::string &exe, std::string &ini) {
 	m_Client->MallocFrameBuffer = MallocFrameBuffer;
 	m_Client->canHandleNewFBSize = FALSE;
 	m_Client->GotFrameBufferUpdate = GotFrameBufferUpdate;
-#if 0
-	m_Client->HandleKeyboardLedState=kbd_leds;
-	m_Client->HandleTextChat=text_chat;
-	m_Client->GotXCutText = got_selection;
-#endif
 	m_Client->listenPort = -1;
 	m_Client->listen6Port = -1;
-#if 1
-	m_Client->format.redShift = 16;
-	m_Client->format.greenShift = 8;
+
+	/* TODO: for some reason even if I set RGB565 (converted
+	 * with reverse shift order to BGR565) it doesn't work.
+	 * So, it seems to be 15-bit, but how does it
+	 * work on win bgr565 then? */
+	m_Client->format.redShift = 10;
+	m_Client->format.greenShift = 5;
 	m_Client->format.blueShift = 0;
-#endif
 
 	/* and start */
 	if (!rfbInitClient(m_Client, &argc, argv)) {
