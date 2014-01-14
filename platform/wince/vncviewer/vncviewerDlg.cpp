@@ -63,9 +63,22 @@ BOOL CvncviewerDlg::OnInitDialog()
 	rcDesktop.bottom = rcDesktop.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
 	MoveWindow(rcDesktop, FALSE);
 
+	wchar_t wfilename[MAX_PATH + 1];
+	char filename[MAX_PATH + 1];
+
+	GetModuleFileName(NULL, wfilename, MAX_PATH);
+	wcstombs(filename, wfilename, sizeof(filename));
+	std::string exe(filename);
+	char *dot = strrchr(filename, '.');
+	if (dot) {
+		*dot = '\0';
+	}
+	std::string ini(filename);
+	ini += ".ini";
+
 	/* let's rock */
 	for (i = 0; i < CONNECT_MAX_TRY; i++) {
-		if (0 == vnc_client->Start(static_cast<void *>(this))) {
+		if (0 == vnc_client->Start(static_cast<void *>(this), exe, ini)) {
 			break;
 		}
 		if (IDCANCEL == MessageBox(_T("Failed to connect to the server\r\nRetry?"),

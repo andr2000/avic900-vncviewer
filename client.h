@@ -16,7 +16,7 @@ public:
 		return m_Instance;
 	};
 
-	int Start(void *_private);
+	int Start(void *_private, std::string &exe, std::string &ini);
 
 	enum event_type_t {
 		EVT_MOUSE,
@@ -43,6 +43,8 @@ protected:
 	/* message queue */
 	std::deque< event_t > m_MessageQueue;
 	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
+	std::string m_ExecFName;
+	std::string m_IniFName;
 
 	virtual void SetLogging() = 0;
 	int Poll();

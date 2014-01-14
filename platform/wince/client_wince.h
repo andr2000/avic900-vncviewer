@@ -3,6 +3,7 @@
 
 #include <rfb/rfbclient.h>
 #include "client.h"
+#include "compat.h"
 
 class Client_WinCE : public Client {
 public:
