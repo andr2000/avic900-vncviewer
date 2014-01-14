@@ -259,26 +259,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\logger.c"
-				>
-				<FileConfiguration
-					Name="Debug|Pocket PC 2003 (ARMV4)"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Pocket PC 2003 (ARMV4)"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\mutex_wince.cpp"
 				>
 				<FileConfiguration
@@ -559,15 +539,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\getopt.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\..\inih\cpp\INIReader.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\logger.h"
 				>
 			</File>
 			<File

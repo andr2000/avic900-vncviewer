@@ -1,6 +1,5 @@
 #include <rfb/rfbclient.h>
 #include "client.h"
-#include "compat.h"
 #include "INIReader.h"
 
 Client *Client::m_Instance = NULL;
@@ -34,14 +33,13 @@ int Client::PollRFB(void *data) {
 }
 
 int Client::ReadInitData() {
-	std::string filepath = get_exe_name();
 	std::string host;
 	size_t pos;
 
-	if (filepath.empty()) {
+	if (m_IniFName.empty()) {
 		return -1;
 	}
-	INIReader ini(filepath.substr(0, filepath.length()) + ".ini");
+	INIReader ini(m_IniFName);
 	pos = 0;
 	host = ini.Get("General", "Host", "192.168.2.1:5901");
 	rfbClientLog("Host is %s\n", host.c_str());
@@ -71,7 +69,7 @@ void Client::AllocateArgv(int count) {
 		argv[i] = new char[MAX_PATH + 1];
 	}
 	argc = count;
-	strcpy(argv[0], get_exe_name());
+	strcpy(argv[0], m_ExecFName.c_str());
 }
 
 void Client::SetDefaultParams() {
@@ -82,7 +80,9 @@ void Client::SetDefaultParams() {
 	}
 }
 
-int Client::Start(void *_private) {
+int Client::Start(void *_private, std::string &exe, std::string &ini) {
+	m_ExecFName = exe;
+	m_IniFName = ini;
 	/* set logging options */
 #ifdef DEBUG
 	rfbEnableClientLogging = TRUE;
