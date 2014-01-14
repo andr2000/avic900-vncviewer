@@ -9,7 +9,7 @@ Thread_Linux::~Thread_Linux() {
 
 int Thread_Linux::Start() {
 	m_Terminated = false;
-	m_Thread = std::thread([this](){ return Run(); });
+	m_Thread = std::thread(&Thread_Linux::Run, this);
 	return 1;
 }
 

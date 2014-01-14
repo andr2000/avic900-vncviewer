@@ -38,13 +38,13 @@ int Client::ReadInitData() {
 	std::string host;
 	size_t pos;
 
-	pos = filepath.find_last_of(".");
-	if (std::string::npos == pos) {
+	if (filepath.empty()) {
 		return -1;
 	}
-	INIReader ini(filepath.substr(0, pos) + ".ini");
+	INIReader ini(filepath.substr(0, filepath.length()) + ".ini");
 	pos = 0;
 	host = ini.Get("General", "Host", "192.168.2.1:5901");
+	rfbClientLog("Host is %s\n", host.c_str());
 	pos++;
 	AllocateArgv(pos);
 	/* this MUST be the last */
@@ -84,11 +84,16 @@ void Client::SetDefaultParams() {
 
 int Client::Start(void *_private) {
 	/* set logging options */
+#ifdef DEBUG
+	rfbEnableClientLogging = TRUE;
+#else
+	rfbEnableClientLogging = FALSE;
+#endif
 	SetLogging();
-	rfbClientLog("Initializing VNC Client");
+	rfbClientLog("Initializing VNC Client\n");
 	m_Private = _private;
 	/* read ini file */
-	if (!ReadInitData()) {
+	if (ReadInitData() < 0) {
 		SetDefaultParams();
 	}
 	/* get new RFB client */

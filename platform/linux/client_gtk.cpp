@@ -5,6 +5,7 @@
 
 Client_Gtk::Client_Gtk() : Client() {
 	m_FrameBuffer = NULL;
+	m_DrawingArea = NULL;
 }
 
 Client_Gtk::~Client_Gtk() {
@@ -17,7 +18,7 @@ void Client_Gtk::Logger(const char *format, ...) {
       return;
 
     va_start(args, format);
-	fprintf(stdout, format, args);
+	vfprintf(stdout, format, args);
     va_end(args);
 }
 
@@ -32,7 +33,7 @@ rfbBool Client_Gtk::OnMallocFrameBuffer(rfbClient *client) {
 	width = client->width;
 	height = client->height;
 	depth = client->format.bitsPerPixel;
-	rfbClientLog("OnMallocFrameBuffer: w=%d h=%d d=%d\r\n", width, height, depth);
+	rfbClientLog("OnMallocFrameBuffer: w=%d h=%d d=%d\n", width, height, depth);
 	client->updateRect.x = 0;
 	client->updateRect.y = 0;
 	client->updateRect.w = width;
@@ -44,5 +45,5 @@ rfbBool Client_Gtk::OnMallocFrameBuffer(rfbClient *client) {
 }
 
 void Client_Gtk::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
-	rfbClientLog("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n", x, y, w, h);
+	rfbClientLog("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\n", x, y, w, h);
 }
