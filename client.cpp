@@ -160,6 +160,22 @@ int Client::GetEvent(event_t &evt) {
 	return result;
 }
 
+void Client::HandleKey(key_t key) {
+	uint32_t rfb_key;
+	switch (key) {
+	case KEY_BACK:
+		rfb_key = XK_Delete;
+		break;
+	case KEY_HOME:
+		rfb_key = XK_Home;
+		break;
+	default:
+		return;
+	}
+	SendKeyEvent(m_Client, rfb_key, TRUE);
+	SendKeyEvent(m_Client, rfb_key, FALSE);
+}
+
 int Client::Poll() {
 	int result, evt_count;
 	event_t evt;
@@ -188,6 +204,11 @@ int Client::Poll() {
 				evt.data.point.is_down ? rfbButton1Mask : 0);
 			rfbClientLog("Mouse event at %d:%d, is_down %d\n",
 				evt.data.point.x, evt.data.point.y, evt.data.point.is_down);
+			break;
+		}
+		case EVT_KEY:
+		{
+			HandleKey(evt.data.key);
 			break;
 		}
 		default:

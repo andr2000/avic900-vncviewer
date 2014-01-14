@@ -20,7 +20,12 @@ public:
 
 	enum event_type_t {
 		EVT_MOUSE,
-		EVT_MOVE
+		EVT_MOVE,
+		EVT_KEY
+	};
+	enum key_t {
+		KEY_BACK,
+		KEY_HOME
 	};
 	struct event_t {
 		event_type_t what;
@@ -30,6 +35,7 @@ public:
 				int x;
 				int y;
 			} point;
+			key_t key;
 		} data;
 	};
 	int PostEvent(event_t &evt);
@@ -64,6 +70,7 @@ private:
 	static int PollRFB(void *data);
 	static rfbBool MallocFrameBuffer(rfbClient *client);
 	static void GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
+	void HandleKey(key_t key);
 };
 
 #endif

@@ -44,12 +44,17 @@ private:
 	static const wchar_t *WND_PROC_NAMES[];
 	HWND m_HotkeyHwnd;
 	WNDPROC m_HotkeyWndProc;
+	DWORD m_MapKeyPressStartTick;
+	static const DWORD MAP_LONG_PRESS_TICKS = 1000;
+
 	static const int CONNECT_MAX_TRY = 3;
 	Client *vnc_client;
 	bool m_RenderingEnabled;
 
+
 	static LRESULT CALLBACK SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	void SetHotkeyHandler(bool set);
+	void HandleMapKey(bool pressed);
 public:
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);

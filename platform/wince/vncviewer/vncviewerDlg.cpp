@@ -22,6 +22,7 @@ CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 	m_RenderingEnabled = FALSE;
 	m_HotkeyHwnd = NULL;
 	m_HotkeyWndProc = NULL;
+	m_MapKeyPressStartTick = 0;
 	m_Instance = this;
 }
 
@@ -254,4 +255,24 @@ LRESULT CALLBACK CvncviewerDlg::SubWndProc(HWND hWnd, UINT message, WPARAM wPara
 	/* skip this message and pass it to the adressee */
 	return CallWindowProc(dlg->m_HotkeyWndProc,
 		hWnd, message, wParam, lParam);;
+}
+
+void CvncviewerDlg::HandleMapKey(bool pressed) {
+	if (pressed) {
+		m_MapKeyPressStartTick = GetTickCount();
+	} else {
+		DWORD delta_ms = GetTickCount() - m_MapKeyPressStartTick;
+		if (vnc_client) {
+			Client::event_t evt;
+			evt.what = Client::EVT_KEY;
+			if (delta_ms >= MAP_LONG_PRESS_TICKS) {
+				/* long press */
+				evt.data.key = Client::KEY_HOME;
+			} else {
+				/* normal press */
+				evt.data.key = Client::KEY_BACK;
+			}
+			vnc_client->PostEvent(evt);
+		}
+	}
 }
