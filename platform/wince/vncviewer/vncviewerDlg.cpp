@@ -8,10 +8,21 @@
 #define new DEBUG_NEW
 #endif
 
+const wchar_t *CvncviewerDlg::WND_PROC_NAMES[] = {
+	/* Launcher MUST be the first entry */
+	{ TEXT("Launcher") },
+	{ TEXT("MainMenu") }
+};
+
+CvncviewerDlg *CvncviewerDlg::m_Instance = NULL;
+
 CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CvncviewerDlg::IDD, pParent) {
 	vnc_client = NULL;
 	m_RenderingEnabled = FALSE;
+	m_HotkeyHwnd = NULL;
+	m_HotkeyWndProc = NULL;
+	m_Instance = this;
 }
 
 CvncviewerDlg::~CvncviewerDlg() {
@@ -91,7 +102,10 @@ BOOL CvncviewerDlg::OnInitDialog()
 		MessageBox(_T("Was not able to connect to the VNC server\r\nTerminating now"),
 			_T("Error"), MB_OK);
 		PostMessage(WM_CLOSE);
+		return TRUE;
 	}
+	/* install handlers to intercept WM_HOTKEY */
+	SetHotkeyHandler(TRUE);
 	return TRUE;
 }
 
@@ -154,6 +168,7 @@ void CvncviewerDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 	CDialog::OnActivate(nState, pWndOther, bMinimized);
 
 	m_RenderingEnabled = nState != WA_INACTIVE;
+	SetHotkeyHandler(m_RenderingEnabled);
 }
 
 BOOL CvncviewerDlg::OnEraseBkgnd(CDC* pDC)
@@ -188,4 +203,55 @@ void CvncviewerDlg::OnPaint()
 			EndPaint(&ps);
 		}
 	}
+}
+
+void CvncviewerDlg::SetHotkeyHandler(bool set) {
+	if (set) {
+		if (m_HotkeyHwnd && m_HotkeyWndProc) {
+			return;
+		}
+		int i, num_windows = sizeof(WND_PROC_NAMES)/sizeof(WND_PROC_NAMES[0]);
+		for (i = 0; i < num_windows; i++) {
+			m_HotkeyHwnd = ::FindWindow(NULL, WND_PROC_NAMES[i]);
+			if (NULL == m_HotkeyHwnd) {
+				continue;
+			}
+			/* found, substitute */
+			DEBUGMSG(TRUE, (_T("Found original hotkey handler: %s\r\n"),
+				WND_PROC_NAMES[i]));
+			m_HotkeyWndProc = (WNDPROC)GetWindowLong(m_HotkeyHwnd, GWL_WNDPROC);
+			if (m_HotkeyWndProc) {
+				SetWindowLong(m_HotkeyHwnd, GWL_WNDPROC, (LONG)SubWndProc);
+				break;
+			} else {
+				m_HotkeyHwnd = NULL;
+			}
+		}
+		if (i == num_windows) {
+			DEBUGMSG(TRUE, (_T("DID NOT find the original hotkey handler\r\n")));
+		}
+	} else {
+		if (m_HotkeyWndProc && m_HotkeyHwnd) {
+			SetWindowLong(m_HotkeyHwnd, GWL_WNDPROC, (LONG)m_HotkeyWndProc);
+		}
+		m_HotkeyHwnd = NULL;
+		m_HotkeyWndProc = NULL;
+	}
+}
+
+LRESULT CALLBACK CvncviewerDlg::SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	CvncviewerDlg *dlg = CvncviewerDlg::GetInstance();
+
+	if ((WM_HOTKEY == message) && (HW_BTN_MAP == wParam)){
+		if (lParam & 0x1000) {
+			/* released */
+			DEBUGMSG(TRUE, (_T("MAP released\r\n")));
+		} else {
+			/* pressed */
+			DEBUGMSG(TRUE, (_T("MAP pressed\r\n")));
+		}
+	}
+	/* skip this message and pass it to the adressee */
+	return CallWindowProc(dlg->m_HotkeyWndProc,
+		hWnd, message, wParam, lParam);;
 }
