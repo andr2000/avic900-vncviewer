@@ -1,5 +1,6 @@
 #include <rfb/rfbclient.h>
 #include "client.h"
+#include "compat.h"
 #include "INIReader.h"
 
 Client *Client::m_Instance = NULL;

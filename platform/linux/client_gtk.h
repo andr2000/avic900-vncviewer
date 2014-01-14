@@ -1,9 +1,6 @@
 #ifndef _CLIENT_GTK_H
 #define _CLIENT_GTK_H
 
-#include <gtk/gtk.h>
-#include <gdk/gdkkeysyms.h>
-
 #include <rfb/rfbclient.h>
 #include "client.h"
 
@@ -28,7 +25,6 @@ protected:
 	void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
 private:
 	uint8_t *m_FrameBuffer;
-	GtkWidget *m_DrawingArea;
 
 	static void Logger(const char *format, ...);
 };
