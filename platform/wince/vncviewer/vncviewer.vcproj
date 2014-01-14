@@ -255,10 +255,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\getopt.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\mutex_wince.cpp"
 				>
 				<FileConfiguration

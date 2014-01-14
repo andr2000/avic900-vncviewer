@@ -47,6 +47,7 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
 	client->updateRect.h = height;
 
 	/* create frambuffer */
+	/* For Windows bitmap is BGR565/BGR888, upside down - see -height below */
 	BITMAPINFO bm_info;
 	memset(&bm_info, 0, sizeof(BITMAPINFO));
 	bm_info.bmiHeader.biSize            = sizeof(BITMAPINFOHEADER);
