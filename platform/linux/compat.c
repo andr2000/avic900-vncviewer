@@ -1,7 +1,7 @@
 #include "compat.h"
 
-char exe_name[MAX_PATH + 1];
+extern char *g_exe_name;
 
 char * get_exe_name(void) {
-	return exe_name;
+	return g_exe_name;
 }

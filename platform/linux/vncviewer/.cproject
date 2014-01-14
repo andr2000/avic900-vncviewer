@@ -18,12 +18,23 @@
 					<folderInfo id="cdt.managedbuild.config.gnu.exe.debug.743108150." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.exe.debug.1252510935" name="Linux GCC" nonInternalBuilderId="cdt.managedbuild.target.gnu.builder.exe.debug" superClass="cdt.managedbuild.toolchain.gnu.exe.debug">
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.debug.1287387171" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.debug"/>
-							<builder autoBuildTarget="all" buildPath="${workspace_loc:/vncviewer/Debug}" cleanBuildTarget="clean" id="org.eclipse.cdt.build.core.internal.builder.26149765" incrementalBuildTarget="all" managedBuildOn="true" name="CDT Internal Builder" superClass="org.eclipse.cdt.build.core.internal.builder"/>
+							<builder autoBuildTarget="all" buildPath="${workspace_loc:/vncviewer/Debug}" cleanBuildTarget="clean" id="org.eclipse.cdt.build.core.internal.builder.26149765" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="CDT Internal Builder" superClass="org.eclipse.cdt.build.core.internal.builder"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.999354292" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.589772601" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
 								<option id="gnu.cpp.compiler.exe.debug.option.optimization.level.79067673" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.exe.debug.option.debugging.level.1861492765" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.143195471" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/pango-1.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/gio-unix-2.0/"/>
+									<listOptionValue builtIn="false" value="/usr/include/atk-1.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/cairo"/>
+									<listOptionValue builtIn="false" value="/usr/include/gdk-pixbuf-2.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/freetype2"/>
+									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
+									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu/glib-2.0/include"/>
+									<listOptionValue builtIn="false" value="/usr/include/pixman-1"/>
+									<listOptionValue builtIn="false" value="/usr/include/libpng12"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}/..&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}/../../..&quot;"/>
@@ -31,13 +42,27 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}/../../../inih&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}/../../../inih/cpp&quot;"/>
 								</option>
-								<option id="gnu.cpp.compiler.option.other.other.81277011" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=c++11" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.other.other.81277011" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 -std=c++11 -pthread" valueType="string"/>
+								<option id="gnu.cpp.compiler.option.preprocessor.def.1154714402" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="DEBUG"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1283097483" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.exe.debug.654243815" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.exe.debug">
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.791915762" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.24303492" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1429187522" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/pango-1.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/gio-unix-2.0/"/>
+									<listOptionValue builtIn="false" value="/usr/include/atk-1.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/cairo"/>
+									<listOptionValue builtIn="false" value="/usr/include/gdk-pixbuf-2.0"/>
+									<listOptionValue builtIn="false" value="/usr/include/freetype2"/>
+									<listOptionValue builtIn="false" value="/usr/include/glib-2.0"/>
+									<listOptionValue builtIn="false" value="/usr/lib/x86_64-linux-gnu/glib-2.0/include"/>
+									<listOptionValue builtIn="false" value="/usr/include/pixman-1"/>
+									<listOptionValue builtIn="false" value="/usr/include/libpng12"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}/../../..&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}/../../../libvncserver&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}}/../../../libvncserver/libvncclient&quot;"/>
@@ -47,6 +72,20 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1455300450" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug.426206299" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.exe.debug">
+								<option id="gnu.cpp.link.option.libs.631364968" name="Libraries (-l)" superClass="gnu.cpp.link.option.libs" valueType="libs">
+									<listOptionValue builtIn="false" value="gtk-3"/>
+									<listOptionValue builtIn="false" value="pthread"/>
+									<listOptionValue builtIn="false" value="gdk-3"/>
+									<listOptionValue builtIn="false" value="atk-1.0"/>
+									<listOptionValue builtIn="false" value="gio-2.0"/>
+									<listOptionValue builtIn="false" value="pangocairo-1.0"/>
+									<listOptionValue builtIn="false" value="gdk_pixbuf-2.0"/>
+									<listOptionValue builtIn="false" value="cairo-gobject"/>
+									<listOptionValue builtIn="false" value="pango-1.0"/>
+									<listOptionValue builtIn="false" value="cairo"/>
+									<listOptionValue builtIn="false" value="gobject-2.0"/>
+									<listOptionValue builtIn="false" value="glib-2.0"/>
+								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.235583094" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -59,7 +98,37 @@
 					</folderInfo>
 				</configuration>
 			</storageModule>
-			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+			<storageModule moduleId="org.eclipse.cdt.core.externalSettings">
+				<externalSettings containerId="org.eclipse.cdt.managedbuilder.pkgconfig.extSettings" factoryId="org.eclipse.cdt.core.extension.container.factory">
+					<externalSetting contentTypes="org.eclipse.cdt.core.cSource:org.eclipse.cdt.core.cxxSource">
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/gtk-3.0"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/pango-1.0"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/gio-unix-2.0/"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/atk-1.0"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/cairo"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/gdk-pixbuf-2.0"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/freetype2"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/glib-2.0"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/lib/x86_64-linux-gnu/glib-2.0/include"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/pixman-1"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/libpng12"/>
+					</externalSetting>
+					<externalSetting contentTypes="org.eclipse.cdt.managedbuilder.core.compiledObjectFile">
+						<entry flags="" kind="libraryFile" name="gtk-3"/>
+						<entry flags="" kind="libraryFile" name="gdk-3"/>
+						<entry flags="" kind="libraryFile" name="atk-1.0"/>
+						<entry flags="" kind="libraryFile" name="gio-2.0"/>
+						<entry flags="" kind="libraryFile" name="pangocairo-1.0"/>
+						<entry flags="" kind="libraryFile" name="gdk_pixbuf-2.0"/>
+						<entry flags="" kind="libraryFile" name="cairo-gobject"/>
+						<entry flags="" kind="libraryFile" name="pango-1.0"/>
+						<entry flags="" kind="libraryFile" name="cairo"/>
+						<entry flags="" kind="libraryFile" name="gobject-2.0"/>
+						<entry flags="" kind="libraryFile" name="glib-2.0"/>
+					</externalSetting>
+				</externalSettings>
+			</storageModule>
+			<storageModule Qt3Support="false" Qt5Bootstrap="false" Qt5Concurrent="false" Qt5Core="false" Qt5DBus="false" Qt5Gui="false" Qt5Multimedia="false" Qt5MultimediaQuick_p="false" Qt5MultimediaWidgets="false" Qt5Network="false" Qt5PlatformSupport="false" Qt5PrintSupport="false" Qt5Qml="false" Qt5QmlDevTools="false" Qt5Quick="false" Qt5QuickParticles="false" Qt5QuickTest="false" Qt5Sql="false" Qt5Test="false" Qt5Widgets="false" Qt5Xml="false" QtCLucene="false" QtCore="false" QtDBus="false" QtDeclarative="false" QtDesigner="false" QtDesignerComponents="false" QtGui="false" QtHelp="false" QtNetwork="false" QtOpenGL="false" QtScript="false" QtScriptTools="false" QtSql="false" QtSvg="false" QtTest="false" QtUiTools="false" QtWebKit="false" QtXml="false" QtXmlPatterns="false" alsa="false" atk="false" audiofile="false" bluez="false" cairo="false" cairo-fc="false" cairo-ft="false" cairo-gobject="false" cairo-pdf="false" cairo-png="false" cairo-ps="false" cairo-svg="false" cairo-xcb="false" cairo-xcb-shm="false" cairo-xlib="false" cairo-xlib-xrender="false" compositeproto="false" cutter="false" damageproto="false" dbus-1="false" dbus-cplusplus-1="false" dbus-cplusplus-glib-1="false" dbus-python="false" dri="false" esound="false" fixesproto="false" fontconfig="false" fontutil="false" form="false" freetype2="false" fribidi="false" gdk-3.0="false" gdk-pixbuf-2.0="false" gdk-pixbuf-xlib-2.0="false" gdk-x11-3.0="false" ginn="false" gio-2.0="false" gio-unix-2.0="false" gl="false" glib-2.0="false" glu="false" gmodule-2.0="false" gmodule-export-2.0="false" gmodule-no-export-2.0="false" gnome-icon-theme="false" gnutls="false" gnutls-extra="false" gobject-2.0="false" gstreamer-0.10="false" gstreamer-1.0="false" gstreamer-allocators-1.0="false" gstreamer-app-0.10="false" gstreamer-app-1.0="false" gstreamer-audio-0.10="false" gstreamer-audio-1.0="false" gstreamer-base-0.10="false" gstreamer-base-1.0="false" gstreamer-cdda-0.10="false" gstreamer-check-0.10="false" gstreamer-check-1.0="false" gstreamer-controller-0.10="false" gstreamer-controller-1.0="false" gstreamer-dataprotocol-0.10="false" gstreamer-fft-0.10="false" gstreamer-fft-1.0="false" gstreamer-floatcast-0.10="false" gstreamer-interfaces-0.10="false" gstreamer-net-0.10="false" gstreamer-net-1.0="false" gstreamer-netbuffer-0.10="false" gstreamer-pbutils-0.10="false" gstreamer-pbutils-1.0="false" gstreamer-plugins-base-0.10="false" gstreamer-plugins-base-1.0="false" gstreamer-riff-0.10="false" gstreamer-riff-1.0="false" gstreamer-rtp-0.10="false" gstreamer-rtp-1.0="false" gstreamer-rtsp-0.10="false" gstreamer-rtsp-1.0="false" gstreamer-sdp-0.10="false" gstreamer-sdp-1.0="false" gstreamer-sharp-0.10="false" gstreamer-tag-0.10="false" gstreamer-tag-1.0="false" gstreamer-vaapi-0.10="false" gstreamer-vaapi-glx-0.10="false" gstreamer-vaapi-x11-0.10="false" gstreamer-video-0.10="false" gstreamer-video-1.0="false" gthread-2.0="false" gtkplus-3.0="true" gtkplus-unix-print-3.0="false" gtkplus-x11-3.0="false" ibus-table="false" ice="false" inputproto="false" iso-codes="false" kbproto="false" libbsd="false" libbsd-overlay="false" libcrypto="false" libcutter="false" libdrm="false" libdrm_intel="false" libdrm_nouveau="false" libdrm_nouveau1="false" libdrm_radeon="false" libexslt="false" libffi="false" libkms="false" liblzma="false" libpcre="false" libpcrecpp="false" libpcreposix="false" libpng="false" libpng12="false" libquvi-scripts="false" libssl="false" libtasn1="false" libva="false" libva-egl="false" libva-glx="false" libva-tpi="false" libva-x11="false" libxml-2.0="false" libxslt="false" menu="false" mobile-broadband-provider-info="false" moduleId="packages" nautilus-sendto="false" ncurses="false" ncursesplusplus="false" notify-python="false" nspr="false" nss="false" openssl="false" p11-kit-1="false" panel="false" pango="false" pangocairo="false" pangoft2="false" pangox="false" pangoxft="false" pixman-1="false" pm-utils="false" pthread-stubs="false" pygtksourceview-2.0="false" quesoglc="false" randrproto="false" renderproto="false" shared-desktop-ontologies="false" shared-mime-info="false" sm="false" sqlite3="false" tic="false" tinfo="false" udev="false" udisks="false" usbutils="false" valgrind="false" x11="false" xau="false" xbitmaps="false" xcb="false" xcb-render="false" xcb-shm="false" xcomposite="false" xcursor="false" xdamage="false" xdmcp="false" xext="false" xextproto="false" xfixes="false" xft="false" xi="false" xinerama="false" xineramaproto="false" xkeyboard-config="false" xmlsec1="false" xmlsec1-gnutls="false" xmlsec1-nss="false" xmlsec1-openssl="false" xmu="false" xorg-sgml-doctools="false" xorg-wacom="false" xproto="false" xrandr="false" xrender="false" xt="false" xtrans="false" xulrunner-nspr="false" xulrunner-nss="false" yelp-xsl="false" zlib="false"/>
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.config.gnu.exe.release.925157797">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.exe.release.925157797" moduleId="org.eclipse.cdt.core.settings" name="Release">
@@ -80,7 +149,7 @@
 							<targetPlatform id="cdt.managedbuild.target.gnu.platform.exe.release.1871437822" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.exe.release"/>
 							<builder buildPath="${workspace_loc:/vncviewer/Release}" id="cdt.managedbuild.target.gnu.builder.exe.release.874517898" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.exe.release"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.768734388" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
-							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS}" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.2123347952" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release">
+							<tool command="g++" commandLinePattern="${COMMAND} ${FLAGS} ${OUTPUT_FLAG} ${OUTPUT_PREFIX}${OUTPUT} ${INPUTS} ${GTK}" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release.2123347952" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.release">
 								<option id="gnu.cpp.compiler.exe.release.option.optimization.level.471725581" name="Optimization Level" superClass="gnu.cpp.compiler.exe.release.option.optimization.level" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.exe.release.option.debugging.level.1293804434" name="Debug Level" superClass="gnu.cpp.compiler.exe.release.option.debugging.level" value="gnu.cpp.compiler.debugging.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.414074801" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
