@@ -281,7 +281,7 @@ rfbBool rfbInitClient(rfbClient* client,int* argc,char** argv) {
 
     for (i = 1; i < *argc; i++) {
       j = i;
-#ifndef WINCE
+#if !defined(WINCE) && !defined(__linux__)
       if (strcmp(argv[i], "-listen") == 0) {
 	listenForIncomingConnections(client);
 	break;

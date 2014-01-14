@@ -124,11 +124,7 @@
 
 /* Define to 1 if you have the `jpeg' library (-ljpeg). */
 #ifndef LIBVNCSERVER_HAVE_LIBJPEG 
-#ifdef WINCE
 #undef LIBVNCSERVER_HAVE_LIBJPEG
-#else
-#define LIBVNCSERVER_HAVE_LIBJPEG  1 
-#endif
 #endif
 
 /* Define to 1 if you have the `nsl' library (-lnsl). */
@@ -168,11 +164,7 @@
 
 /* Define to 1 if you have the `z' library (-lz). */
 #ifndef LIBVNCSERVER_HAVE_LIBZ 
-#ifdef WINCE
 #undef LIBVNCSERVER_HAVE_LIBZ
-#else
-#define LIBVNCSERVER_HAVE_LIBZ  1 
-#endif
 #endif
 
 /* linux fb device build environment present */
