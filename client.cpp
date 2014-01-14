@@ -1,6 +1,5 @@
 #include <rfb/rfbclient.h>
 #include "client.h"
-#include "logger.h"
 #include "compat.h"
 #include "INIReader.h"
 
@@ -84,7 +83,9 @@ void Client::SetDefaultParams() {
 }
 
 int Client::Start(void *_private) {
-	LOG("Initializing VNC Client");
+	/* set logging options */
+	SetLogging();
+	rfbClientLog("Initializing VNC Client");
 	m_Private = _private;
 	/* read ini file */
 	if (!ReadInitData()) {
@@ -112,8 +113,6 @@ int Client::Start(void *_private) {
 	m_Client->format.blueShift = 0;
 #endif
 
-	/* set logging options */
-	SetLogging();
 	/* and start */
 	if (!rfbInitClient(m_Client, &argc, argv)) {
 		/* rfbInitClient has already freed the client struct */
@@ -183,8 +182,8 @@ int Client::Poll() {
 		{
 			SendPointerEvent(m_Client, evt.data.point.x, evt.data.point.y,
 				evt.data.point.is_down ? rfbButton1Mask : 0);
-			DEBUGMSG(TRUE, (_T("Mouse event at %d:%d, is_down %d\r\n"),
-				evt.data.point.x, evt.data.point.y, evt.data.point.is_down));
+			rfbClientLog("Mouse event at %d:%d, is_down %d\n",
+				evt.data.point.x, evt.data.point.y, evt.data.point.is_down);
 			break;
 		}
 		default:
