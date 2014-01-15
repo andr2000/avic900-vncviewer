@@ -255,6 +255,26 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\..\..\config_storage.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Pocket PC 2003 (ARMV4)"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Pocket PC 2003 (ARMV4)"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\mutex_wince.cpp"
 				>
 				<FileConfiguration
@@ -532,6 +552,10 @@
 			</File>
 			<File
 				RelativePath="..\compat.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\config_storage.h"
 				>
 			</File>
 			<File

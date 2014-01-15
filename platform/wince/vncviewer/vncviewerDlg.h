@@ -1,6 +1,7 @@
 #pragma once
 
 class Client;
+class ConfigStorage;
 
 class CvncviewerDlg : public CDialog {
 public:
@@ -51,6 +52,7 @@ private:
 	Client *vnc_client;
 	bool m_RenderingEnabled;
 
+	ConfigStorage *m_ConfigStorage;
 
 	static LRESULT CALLBACK SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	void SetHotkeyHandler(bool set);

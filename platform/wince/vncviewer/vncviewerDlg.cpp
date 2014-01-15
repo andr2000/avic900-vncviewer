@@ -3,6 +3,7 @@
 #include "vncviewerDlg.h"
 
 #include "client_factory.h"
+#include "config_storage.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -24,12 +25,16 @@ CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 	m_HotkeyWndProc = NULL;
 	m_MapKeyPressStartTick = 0;
 	m_Instance = this;
+	m_ConfigStorage = NULL;
 }
 
 CvncviewerDlg::~CvncviewerDlg() {
 	if (vnc_client) {
 		/* TODO: stop it */
 		delete vnc_client;
+	}
+	if (m_ConfigStorage) {
+		delete m_ConfigStorage;
 	}
 }
 
@@ -59,6 +64,23 @@ BOOL CvncviewerDlg::OnInitDialog()
 
 	SetWindowText(CvncviewerApp::APP_TITLE);
 
+	m_ConfigStorage = ConfigStorage::GetInstance();
+
+	wchar_t wfilename[MAX_PATH + 1];
+	char filename[MAX_PATH + 1];
+
+	GetModuleFileName(NULL, wfilename, MAX_PATH);
+	wcstombs(filename, wfilename, sizeof(filename));
+	std::string exe(filename);
+	char *dot = strrchr(filename, '.');
+	if (dot) {
+		*dot = '\0';
+	}
+	std::string ini(filename);
+	ini += ".ini";
+
+	m_ConfigStorage->Initialize(exe, ini);
+
 	vnc_client = ClientFactory::GetInstance();
 	if (NULL == vnc_client) {
 		MessageBox(_T("Failed to intstaniate VNC client\r\nShit happens"),
@@ -75,22 +97,9 @@ BOOL CvncviewerDlg::OnInitDialog()
 	rcDesktop.bottom = rcDesktop.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
 	MoveWindow(rcDesktop, FALSE);
 
-	wchar_t wfilename[MAX_PATH + 1];
-	char filename[MAX_PATH + 1];
-
-	GetModuleFileName(NULL, wfilename, MAX_PATH);
-	wcstombs(filename, wfilename, sizeof(filename));
-	std::string exe(filename);
-	char *dot = strrchr(filename, '.');
-	if (dot) {
-		*dot = '\0';
-	}
-	std::string ini(filename);
-	ini += ".ini";
-
 	/* let's rock */
 	for (i = 0; i < CONNECT_MAX_TRY; i++) {
-		if (0 == vnc_client->Start(static_cast<void *>(this), exe, ini)) {
+		if (0 == vnc_client->Start(static_cast<void *>(this))) {
 			break;
 		}
 		if (IDCANCEL == MessageBox(_T("Failed to connect to the server\r\nRetry?"),
