@@ -102,7 +102,7 @@ void Client::HandleKey(key_t key) {
 	uint32_t rfb_key;
 	switch (key) {
 	case KEY_BACK:
-		rfb_key = XK_Delete;
+		rfb_key = XK_Escape;
 		rfbClientLog("Key event: KEY_BACK\n");
 		break;
 	case KEY_HOME:

@@ -3,7 +3,6 @@
 #include "client_factory.h"
 #include "config_storage.h"
 
-
 int main(int argc, char *argv[]) {
 	std::string exe(argv[0]);
 	ConfigStorage *cfg = new ConfigStorage();
@@ -23,7 +22,18 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 	while (1) {
-		sleep(1);
+		Client::event_t evt;
+
+		sleep(10);
+		fprintf(stdout, "KEY_HOME\n");
+		evt.what = Client::EVT_KEY;
+		evt.data.key = Client::KEY_HOME;
+		vnc_client->PostEvent(evt);
+		sleep(10);
+		fprintf(stdout, "KEY_BACK\n");
+		evt.what = Client::EVT_KEY;
+		evt.data.key = Client::KEY_BACK;
+		vnc_client->PostEvent(evt);
 	}
 	if (vnc_client) {
 		delete vnc_client;
