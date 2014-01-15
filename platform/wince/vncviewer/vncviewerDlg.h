@@ -45,8 +45,10 @@ private:
 	static const wchar_t *WND_PROC_NAMES[];
 	HWND m_HotkeyHwnd;
 	WNDPROC m_HotkeyWndProc;
-	DWORD m_MapKeyPressStartTick;
-	static const DWORD MAP_LONG_PRESS_TICKS = 1000;
+	bool m_FilterAutoRepeat;
+	bool m_LongPress;
+	static const UINT ID_TIMER_LONG_PRESS = 1;
+	static const UINT ID_TIMER_LONG_PRESS_DELAY = 1000;
 
 	static const int CONNECT_MAX_TRY = 3;
 	Client *vnc_client;
@@ -56,9 +58,10 @@ private:
 
 	static LRESULT CALLBACK SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	void SetHotkeyHandler(bool set);
-	void HandleMapKey(bool pressed);
+	void HandleMapKey(bool long_press);
 public:
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnPaint();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
