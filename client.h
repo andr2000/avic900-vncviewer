@@ -16,7 +16,7 @@ public:
 		return m_Instance;
 	};
 
-	int Start(void *_private, std::string &exe, std::string &ini);
+	int Start(void *_private);
 
 	enum event_type_t {
 		EVT_MOUSE,
@@ -49,8 +49,6 @@ protected:
 	/* message queue */
 	std::deque< event_t > m_MessageQueue;
 	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
-	std::string m_ExecFName;
-	std::string m_IniFName;
 
 	virtual void SetLogging() = 0;
 	int Poll();
@@ -58,15 +56,6 @@ protected:
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
 	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) = 0;
 private:
-	static std::string VNC_PARAMS[];
-	int argc;
-	char **argv;
-
-	void AllocateArgv(int count);
-	void DeleteArgv();
-	int ReadInitData();
-	void SetDefaultParams();
-
 	static int PollRFB(void *data);
 	static rfbBool MallocFrameBuffer(rfbClient *client);
 	static void GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);

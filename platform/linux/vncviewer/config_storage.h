@@ -1,0 +1,38 @@
+#ifndef _CONFIG_STORAGE_H_
+#define _CONFIG_STORAGE_H_
+
+#include <vector>
+
+#include "INIReader.h"
+
+class ConfigStorage : public INIReader {
+public:
+	ConfigStorage();
+	virtual ~ConfigStorage();
+
+	static ConfigStorage *GetInstance() {
+		return m_Instance;
+	}
+	void Initialize(std::string &exe, std::string &ini);
+
+	int GetArgC() {
+		return m_ArgC;
+	}
+	char **GetArgV() {
+		return m_ArgV;
+	}
+	std::string GetServer();
+	bool LoggingEnabled();
+protected:
+	static ConfigStorage *m_Instance;
+	static const std::string SECTION_NAME;
+
+	std::vector <std::string> m_Args;
+	int m_ArgC;
+	char **m_ArgV;
+
+	void Prepare();
+	void Clear();
+};
+
+#endif
