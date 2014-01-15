@@ -8,9 +8,13 @@
 
 using std::string;
 
-INIReader::INIReader(string filename)
+INIReader::INIReader()
 {
-    _error = ini_parse(filename.c_str(), ValueHandler, this);
+}
+
+int INIReader::Initialize(string &filename) {
+	_error = ini_parse(filename.c_str(), ValueHandler, this);
+	return _error;
 }
 
 int INIReader::ParseError()

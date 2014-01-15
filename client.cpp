@@ -1,28 +1,18 @@
 #include <rfb/rfbclient.h>
 #include "client.h"
-#include "compat.h"
-#include "INIReader.h"
+#include "config_storage.h"
 
 Client *Client::m_Instance = NULL;
-
-std::string Client::VNC_PARAMS[] = {
-	/* this one MUST be the last */
-	"192.168.2.1:5901"
-};
 
 Client::Client() {
 	m_Private = NULL;
 	m_Client = NULL;
 	m_Thread = NULL;
 	m_Mutex = MutexFactory::GetNewMutex();
-	argc = 0;
-	argv = NULL;
-	SetDefaultParams();
 }
 
 Client::~Client() {
 	m_MessageQueue.clear();
-	DeleteArgv();
 	if (m_Mutex) {
 		delete m_Mutex;
 	}
@@ -33,70 +23,14 @@ int Client::PollRFB(void *data) {
 	return context->Poll();
 }
 
-int Client::ReadInitData() {
-	std::string host;
-	size_t pos;
+int Client::Start(void *_private) {
+	ConfigStorage *cfg = ConfigStorage::GetInstance();
 
-	if (m_IniFName.empty()) {
-		return -1;
-	}
-	INIReader ini(m_IniFName);
-	pos = 0;
-	host = ini.Get("General", "Host", "192.168.2.1:5901");
-	rfbClientLog("Host is %s\n", host.c_str());
-	pos++;
-	AllocateArgv(pos);
-	/* this MUST be the last */
-	strcpy(argv[pos], host.c_str());
-	return 0;
-}
-
-void Client::DeleteArgv() {
-	if (argv) {
-		for (int i = 0; i < argc; i++) {
-			delete[] argv[i];
-		}
-		delete[] argv;
-	}
-	argc = 0;
-}
-
-void Client::AllocateArgv(int count) {
-	DeleteArgv();
-	/* +1 for exe name */
-	count++;
-	argv = new char *[count];
-	for (int i = 0; i < count; i++) {
-		argv[i] = new char[MAX_PATH + 1];
-	}
-	argc = count;
-	strcpy(argv[0], m_ExecFName.c_str());
-}
-
-void Client::SetDefaultParams() {
-	DeleteArgv();
-	AllocateArgv(sizeof(VNC_PARAMS) / sizeof(VNC_PARAMS[0]));
-	for (int i = 1; i < argc; i++) {
-		strcpy(argv[i], VNC_PARAMS[i - 1].c_str());
-	}
-}
-
-int Client::Start(void *_private, std::string &exe, std::string &ini) {
-	m_ExecFName = exe;
-	m_IniFName = ini;
 	/* set logging options */
-#ifdef DEBUG
-	rfbEnableClientLogging = TRUE;
-#else
-	rfbEnableClientLogging = FALSE;
-#endif
+	rfbEnableClientLogging = cfg->LoggingEnabled();
 	SetLogging();
 	rfbClientLog("Initializing VNC Client\n");
 	m_Private = _private;
-	/* read ini file */
-	if (ReadInitData() < 0) {
-		SetDefaultParams();
-	}
 	/* get new RFB client */
 	m_Client = rfbGetClient(5, 3, 2);
 	if (NULL == m_Client) {
@@ -118,6 +52,10 @@ int Client::Start(void *_private, std::string &exe, std::string &ini) {
 	m_Client->format.blueShift = 0;
 
 	/* and start */
+	int argc;
+	char **argv;
+	argc = cfg->GetArgC();
+	argv = cfg->GetArgV();
 	if (!rfbInitClient(m_Client, &argc, argv)) {
 		/* rfbInitClient has already freed the client struct */
 		m_Client = NULL;
@@ -165,9 +103,11 @@ void Client::HandleKey(key_t key) {
 	switch (key) {
 	case KEY_BACK:
 		rfb_key = XK_Delete;
+		rfbClientLog("Key event: KEY_BACK\n");
 		break;
 	case KEY_HOME:
 		rfb_key = XK_Home;
+		rfbClientLog("Key event: KEY_HOME\n");
 		break;
 	default:
 		return;
