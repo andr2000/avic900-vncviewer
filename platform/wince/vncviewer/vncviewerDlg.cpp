@@ -254,15 +254,28 @@ void CvncviewerDlg::SetHotkeyHandler(bool set) {
 LRESULT CALLBACK CvncviewerDlg::SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	CvncviewerDlg *dlg = CvncviewerDlg::GetInstance();
 
-	if (dlg && (WM_HOTKEY == message) && (HW_BTN_MAP == LOWORD(wParam))){
+	if (dlg && (WM_HOTKEY == message) && (HW_BTN_MAP == LOWORD(wParam))) {
 		if (LOWORD(lParam) == 0x0) {
 			/* pressed */
 			DEBUGMSG(true, (_T("MAP pressed\r\n")));
-			if (!dlg->m_FilterAutoRepeat && !dlg->m_LongPress) {				/* start processing long press */				dlg->SetTimer(ID_TIMER_LONG_PRESS, ID_TIMER_LONG_PRESS_DELAY, NULL);				dlg->m_FilterAutoRepeat = true;			}			return 1;
+			if (!dlg->m_FilterAutoRepeat && !dlg->m_LongPress) {
+				/* start processing long press */
+				dlg->SetTimer(ID_TIMER_LONG_PRESS, ID_TIMER_LONG_PRESS_DELAY, NULL);
+				dlg->m_FilterAutoRepeat = true;
+			}
+			return 1;
 		} else if (LOWORD(lParam) == 0x1000) {
 			/* released */
 			DEBUGMSG(true, (_T("MAP released\r\n")));
-			if (dlg->m_FilterAutoRepeat) {				dlg->m_FilterAutoRepeat = false;				dlg->KillTimer(ID_TIMER_LONG_PRESS);			}			if (dlg->m_LongPress) {				/* already handled by the timer */				dlg->m_LongPress = false;				return 1;			}
+			if (dlg->m_FilterAutoRepeat) {
+				dlg->m_FilterAutoRepeat = false;
+				dlg->KillTimer(ID_TIMER_LONG_PRESS);
+			}
+			if (dlg->m_LongPress) {
+				/* already handled by the timer */
+				dlg->m_LongPress = false;
+				return 1;
+			}
 			dlg->HandleMapKey(false);
 		}
 		/* eat the key */
@@ -270,7 +283,7 @@ LRESULT CALLBACK CvncviewerDlg::SubWndProc(HWND hWnd, UINT message, WPARAM wPara
 	}
 	/* skip this message and pass it to the adressee */
 	return CallWindowProc(dlg->m_HotkeyWndProc,
-		hWnd, message, wParam, lParam);;
+		hWnd, message, wParam, lParam);
 }
 
 void CvncviewerDlg::HandleMapKey(bool long_press) {
@@ -290,8 +303,12 @@ void CvncviewerDlg::HandleMapKey(bool long_press) {
 
 void CvncviewerDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	if (ID_TIMER_LONG_PRESS == nIDEvent) {		/* MAP long press */		KillTimer(ID_TIMER_LONG_PRESS);		m_FilterAutoRepeat = false;
+	if (ID_TIMER_LONG_PRESS == nIDEvent) {
+		/* MAP long press */
+		KillTimer(ID_TIMER_LONG_PRESS);
+		m_FilterAutoRepeat = false;
 		m_LongPress = true;
 		HandleMapKey(true);
-	}	CDialog::OnTimer(nIDEvent);
+	}
+	CDialog::OnTimer(nIDEvent);
 }
