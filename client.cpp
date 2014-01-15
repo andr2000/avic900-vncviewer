@@ -9,6 +9,7 @@ Client::Client() {
 	m_Client = NULL;
 	m_Thread = NULL;
 	m_Mutex = MutexFactory::GetNewMutex();
+	m_NeedsVirtInpHack = false;
 }
 
 Client::~Client() {
@@ -29,6 +30,8 @@ int Client::Start(void *_private) {
 	/* set logging options */
 	rfbEnableClientLogging = cfg->LoggingEnabled();
 	SetLogging();
+	/* do we need to hack android's virtual input event? */
+	m_NeedsVirtInpHack = cfg->NeedsVirtualInputHack();
 	rfbClientLog("Initializing VNC Client\n");
 	m_Private = _private;
 	/* get new RFB client */
@@ -112,8 +115,14 @@ void Client::HandleKey(key_t key) {
 	default:
 		return;
 	}
+	if (m_NeedsVirtInpHack) {
+		SendPointerEvent(m_Client, -1, -1, rfbButton1Mask);
+	}
 	SendKeyEvent(m_Client, rfb_key, TRUE);
 	SendKeyEvent(m_Client, rfb_key, FALSE);
+	if (m_NeedsVirtInpHack) {
+		SendPointerEvent(m_Client, -1, -1, 0);
+	}
 }
 
 int Client::Poll() {

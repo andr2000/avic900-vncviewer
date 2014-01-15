@@ -49,6 +49,10 @@ std::string ConfigStorage::GetServer() {
 	return Get(SECTION_NAME, "Server", "192.168.2.1:5901");
 }
 
+bool ConfigStorage::NeedsVirtualInputHack() {
+	return GetBoolean(SECTION_NAME, "VirtInputHack", true);
+}
+
 bool ConfigStorage::LoggingEnabled() {
 #ifdef DEBUG
 	bool def = true;
