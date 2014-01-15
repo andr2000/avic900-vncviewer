@@ -21,8 +21,9 @@ public:
 	char **GetArgV() {
 		return m_ArgV;
 	}
-	std::string GetServer();
 	bool LoggingEnabled();
+	std::string GetServer();
+	bool NeedsVirtualInputHack();
 protected:
 	static ConfigStorage *m_Instance;
 	static const std::string SECTION_NAME;
