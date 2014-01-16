@@ -112,6 +112,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/compat.h</locationURI>
 		</link>
 		<link>
+			<name>config_storage.cpp</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/config_storage.cpp</locationURI>
+		</link>
+		<link>
+			<name>config_storage.h</name>
+			<type>1</type>
+			<locationURI>PARENT-3-PROJECT_LOC/config_storage.h</locationURI>
+		</link>
+		<link>
 			<name>mutex.h</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/mutex.h</locationURI>
