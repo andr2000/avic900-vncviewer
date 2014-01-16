@@ -16,8 +16,12 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Failed to instantiate VNC client\n");
  		return -1;
 	}
+	if (vnc_client->Initialize(static_cast<void *>(NULL)) < 0) {
+	fprintf(stderr, "Failed to initialize VNC client\n");
+		return -1;
+	}
 	fprintf(stdout, "Trying to connect to %s\n", cfg->GetServer().c_str());
-	if (vnc_client->Start(static_cast<void *>(NULL)) < 0) {
+	if (vnc_client->Connect() < 0) {
 	fprintf(stderr, "Failed to start VNC client\n");
 		return -1;
 	}

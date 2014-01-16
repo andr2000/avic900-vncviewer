@@ -372,11 +372,6 @@
 			<locationURI>PROJECT_LOC/Debug/libvncclient/vncviewer.d</locationURI>
 		</link>
 		<link>
-			<name>vncviewer/Debug/libvncclient/vncviewer.o</name>
-			<type>1</type>
-			<locationURI>PROJECT_LOC/Debug/libvncclient/vncviewer.o</locationURI>
-		</link>
-		<link>
 			<name>vncviewer/Debug/libvncclient/zlib.d</name>
 			<type>1</type>
 			<locationURI>PROJECT_LOC/Debug/libvncclient/zlib.d</locationURI>
