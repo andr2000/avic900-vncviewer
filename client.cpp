@@ -10,6 +10,7 @@ Client::Client() {
 	m_Thread = NULL;
 	m_Mutex = MutexFactory::GetNewMutex();
 	m_NeedsVirtInpHack = false;
+	m_ConfigStorage = NULL;
 }
 
 Client::~Client() {
@@ -24,14 +25,13 @@ int Client::PollRFB(void *data) {
 	return context->Poll();
 }
 
-int Client::Start(void *_private) {
-	ConfigStorage *cfg = ConfigStorage::GetInstance();
-
+int Client::Initialize(void *_private) {
+	m_ConfigStorage = ConfigStorage::GetInstance();
 	/* set logging options */
-	rfbEnableClientLogging = cfg->LoggingEnabled();
+	rfbEnableClientLogging = m_ConfigStorage->LoggingEnabled();
 	SetLogging();
 	/* do we need to hack android's virtual input event? */
-	m_NeedsVirtInpHack = cfg->NeedsVirtualInputHack();
+	m_NeedsVirtInpHack = m_ConfigStorage->NeedsVirtualInputHack();
 	rfbClientLog("Initializing VNC Client\n");
 	m_Private = _private;
 	/* get new RFB client */
@@ -53,12 +53,14 @@ int Client::Start(void *_private) {
 	m_Client->format.redShift = 10;
 	m_Client->format.greenShift = 5;
 	m_Client->format.blueShift = 0;
+	return 0;
+}
 
-	/* and start */
+int Client::Connect() {
 	int argc;
 	char **argv;
-	argc = cfg->GetArgC();
-	argv = cfg->GetArgV();
+	argc = m_ConfigStorage->GetArgC();
+	argv = m_ConfigStorage->GetArgV();
 	if (!rfbInitClient(m_Client, &argc, argv)) {
 		/* rfbInitClient has already freed the client struct */
 		m_Client = NULL;

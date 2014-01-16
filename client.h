@@ -4,6 +4,7 @@
 #include <string>
 #include <deque>
 #include <rfb/rfbclient.h>
+#include "config_storage.h"
 #include "mutex_factory.h"
 #include "thread_factory.h"
 
@@ -16,7 +17,8 @@ public:
 		return m_Instance;
 	};
 
-	int Start(void *_private);
+	int Initialize(void *_private);
+	int Connect();
 
 	enum event_type_t {
 		EVT_MOUSE,
@@ -49,6 +51,7 @@ protected:
 	/* message queue */
 	std::deque< event_t > m_MessageQueue;
 	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
+	ConfigStorage *m_ConfigStorage;
 
 	virtual void SetLogging() = 0;
 	int Poll();
