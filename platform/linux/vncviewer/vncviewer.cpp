@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[]) {
 	std::string exe(argv[0]);
-	ConfigStorage *cfg = new ConfigStorage();
+	ConfigStorage *cfg = ConfigStorage::GetInstance();
 	Client *vnc_client;
 	std::string ini;
 

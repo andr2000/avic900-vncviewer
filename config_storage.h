@@ -11,6 +11,10 @@ public:
 	virtual ~ConfigStorage();
 
 	static ConfigStorage *GetInstance() {
+		if (NULL == m_Instance) {
+			m_Instance = new ConfigStorage();
+			return m_Instance;
+		}
 		return m_Instance;
 	}
 	void Initialize(std::string &exe, std::string &ini);
