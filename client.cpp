@@ -1,6 +1,7 @@
 #include <rfb/rfbclient.h>
 #include "client.h"
 #include "config_storage.h"
+#include "connection_watchdog.h"
 
 Client *Client::m_Instance = NULL;
 
@@ -11,9 +12,14 @@ Client::Client() {
 	m_Mutex = MutexFactory::GetNewMutex();
 	m_NeedsVirtInpHack = false;
 	m_ConfigStorage = NULL;
+	m_ConnectionWatchdog = NULL;
 }
 
 Client::~Client() {
+	if (m_ConnectionWatchdog) {
+		m_ConnectionWatchdog->ShutDown();
+		delete m_ConnectionWatchdog;
+	}
 	m_MessageQueue.clear();
 	if (m_Mutex) {
 		delete m_Mutex;
@@ -54,6 +60,11 @@ int Client::Initialize(void *_private) {
 	m_Client->format.greenShift = 5;
 	m_Client->format.blueShift = 0;
 	return 0;
+}
+
+std::string Client::GetServerIP() {
+	std::string server = m_ConfigStorage->GetServer();
+	return server.erase(server.find_first_of(':'));
 }
 
 int Client::Connect() {

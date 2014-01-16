@@ -7,7 +7,8 @@ int main(int argc, char *argv[]) {
 	std::string exe(argv[0]);
 	ConfigStorage *cfg = ConfigStorage::GetInstance();
 	Client *vnc_client;
-	std::string ini;
+	std::string ini, server_ip;
+	bool alive;
 
 	ini = exe + ".ini";
 	cfg->Initialize(exe, ini);
@@ -20,9 +21,18 @@ int main(int argc, char *argv[]) {
 	fprintf(stderr, "Failed to initialize VNC client\n");
 		return -1;
 	}
+	server_ip = vnc_client->GetServerIP();
+	alive = vnc_client->IsServerAlive(server_ip);
+	fprintf(stdout, "Server %s is %s alive\n", server_ip.c_str(),
+			alive ? "" : "not");
+	if (!alive) {
+		delete vnc_client;
+		delete cfg;
+		return -1;
+	}
 	fprintf(stdout, "Trying to connect to %s\n", cfg->GetServer().c_str());
 	if (vnc_client->Connect() < 0) {
-	fprintf(stderr, "Failed to start VNC client\n");
+		fprintf(stderr, "Failed to start VNC client\n");
 		return -1;
 	}
 	while (1) {
