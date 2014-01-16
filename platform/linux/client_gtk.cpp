@@ -46,3 +46,24 @@ rfbBool Client_Gtk::OnMallocFrameBuffer(rfbClient *client) {
 void Client_Gtk::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
 	rfbClientLog("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\n", x, y, w, h);
 }
+
+bool Client_Gtk::IsServerAlive(std::string &host) {
+	/* TODO: this is not portable */
+	std::string cmd = "/bin/ping -q -c 1 -n " + host;
+	FILE* pipe = popen(cmd.c_str(), "r");
+	if (!pipe) {
+		return false;
+	}
+	char buffer[128];
+	std::string result = "";
+	while (!feof(pipe)) {
+		if (fgets(buffer, sizeof(buffer), pipe) != NULL)
+			result += buffer;
+	}
+	pclose(pipe);
+	if (std::string::npos != result.find_first_of("unknown host") ||
+		std::string::npos != result.find_first_of("100% packet loss")) {
+		return false;
+	}
+	return true;
+}

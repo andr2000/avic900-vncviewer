@@ -19,6 +19,7 @@ public:
 	void *GetDrawingContext() {
 		return NULL;
 	};
+	bool IsServerAlive(std::string &host);
 protected:
 	void SetLogging();
 	rfbBool OnMallocFrameBuffer(rfbClient *client);
