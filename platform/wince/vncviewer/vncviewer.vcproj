@@ -74,6 +74,7 @@
 				StackCommitSize="4096"
 				EntryPointSymbol="WinMainCRTStartup"
 				TargetMachine="3"
+				Profile="false"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -128,7 +129,9 @@
 				Name="VCCLCompilerTool"
 				ExecutionBucket="7"
 				Optimization="2"
+				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\..\platform\wince&quot;;&quot;$(ProjectDir)\..\..\..\&quot;;&quot;$(ProjectDir)\..\..\..\libvncserver&quot;;&quot;$(ProjectDir)\..\..\..\libvncserver\common&quot;;&quot;$(ProjectDir)\..\..\..\libvncserver\libvncclient&quot;;&quot;$(ProjectDir)\..\..\..\platform\wince\vncviewer&quot;;&quot;$(ProjectDir)\..\..\..\inih\cpp&quot;"
 				PreprocessorDefinitions="NDEBUG;_WIN32_WCE=$(CEVER);UNDER_CE;$(PLATFORMDEFINES);WINCE;$(ARCHFAM);$(_ARCHFAM_);POCKETPC2003_UI_MODEL"
 				MinimalRebuild="false"
@@ -256,6 +259,26 @@
 			</File>
 			<File
 				RelativePath="..\..\..\config_storage.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Pocket PC 2003 (ARMV4)"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Pocket PC 2003 (ARMV4)"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\..\connection_watchdog.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Pocket PC 2003 (ARMV4)"
@@ -556,6 +579,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\config_storage.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\connection_watchdog.h"
 				>
 			</File>
 			<File
