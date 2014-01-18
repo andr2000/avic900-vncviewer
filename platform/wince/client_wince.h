@@ -20,6 +20,7 @@ public:
 	void *GetDrawingContext() {
 		return static_cast<void *>(m_hBmp);
 	};
+	bool IsServerAlive(std::string &host);
 protected:
 	void SetLogging();
 	rfbBool OnMallocFrameBuffer(rfbClient *client);

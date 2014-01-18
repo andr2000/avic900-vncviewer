@@ -28,3 +28,7 @@ void Thread_WinCE::Terminate() {
 	CloseHandle(m_Thread);
 	m_Thread = NULL;
 }
+
+void Thread_WinCE::SleepMs(int ms) {
+	Sleep(ms);
+}

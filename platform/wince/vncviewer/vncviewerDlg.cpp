@@ -66,7 +66,7 @@ BOOL CvncviewerDlg::OnInitDialog()
 
 	SetWindowText(CvncviewerApp::APP_TITLE);
 
-	m_ConfigStorage = new ConfigStorage();
+	m_ConfigStorage = ConfigStorage::GetInstance();
 
 	wchar_t wfilename[MAX_PATH + 1];
 	char filename[MAX_PATH + 1];
@@ -99,15 +99,19 @@ BOOL CvncviewerDlg::OnInitDialog()
 	rcDesktop.bottom = rcDesktop.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
 	MoveWindow(rcDesktop, false);
 
+	if (vnc_client->Initialize(static_cast<void *>(this)) < 0) {
+		return true;
+	}
+
 	/* let's rock */
 	for (i = 0; i < CONNECT_MAX_TRY; i++) {
-		if (0 == vnc_client->Start(static_cast<void *>(this))) {
+		if (0 == vnc_client->Connect()) {
 			break;
 		}
 		if (IDCANCEL == MessageBox(_T("Failed to connect to the server\r\nRetry?"),
 			_T("Error"), MB_RETRYCANCEL)) {
 				PostMessage(WM_CLOSE);
-				return false;
+				return true;
 		}
 	}
 	if (i == CONNECT_MAX_TRY) {

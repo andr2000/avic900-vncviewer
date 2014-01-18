@@ -9,9 +9,10 @@ class Thread_WinCE : public Thread {
 public:
 	Thread_WinCE();
 	~Thread_WinCE();
+	void Terminate();
+	void SleepMs(int ms);
 protected:
 	int Start();
-	void Terminate();
 	int ShouldStop() {
 		return InterlockedExchange(&m_Terminated, m_Terminated);
 	}
