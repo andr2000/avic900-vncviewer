@@ -122,16 +122,6 @@
 			<locationURI>PARENT-3-PROJECT_LOC/config_storage.h</locationURI>
 		</link>
 		<link>
-			<name>connection_watchdog.cpp</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/connection_watchdog.cpp</locationURI>
-		</link>
-		<link>
-			<name>connection_watchdog.h</name>
-			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/connection_watchdog.h</locationURI>
-		</link>
-		<link>
 			<name>mutex.h</name>
 			<type>1</type>
 			<locationURI>PARENT-3-PROJECT_LOC/mutex.h</locationURI>
@@ -355,11 +345,6 @@
 			<name>vncviewer/Debug/libvncclient/sockets.d</name>
 			<type>1</type>
 			<locationURI>PROJECT_LOC/Debug/libvncclient/sockets.d</locationURI>
-		</link>
-		<link>
-			<name>vncviewer/Debug/libvncclient/sockets.o</name>
-			<type>1</type>
-			<locationURI>PROJECT_LOC/Debug/libvncclient/sockets.o</locationURI>
 		</link>
 		<link>
 			<name>vncviewer/Debug/libvncclient/subdir.mk</name>

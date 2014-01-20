@@ -1,7 +1,6 @@
 #include <rfb/rfbclient.h>
 #include "client.h"
 #include "config_storage.h"
-#include "connection_watchdog.h"
 
 Client *Client::m_Instance = NULL;
 
@@ -12,14 +11,9 @@ Client::Client() {
 	m_Mutex = MutexFactory::GetNewMutex();
 	m_NeedsVirtInpHack = false;
 	m_ConfigStorage = NULL;
-	m_ConnectionWatchdog = NULL;
 }
 
 Client::~Client() {
-	if (m_ConnectionWatchdog) {
-		m_ConnectionWatchdog->ShutDown();
-		delete m_ConnectionWatchdog;
-	}
 	m_MessageQueue.clear();
 	if (m_Mutex) {
 		delete m_Mutex;
