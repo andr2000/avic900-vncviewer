@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef SHOW_POINTER_TRACE
+#include <deque>
+#endif
+
 class Client;
 class ConfigStorage;
 
@@ -53,9 +57,15 @@ private:
 	enum ID_TIMER {
 		ID_TIMER_LONG_PRESS = 1,
 		ID_TIMER_SWIPE
+#ifdef SHOW_POINTER_TRACE
+		, ID_TIMER_TRACE
+#endif
 	};
 	static const UINT ID_TIMER_LONG_PRESS_DELAY = 1000;
 	static const UINT ID_TIMER_SWIPE_DELAY = 100;
+#ifdef SHOW_POINTER_TRACE
+	static const UINT ID_TIMER_TRACE_DELAY = 5000;
+#endif
 
 	static const int CONNECT_MAX_TRY = 3;
 	Client *vnc_client;
@@ -67,6 +77,21 @@ private:
 	void SetHotkeyHandler(bool set);
 	void HandleMapKey(bool long_press);
 	void Cleanup();
+#ifdef SHOW_POINTER_TRACE
+	enum trace_point_type_e {
+		TRACE_POINT_DOWN,
+		TRACE_POINT_UP,
+		TRACE_POINT_MOVE
+	};
+	struct trace_point_t {
+		LONG x;
+		LONG y;
+		trace_point_type_e type;
+	};
+	static const int TRACE_POINT_BAR_SZ = 10;
+	std::deque< trace_point_t > m_TraceQueue;
+	void AddTracePoint(trace_point_type_e type, LONG x, LONG y);
+#endif
 public:
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
