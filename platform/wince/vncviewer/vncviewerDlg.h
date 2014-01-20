@@ -47,8 +47,15 @@ private:
 	WNDPROC m_HotkeyWndProc;
 	bool m_FilterAutoRepeat;
 	bool m_LongPress;
-	static const UINT ID_TIMER_LONG_PRESS = 1;
+	bool m_SwipeActive;
+	LONG m_SwipeUpPointX;
+	LONG m_SwipeUpPointY;
+	enum ID_TIMER {
+		ID_TIMER_LONG_PRESS = 1,
+		ID_TIMER_SWIPE
+	};
 	static const UINT ID_TIMER_LONG_PRESS_DELAY = 1000;
+	static const UINT ID_TIMER_SWIPE_DELAY = 100;
 
 	static const int CONNECT_MAX_TRY = 3;
 	Client *vnc_client;
