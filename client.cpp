@@ -14,9 +14,23 @@ Client::Client() {
 }
 
 Client::~Client() {
+	Cleanup();
+}
+
+void Client::Cleanup() {
+	if (m_Thread) {
+		m_Thread->Terminate();
+		delete m_Thread;
+		m_Thread = NULL;
+	}
+	if (m_Client) {
+		rfbClientCleanup(m_Client);
+		m_Client = NULL;
+	}
 	m_MessageQueue.clear();
 	if (m_Mutex) {
 		delete m_Mutex;
+		m_Mutex = NULL;
 	}
 }
 

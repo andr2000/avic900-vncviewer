@@ -12,6 +12,7 @@ ConfigStorage::ConfigStorage() {
 }
 
 ConfigStorage::~ConfigStorage() {
+	Clear();
 }
 
 void ConfigStorage::Initialize(std::string &exe, std::string &ini) {
