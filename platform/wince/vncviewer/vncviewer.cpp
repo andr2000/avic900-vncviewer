@@ -72,5 +72,5 @@ BOOL CvncviewerApp::InitInstance()
 	if (nResponse == IDOK)
 	{
 	}
-	return FALSE;
+	return TRUE;
 }

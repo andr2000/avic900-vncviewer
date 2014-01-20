@@ -33,13 +33,6 @@ CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 }
 
 CvncviewerDlg::~CvncviewerDlg() {
-	if (vnc_client) {
-		/* TODO: stop it */
-		delete vnc_client;
-	}
-	if (m_ConfigStorage) {
-		delete m_ConfigStorage;
-	}
 }
 
 void CvncviewerDlg::DoDataExchange(CDataExchange* pDX) {
@@ -331,4 +324,21 @@ void CvncviewerDlg::OnTimer(UINT_PTR nIDEvent)
 		}
 	}
 	CDialog::OnTimer(nIDEvent);
+}
+
+void CvncviewerDlg::Cleanup() {
+	SetHotkeyHandler(false);
+	if (vnc_client) {
+		delete vnc_client;
+		vnc_client = NULL;
+	}
+	if (m_ConfigStorage) {
+		delete m_ConfigStorage;
+	}
+}
+
+void CvncviewerDlg::OnOK()
+{
+	Cleanup();
+	CDialog::OnOK();
 }

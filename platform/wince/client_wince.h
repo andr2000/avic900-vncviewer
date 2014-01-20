@@ -8,7 +8,7 @@
 class Client_WinCE : public Client {
 public:
 	Client_WinCE();
-	virtual ~Client_WinCE();
+	~Client_WinCE();
 
 	static Client *GetInstance_WinCE() {
 		if (NULL != Client::GetInstance()) {
@@ -20,7 +20,6 @@ public:
 	void *GetDrawingContext() {
 		return static_cast<void *>(m_hBmp);
 	};
-	bool IsServerAlive(std::string &host);
 protected:
 	void SetLogging();
 	rfbBool OnMallocFrameBuffer(rfbClient *client);

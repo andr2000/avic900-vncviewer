@@ -14,7 +14,6 @@ Client::Client() {
 }
 
 Client::~Client() {
-	Cleanup();
 }
 
 void Client::Cleanup() {
