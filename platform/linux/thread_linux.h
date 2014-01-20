@@ -22,7 +22,7 @@ protected:
 	}
 private:
 	std::atomic<bool> m_Terminated;
-	std::thread m_Thread;;
+	std::thread m_Thread;
 };
 
 #endif

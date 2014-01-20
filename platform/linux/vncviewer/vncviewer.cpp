@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
 
 #include "client_factory.h"
 #include "config_storage.h"
@@ -7,8 +9,10 @@ int main(int argc, char *argv[]) {
 	std::string exe(argv[0]);
 	ConfigStorage *cfg = ConfigStorage::GetInstance();
 	Client *vnc_client;
-	std::string ini, server_ip;
-	bool alive;
+	std::string ini;
+	static struct termios oldt, newt;
+	char c;
+	bool run = true;
 
 	ini = exe + ".ini";
 	cfg->Initialize(exe, ini);
@@ -21,34 +25,47 @@ int main(int argc, char *argv[]) {
 	fprintf(stderr, "Failed to initialize VNC client\n");
 		return -1;
 	}
-	server_ip = vnc_client->GetServerIP();
-	alive = vnc_client->IsServerAlive(server_ip);
-	fprintf(stdout, "Server %s is %s alive\n", server_ip.c_str(),
-			alive ? "" : "not");
-	if (!alive) {
-		delete vnc_client;
-		delete cfg;
-		return -1;
-	}
 	fprintf(stdout, "Trying to connect to %s\n", cfg->GetServer().c_str());
 	if (vnc_client->Connect() < 0) {
 		fprintf(stderr, "Failed to start VNC client\n");
 		return -1;
 	}
-	while (1) {
-		Client::event_t evt;
+	tcgetattr(STDIN_FILENO, &oldt);
+	newt = oldt;
+	newt.c_lflag &= ~(ICANON);
+	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+	while (run) {
+		fprintf(stdout, "q to quit, h for Home or e for Escape:\n");
+		c = getchar();
+		switch (c) {
+		case 'q':
+			run = false;
+			break;
+		case 'h':
+		{
+			Client::event_t evt;
 
-		sleep(10);
-		fprintf(stdout, "KEY_HOME\n");
-		evt.what = Client::EVT_KEY;
-		evt.data.key = Client::KEY_HOME;
-		vnc_client->PostEvent(evt);
-		sleep(10);
-		fprintf(stdout, "KEY_BACK\n");
-		evt.what = Client::EVT_KEY;
-		evt.data.key = Client::KEY_BACK;
-		vnc_client->PostEvent(evt);
+			fprintf(stdout, "KEY_HOME\n");
+			evt.what = Client::EVT_KEY;
+			evt.data.key = Client::KEY_HOME;
+			vnc_client->PostEvent(evt);
+			break;
+		}
+		case 'e':
+		{
+			Client::event_t evt;
+
+			fprintf(stdout, "KEY_BACK\n");
+			evt.what = Client::EVT_KEY;
+			evt.data.key = Client::KEY_BACK;
+			vnc_client->PostEvent(evt);
+			break;
+		}
+		default:
+			break;
+		}
 	}
+	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 	if (vnc_client) {
 		delete vnc_client;
 	}

@@ -18,9 +18,6 @@ public:
 	};
 
 	int Initialize(void *_private);
-	virtual bool IsServerAlive(std::string &host) {
-		return false;
-	}
 	std::string GetServerIP();
 	int Connect();
 
@@ -60,6 +57,7 @@ protected:
 
 	virtual void SetLogging() = 0;
 	int Poll();
+	void Cleanup();
 	int GetEvent(event_t &evt);
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
 	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) = 0;
