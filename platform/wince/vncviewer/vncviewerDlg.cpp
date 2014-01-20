@@ -33,6 +33,9 @@ CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 }
 
 CvncviewerDlg::~CvncviewerDlg() {
+#ifdef SHOW_POINTER_TRACE
+	m_TraceQueue.clear();
+#endif
 }
 
 void CvncviewerDlg::DoDataExchange(CDataExchange* pDX) {
@@ -135,10 +138,31 @@ void CvncviewerDlg::OnSize(UINT /*nType*/, int /*cx*/, int /*cy*/) {
 }
 #endif
 
+#ifdef SHOW_POINTER_TRACE
+void CvncviewerDlg::AddTracePoint(trace_point_type_e type, LONG x, LONG y) {
+	RECT rect;
+	trace_point_t trace;
+
+	trace.type = type;
+	trace.x = x;
+	trace.y = y;
+	m_TraceQueue.push_back(trace);
+
+	rect.left = x;
+	rect.right = x + TRACE_POINT_BAR_SZ;
+	rect.top = y;
+	rect.bottom = y + TRACE_POINT_BAR_SZ;
+	InvalidateRect(&rect, FALSE);
+	KillTimer(ID_TIMER_TRACE);
+	SetTimer(ID_TIMER_TRACE, ID_TIMER_TRACE_DELAY, NULL);
+}
+#endif
 
 void CvncviewerDlg::OnLButtonUp(UINT nFlags, CPoint point) {
 	CDialog::OnLButtonUp(nFlags, point);
-
+#ifdef SHOW_POINTER_TRACE
+	AddTracePoint(TRACE_POINT_UP, point.x, point.y);
+#endif
 	m_SwipeUpPointX = point.x;
 	m_SwipeUpPointY = point.y;
 	if (true == m_SwipeActive) {
@@ -152,6 +176,9 @@ void CvncviewerDlg::OnLButtonUp(UINT nFlags, CPoint point) {
 void CvncviewerDlg::OnLButtonDown(UINT nFlags, CPoint point) {
 	CDialog::OnLButtonDown(nFlags, point);
 
+#ifdef SHOW_POINTER_TRACE
+	AddTracePoint(TRACE_POINT_DOWN, point.x, point.y);
+#endif
 	if (vnc_client) {
 		if (false == m_SwipeActive) {
 			Client::event_t evt;
@@ -167,6 +194,9 @@ void CvncviewerDlg::OnLButtonDown(UINT nFlags, CPoint point) {
 void CvncviewerDlg::OnMouseMove(UINT nFlags, CPoint point) {
 	CDialog::OnMouseMove(nFlags, point);
 
+#ifdef SHOW_POINTER_TRACE
+	AddTracePoint(TRACE_POINT_MOVE, point.x, point.y);
+#endif
 	if (vnc_client && (nFlags & MK_LBUTTON)) {
 		Client::event_t evt;
 		evt.what = Client::EVT_MOVE;
@@ -193,14 +223,15 @@ BOOL CvncviewerDlg::OnEraseBkgnd(CDC* pDC)
 
 void CvncviewerDlg::OnPaint()
 {
+	PAINTSTRUCT ps;
+	CDC *pDC = BeginPaint(&ps);
+
 	if (m_RenderingEnabled && vnc_client) {
 		CBitmap *bitmap = CBitmap::FromHandle(
 			static_cast<HBITMAP>(vnc_client->GetDrawingContext()));
 		if (bitmap) {
-			PAINTSTRUCT ps;
 			CDC dcMem;
 			LONG x, y, w, h;
-			CDC *pDC = BeginPaint(&ps);
 
 			x = ps.rcPaint.left;
 			y = ps.rcPaint.top;
@@ -214,9 +245,58 @@ void CvncviewerDlg::OnPaint()
 			pDC->BitBlt(x, y, w, h, &dcMem, x, y, SRCCOPY);
 			dcMem.SelectObject(old_bitmap);
 			dcMem.DeleteDC();
-			EndPaint(&ps);
 		}
 	}
+#ifdef SHOW_POINTER_TRACE
+	{
+		COLORREF color;
+		RECT r;
+
+		for (size_t i = 0; i < m_TraceQueue.size(); i++) {
+			switch (m_TraceQueue[i].type) {
+				case TRACE_POINT_DOWN:
+				{
+					color = RGB(255, 0, 0);
+					break;
+				}
+				case TRACE_POINT_MOVE:
+				{
+					color = RGB(0, 255, 0);
+					break;
+				}
+				case TRACE_POINT_UP:
+				{
+					color = RGB(0, 0, 255);
+					break;
+				}
+				default:
+				{
+					break;
+				}
+			}
+
+			r.left = m_TraceQueue[i].x;
+			r.right = r.left + TRACE_POINT_BAR_SZ;
+			r.top = m_TraceQueue[i].y;
+			r.bottom = r.top + TRACE_POINT_BAR_SZ;
+
+			{
+				CBrush brush(color);
+				CBrush* old_brush = pDC->SelectObject(&brush);
+
+				CPen pen;
+				pen.CreatePen(PS_SOLID, 3, color);
+				CPen* old_pen = pDC->SelectObject(&pen);
+				pDC->FillRect(&r, &brush);
+				pDC->SelectObject(old_brush);
+				pDC->SelectObject(old_pen);
+			}
+			DEBUGMSG(true, (_T("touch at x=%d y=%d c=%lu\r\n"),
+				m_TraceQueue[i].x, m_TraceQueue[i].y, color));
+		}
+	}
+#endif
+	EndPaint(&ps);
 }
 
 void CvncviewerDlg::SetHotkeyHandler(bool set) {
@@ -323,6 +403,18 @@ void CvncviewerDlg::OnTimer(UINT_PTR nIDEvent)
 			vnc_client->PostEvent(evt);
 		}
 	}
+#ifdef SHOW_POINTER_TRACE
+	else  if (ID_TIMER_TRACE == nIDEvent) {
+		RECT r;
+
+		KillTimer(ID_TIMER_TRACE);
+		m_TraceQueue.clear();
+		GetWindowRect(&r);
+		InvalidateRect(&r, FALSE);
+		DEBUGMSG(true, (_T("Invalidate x=%d y=%d w=%d h=%d\r\n"),
+			r.left, r.top, r.right, r.bottom));
+	}
+#endif
 	CDialog::OnTimer(nIDEvent);
 }
 
