@@ -8,8 +8,6 @@
 #include "mutex_factory.h"
 #include "thread_factory.h"
 
-class ConnectionWatchdog;
-
 class Client {
 public:
 	Client();
@@ -59,7 +57,6 @@ protected:
 	std::deque< event_t > m_MessageQueue;
 	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
 	ConfigStorage *m_ConfigStorage;
-	ConnectionWatchdog *m_ConnectionWatchdog;
 
 	virtual void SetLogging() = 0;
 	int Poll();
