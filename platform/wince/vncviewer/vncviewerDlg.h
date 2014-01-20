@@ -66,9 +66,11 @@ private:
 	static LRESULT CALLBACK SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	void SetHotkeyHandler(bool set);
 	void HandleMapKey(bool long_press);
+	void Cleanup();
 public:
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnPaint();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnOK();
 };
