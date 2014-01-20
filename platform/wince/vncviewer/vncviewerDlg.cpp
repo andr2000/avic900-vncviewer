@@ -249,24 +249,39 @@ void CvncviewerDlg::OnPaint()
 	}
 #ifdef SHOW_POINTER_TRACE
 	{
-		COLORREF color;
+		CBrush *brush, *old_brush;
+		CPen *pen, *old_pen;
 		RECT r;
+		CPen pen_red, pen_green, pen_blue;
 
+		CBrush brush_red(RGB(255, 0, 0));
+		CBrush brush_green(RGB(0, 255, 0));
+		CBrush brush_blue(RGB(0, 0, 255));
+
+		pen_red.CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
+		pen_green.CreatePen(PS_SOLID, 3, RGB(0, 255, 0));
+		pen_blue.CreatePen(PS_SOLID, 3, RGB(0, 0, 255));
+
+		old_brush = pDC->SelectObject(&brush_red);
+		old_pen = pDC->SelectObject(&pen_red);
 		for (size_t i = 0; i < m_TraceQueue.size(); i++) {
 			switch (m_TraceQueue[i].type) {
 				case TRACE_POINT_DOWN:
 				{
-					color = RGB(255, 0, 0);
+					brush = &brush_red;
+					pen = &pen_red;
 					break;
 				}
 				case TRACE_POINT_MOVE:
 				{
-					color = RGB(0, 255, 0);
+					brush = &brush_green;
+					pen = &pen_green;
 					break;
 				}
 				case TRACE_POINT_UP:
 				{
-					color = RGB(0, 0, 255);
+					brush = &brush_blue;
+					pen = &pen_blue;
 					break;
 				}
 				default:
@@ -280,20 +295,15 @@ void CvncviewerDlg::OnPaint()
 			r.top = m_TraceQueue[i].y;
 			r.bottom = r.top + TRACE_POINT_BAR_SZ;
 
-			{
-				CBrush brush(color);
-				CBrush* old_brush = pDC->SelectObject(&brush);
+			pDC->SelectObject(&brush_red);
+			pDC->SelectObject(&pen_red);
+			pDC->FillRect(&r, brush);
 
-				CPen pen;
-				pen.CreatePen(PS_SOLID, 3, color);
-				CPen* old_pen = pDC->SelectObject(&pen);
-				pDC->FillRect(&r, &brush);
-				pDC->SelectObject(old_brush);
-				pDC->SelectObject(old_pen);
-			}
-			DEBUGMSG(true, (_T("touch at x=%d y=%d c=%lu\r\n"),
-				m_TraceQueue[i].x, m_TraceQueue[i].y, color));
+			DEBUGMSG(true, (_T("touch at x=%d y=%d\r\n"),
+				m_TraceQueue[i].x, m_TraceQueue[i].y));
 		}
+		pDC->SelectObject(old_brush);
+		pDC->SelectObject(old_pen);
 	}
 #endif
 	EndPaint(&ps);
