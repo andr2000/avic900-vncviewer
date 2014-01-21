@@ -113,7 +113,7 @@ BOOL CvncviewerDlg::OnInitDialog()
 	server = m_ConfigStorage->GetServer();
 	widestr = std::wstring(server.begin(), server.end());
 	/* let's rock */
-	for (i = 0; i < CONNECT_MAX_TRY; i++) {
+	for (i = 0; i <= CONNECT_MAX_TRY; i++) {
 		if (vnc_client->Initialize(static_cast<void *>(this)) < 0) {
 			return true;
 		}
