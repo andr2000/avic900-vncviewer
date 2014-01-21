@@ -27,9 +27,6 @@ CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 	m_ConfigStorage = NULL;
 	m_FilterAutoRepeat = false;
 	m_LongPress = false;
-	m_SwipeActive = false;
-	m_SwipeUpPointX = -1;
-	m_SwipeUpPointY = -1;
 	memset(&m_ServerRect, 0, sizeof(m_ServerRect));
 	memset(&m_ClientRect, 0, sizeof(m_ClientRect));
 	m_NeedScaling = false;
@@ -179,14 +176,14 @@ void CvncviewerDlg::OnLButtonUp(UINT nFlags, CPoint point) {
 #ifdef SHOW_POINTER_TRACE
 	AddTracePoint(TRACE_POINT_UP, point.x, point.y);
 #endif
-	m_SwipeUpPointX = point.x;
-	m_SwipeUpPointY = point.y;
-	if (true == m_SwipeActive) {
-		/* restart timer running timer */
-		KillTimer(ID_TIMER_SWIPE);
+	if (vnc_client) {
+		Client::event_t evt;
+		evt.what = Client::EVT_MOUSE;
+		evt.data.point.is_down = 0;
+		evt.data.point.x = point.x;
+		evt.data.point.y = point.y;
+		vnc_client->PostEvent(evt);
 	}
-	SetTimer(ID_TIMER_SWIPE, ID_TIMER_SWIPE_DELAY, NULL);
-	m_SwipeActive = true;
 }
 
 void CvncviewerDlg::OnLButtonDown(UINT nFlags, CPoint point) {
@@ -196,14 +193,12 @@ void CvncviewerDlg::OnLButtonDown(UINT nFlags, CPoint point) {
 	AddTracePoint(TRACE_POINT_DOWN, point.x, point.y);
 #endif
 	if (vnc_client) {
-		if (false == m_SwipeActive) {
-			Client::event_t evt;
-			evt.what = Client::EVT_MOUSE;
-			evt.data.point.is_down = 1;
-			evt.data.point.x = point.x;
-			evt.data.point.y = point.y;
-			vnc_client->PostEvent(evt);
-		}
+		Client::event_t evt;
+		evt.what = Client::EVT_MOUSE;
+		evt.data.point.is_down = 1;
+		evt.data.point.x = point.x;
+		evt.data.point.y = point.y;
+		vnc_client->PostEvent(evt);
 	}
 }
 
@@ -444,17 +439,6 @@ void CvncviewerDlg::OnTimer(UINT_PTR nIDEvent)
 		m_FilterAutoRepeat = false;
 		m_LongPress = true;
 		HandleMapKey(true);
-	} else  if (ID_TIMER_SWIPE == nIDEvent) {
-		KillTimer(ID_TIMER_SWIPE);
-		m_SwipeActive = false;
-		if (vnc_client) {
-			Client::event_t evt;
-			evt.what = Client::EVT_MOUSE;
-			evt.data.point.is_down = 0;
-			evt.data.point.x = m_SwipeUpPointX;
-			evt.data.point.y = m_SwipeUpPointY;
-			vnc_client->PostEvent(evt);
-		}
 	}
 #ifdef SHOW_POINTER_TRACE
 	else  if (ID_TIMER_TRACE == nIDEvent) {

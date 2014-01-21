@@ -51,12 +51,8 @@ private:
 	WNDPROC m_HotkeyWndProc;
 	bool m_FilterAutoRepeat;
 	bool m_LongPress;
-	bool m_SwipeActive;
-	LONG m_SwipeUpPointX;
-	LONG m_SwipeUpPointY;
 	enum ID_TIMER {
 		ID_TIMER_LONG_PRESS = 1,
-		ID_TIMER_SWIPE
 #ifdef SHOW_POINTER_TRACE
 		, ID_TIMER_TRACE
 #endif
