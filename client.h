@@ -73,6 +73,9 @@ private:
 	static rfbBool MallocFrameBuffer(rfbClient *client);
 	static void GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
 	void HandleKey(key_t key);
+
+	static const char VERSION[];
+	static const char COPYRIGHT[];
 };
 
 #endif
