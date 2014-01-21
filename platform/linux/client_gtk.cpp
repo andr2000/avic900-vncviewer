@@ -8,6 +8,7 @@ Client_Gtk::Client_Gtk() : Client() {
 }
 
 Client_Gtk::~Client_Gtk() {
+	Cleanup();
 }
 
 void Client_Gtk::Logger(const char *format, ...) {
