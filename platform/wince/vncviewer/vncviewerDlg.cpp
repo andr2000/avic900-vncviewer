@@ -110,13 +110,13 @@ BOOL CvncviewerDlg::OnInitDialog()
 	rcDesktop.bottom = rcDesktop.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
 	MoveWindow(rcDesktop, false);
 
-	if (vnc_client->Initialize(static_cast<void *>(this)) < 0) {
-		return true;
-	}
 	server = m_ConfigStorage->GetServer();
 	widestr = std::wstring(server.begin(), server.end());
 	/* let's rock */
 	for (i = 0; i < CONNECT_MAX_TRY; i++) {
+		if (vnc_client->Initialize(static_cast<void *>(this)) < 0) {
+			return true;
+		}
 		if (0 == vnc_client->Connect()) {
 			break;
 		}
@@ -128,7 +128,7 @@ BOOL CvncviewerDlg::OnInitDialog()
 	}
 	if (i == CONNECT_MAX_TRY) {
 		Message(MB_OK, _T("Error"),
-			_T("Was not able to connect to %ls\r\nTerminating now"), widestr.c_str());
+			_T("Was not able to connect to %ls\r\nGiving up now"), widestr.c_str());
 		PostMessage(WM_CLOSE);
 		return true;
 	}
