@@ -54,11 +54,10 @@ private:
 	enum ID_TIMER {
 		ID_TIMER_LONG_PRESS = 1,
 #ifdef SHOW_POINTER_TRACE
-		, ID_TIMER_TRACE
+		ID_TIMER_TRACE
 #endif
 	};
 	static const UINT ID_TIMER_LONG_PRESS_DELAY = 1000;
-	static const UINT ID_TIMER_SWIPE_DELAY = 100;
 #ifdef SHOW_POINTER_TRACE
 	static const UINT ID_TIMER_TRACE_DELAY = 5000;
 #endif
