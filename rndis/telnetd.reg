@@ -1,0 +1,11 @@
+[HKEY_LOCAL_MACHINE\Services\TELNETD\Accept\TCP-23]
+"SockAddr"=hex:02,00,00,17,00,00,00,00,00,00,00,00,00,00,00,00
+
+[HKEY_LOCAL_MACHINE\Services\TELNETD]
+   "Context"=dword:1
+   "FriendlyName"="Telnet"
+   "Dll"="TELNETD.Dll"
+   "Order"=dword:9
+   "Keep"=dword:1
+   "Prefix"="TEL"
+   "Index"=dword:0
