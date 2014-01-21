@@ -57,10 +57,22 @@ BEGIN_MESSAGE_MAP(CvncviewerDlg, CDialog)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
+int CvncviewerDlg::Message(DWORD type, wchar_t *caption, wchar_t *format, ...) {
+	wchar_t msg_text[2 * MAX_PATH + 1];
+	va_list vargs;
+
+	va_start(vargs, format);
+	StringCchVPrintf(msg_text, sizeof(msg_text), format, vargs);
+	va_end(vargs);
+	return MessageBox(msg_text, caption, type);
+}
 
 BOOL CvncviewerDlg::OnInitDialog()
 {
 	int i;
+	std::wstring widestr;
+	std::string server;
+
 	CDialog::OnInitDialog();
 
 	SetWindowText(CvncviewerApp::APP_TITLE);
@@ -84,8 +96,8 @@ BOOL CvncviewerDlg::OnInitDialog()
 
 	vnc_client = ClientFactory::GetInstance();
 	if (NULL == vnc_client) {
-		MessageBox(_T("Failed to intstaniate VNC client\r\nShit happens"),
-			_T("Error"), MB_OK);
+		Message(MB_OK, _T("Error"),
+			_T("Failed to intstaniate VNC client\r\nShit happens"));
 		PostMessage(WM_CLOSE);
 		return true;
 	}
@@ -101,21 +113,22 @@ BOOL CvncviewerDlg::OnInitDialog()
 	if (vnc_client->Initialize(static_cast<void *>(this)) < 0) {
 		return true;
 	}
-
+	server = m_ConfigStorage->GetServer();
+	widestr = std::wstring(server.begin(), server.end());
 	/* let's rock */
 	for (i = 0; i < CONNECT_MAX_TRY; i++) {
 		if (0 == vnc_client->Connect()) {
 			break;
 		}
-		if (IDCANCEL == MessageBox(_T("Failed to connect to the server\r\nRetry?"),
-			_T("Error"), MB_RETRYCANCEL)) {
+		if (IDCANCEL == Message(MB_RETRYCANCEL, _T("Error"),
+			_T("Failed to connect to %ls\r\nRetry?"), widestr.c_str())) {
 				PostMessage(WM_CLOSE);
 				return true;
 		}
 	}
 	if (i == CONNECT_MAX_TRY) {
-		MessageBox(_T("Was not able to connect to the VNC server\r\nTerminating now"),
-			_T("Error"), MB_OK);
+		Message(MB_OK, _T("Error"),
+			_T("Was not able to connect to %ls\r\nTerminating now"), widestr.c_str());
 		PostMessage(WM_CLOSE);
 		return true;
 	}
