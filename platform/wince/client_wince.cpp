@@ -77,10 +77,19 @@ void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, i
 	CDialog *dlg = static_cast<CDialog *>(m_Private);
 	RECT ps;
 
-	ps.left = x;
-	ps.top = y;
-	ps.right = x + w;
-	ps.bottom = y + h;
+	if (m_NeedScaling) {
+		/* TODO: we invalidate the whole screen, otherwise we have partial
+		 updates. This needs to be fixed */
+		ps.left = 0;
+		ps.top = 0;
+		ps.right = client->width;
+		ps.bottom = client->height;
+	} else {
+		ps.left = x;
+		ps.top = y;
+		ps.right = x + w;
+		ps.bottom = y + h;
+	}
 	dlg->InvalidateRect(&ps, FALSE);
 	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
 }

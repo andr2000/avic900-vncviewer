@@ -20,6 +20,8 @@ public:
 	int Initialize(void *_private);
 	std::string GetServerIP();
 	int Connect();
+	int GetScreenSize(int &width, int &height);
+	void SetClientSize(int width, int height);
 
 	enum event_type_t {
 		EVT_MOUSE,
@@ -54,6 +56,10 @@ protected:
 	std::deque< event_t > m_MessageQueue;
 	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
 	ConfigStorage *m_ConfigStorage;
+
+	float m_ScalingFactorX;
+	float m_ScalingFactorY;
+	bool m_NeedScaling;
 
 	virtual void SetLogging() = 0;
 	int Poll();
