@@ -70,7 +70,10 @@ private:
 	static const int CONNECT_MAX_TRY = 3;
 	Client *vnc_client;
 	bool m_RenderingEnabled;
-
+	RECT m_ServerRect;
+	RECT m_ClientRect;
+	bool m_NeedScaling;
+	bool m_SetupScaling;
 	ConfigStorage *m_ConfigStorage;
 
 	static LRESULT CALLBACK SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);

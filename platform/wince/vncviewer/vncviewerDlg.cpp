@@ -30,6 +30,10 @@ CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 	m_SwipeActive = false;
 	m_SwipeUpPointX = -1;
 	m_SwipeUpPointY = -1;
+	memset(&m_ServerRect, 0, sizeof(m_ServerRect));
+	memset(&m_ClientRect, 0, sizeof(m_ClientRect));
+	m_NeedScaling = false;
+	m_SetupScaling = true;
 }
 
 CvncviewerDlg::~CvncviewerDlg() {
@@ -103,12 +107,11 @@ BOOL CvncviewerDlg::OnInitDialog()
 	}
 
 	/* go full screen */
-	CRect rcDesktop;
-	rcDesktop.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
-	rcDesktop.right = rcDesktop.left + GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	rcDesktop.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
-	rcDesktop.bottom = rcDesktop.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	MoveWindow(rcDesktop, false);
+	m_ClientRect.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
+	m_ClientRect.right = m_ClientRect.left + GetSystemMetrics(SM_CXVIRTUALSCREEN);
+	m_ClientRect.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
+	m_ClientRect.bottom = m_ClientRect.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
+	MoveWindow(&m_ClientRect, false);
 
 	server = m_ConfigStorage->GetServer();
 	widestr = std::wstring(server.begin(), server.end());
@@ -246,6 +249,28 @@ void CvncviewerDlg::OnPaint()
 			CDC dcMem;
 			LONG x, y, w, h;
 
+			if (m_SetupScaling) {
+				int width, height;
+
+				m_SetupScaling = false;
+				vnc_client->GetScreenSize(width, height);
+				m_ServerRect.left = 0;
+				m_ServerRect.top = 0;
+				m_ServerRect.right = width;
+				m_ServerRect.bottom = height;
+				DEBUGMSG(true, (_T("Server screen is %dx%d\r\n"), m_ServerRect.right, m_ServerRect.bottom));
+				/* decide if we need to fit */
+				if ((m_ServerRect.right > m_ClientRect.right) || (m_ServerRect.bottom > m_ClientRect.bottom)) {
+					vnc_client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
+					DEBUGMSG(true, (_T("Will fit the screen\r\n")));
+					m_NeedScaling = true;
+				}
+				if ((m_ServerRect.right < m_ClientRect.right) && (m_ServerRect.bottom < m_ClientRect.bottom)) {
+					vnc_client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
+					DEBUGMSG(true, (_T("Will expand\r\n")));
+					m_NeedScaling = true;
+				}
+			}
 			x = ps.rcPaint.left;
 			y = ps.rcPaint.top;
 			w = ps.rcPaint.right - ps.rcPaint.left;
@@ -255,7 +280,12 @@ void CvncviewerDlg::OnPaint()
 
 			dcMem.CreateCompatibleDC(pDC);
 			CBitmap *old_bitmap = dcMem.SelectObject(bitmap);
-			pDC->BitBlt(x, y, w, h, &dcMem, x, y, SRCCOPY);
+			if (m_NeedScaling) {
+				pDC->StretchBlt(m_ClientRect.left, m_ClientRect.top, m_ClientRect.right, m_ClientRect.bottom, &dcMem,
+					m_ServerRect.left, m_ServerRect.top, m_ServerRect.right, m_ServerRect.bottom, SRCCOPY);
+			} else {
+				pDC->BitBlt(x, y, w, h, &dcMem, x, y, SRCCOPY);
+			}
 			dcMem.SelectObject(old_bitmap);
 			dcMem.DeleteDC();
 		}

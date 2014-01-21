@@ -11,6 +11,9 @@ Client::Client() {
 	m_Mutex = MutexFactory::GetNewMutex();
 	m_NeedsVirtInpHack = false;
 	m_ConfigStorage = NULL;
+	m_ScalingFactorX = 1.0f;
+	m_ScalingFactorY = 1.0f;
+	m_NeedScaling = false;
 }
 
 Client::~Client() {
@@ -93,6 +96,23 @@ int Client::Connect() {
 	return m_Thread->Start();
 }
 
+int Client::GetScreenSize(int &width, int &height) {
+	width = 0;
+	height = 0;
+	if (NULL == m_Client) {
+		return -1;
+	}
+	width = m_Client->width;
+	height = m_Client->height;
+	return 0;
+}
+
+void Client::SetClientSize(int width, int height) {
+	m_ScalingFactorX = static_cast<float>(m_Client->width) / width;
+	m_ScalingFactorY = static_cast<float>(m_Client->height) / height;
+	m_NeedScaling = m_Client->width != width || m_Client->height != height;
+}
+
 rfbBool Client::MallocFrameBuffer(rfbClient *client) {
 	return Client::GetInstance()->OnMallocFrameBuffer(client);
 }
@@ -169,7 +189,9 @@ int Client::Poll() {
 		/* fall through */
 		case EVT_MOVE:
 		{
-			SendPointerEvent(m_Client, evt.data.point.x, evt.data.point.y,
+			SendPointerEvent(m_Client,
+				static_cast<int>(evt.data.point.x * m_ScalingFactorX),
+				static_cast<int>(evt.data.point.y * m_ScalingFactorY),
 				evt.data.point.is_down ? rfbButton1Mask : 0);
 			rfbClientLog("Mouse event at %d:%d, is_down %d\n",
 				evt.data.point.x, evt.data.point.y, evt.data.point.is_down);
