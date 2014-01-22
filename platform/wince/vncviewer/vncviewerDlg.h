@@ -63,7 +63,7 @@ private:
 #endif
 
 	static const int CONNECT_MAX_TRY = 3;
-	Client *vnc_client;
+	Client *m_Client;
 	bool m_RenderingEnabled;
 	RECT m_ServerRect;
 	RECT m_ClientRect;
