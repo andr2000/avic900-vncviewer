@@ -26,8 +26,7 @@ public:
 	enum event_type_t {
 		EVT_MOUSE,
 		EVT_MOVE,
-		EVT_KEY,
-		EVT_CONNECTION_LOST
+		EVT_KEY
 	};
 	enum key_t {
 		KEY_BACK,
