@@ -19,7 +19,7 @@ CvncviewerDlg *CvncviewerDlg::m_Instance = NULL;
 
 CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CvncviewerDlg::IDD, pParent) {
-	vnc_client = NULL;
+	m_Client = NULL;
 	m_RenderingEnabled = false;
 	m_HotkeyHwnd = NULL;
 	m_HotkeyWndProc = NULL;
@@ -95,8 +95,8 @@ BOOL CvncviewerDlg::OnInitDialog()
 
 	m_ConfigStorage->Initialize(exe, ini);
 
-	vnc_client = ClientFactory::GetInstance();
-	if (NULL == vnc_client) {
+	m_Client = ClientFactory::GetInstance();
+	if (NULL == m_Client) {
 		Message(MB_OK, _T("Error"),
 			_T("Failed to intstaniate VNC client\r\nShit happens"));
 		PostMessage(WM_CLOSE);
@@ -114,10 +114,10 @@ BOOL CvncviewerDlg::OnInitDialog()
 	widestr = std::wstring(server.begin(), server.end());
 	/* let's rock */
 	for (i = 0; i <= CONNECT_MAX_TRY; i++) {
-		if (vnc_client->Initialize(static_cast<void *>(this)) < 0) {
+		if (m_Client->Initialize(static_cast<void *>(this)) < 0) {
 			return true;
 		}
-		if (0 == vnc_client->Connect()) {
+		if (0 == m_Client->Connect()) {
 			break;
 		}
 		if (IDCANCEL == Message(MB_RETRYCANCEL, _T("Error"),
@@ -176,13 +176,13 @@ void CvncviewerDlg::OnLButtonUp(UINT nFlags, CPoint point) {
 #ifdef SHOW_POINTER_TRACE
 	AddTracePoint(TRACE_POINT_UP, point.x, point.y);
 #endif
-	if (vnc_client) {
+	if (m_Client) {
 		Client::event_t evt;
 		evt.what = Client::EVT_MOUSE;
 		evt.data.point.is_down = 0;
 		evt.data.point.x = point.x;
 		evt.data.point.y = point.y;
-		vnc_client->PostEvent(evt);
+		m_Client->PostEvent(evt);
 	}
 }
 
@@ -192,13 +192,13 @@ void CvncviewerDlg::OnLButtonDown(UINT nFlags, CPoint point) {
 #ifdef SHOW_POINTER_TRACE
 	AddTracePoint(TRACE_POINT_DOWN, point.x, point.y);
 #endif
-	if (vnc_client) {
+	if (m_Client) {
 		Client::event_t evt;
 		evt.what = Client::EVT_MOUSE;
 		evt.data.point.is_down = 1;
 		evt.data.point.x = point.x;
 		evt.data.point.y = point.y;
-		vnc_client->PostEvent(evt);
+		m_Client->PostEvent(evt);
 	}
 }
 
@@ -208,13 +208,13 @@ void CvncviewerDlg::OnMouseMove(UINT nFlags, CPoint point) {
 #ifdef SHOW_POINTER_TRACE
 	AddTracePoint(TRACE_POINT_MOVE, point.x, point.y);
 #endif
-	if (vnc_client && (nFlags & MK_LBUTTON)) {
+	if (m_Client && (nFlags & MK_LBUTTON)) {
 		Client::event_t evt;
 		evt.what = Client::EVT_MOVE;
 		evt.data.point.is_down = 1;
 		evt.data.point.x = point.x;
 		evt.data.point.y = point.y;
-		vnc_client->PostEvent(evt);
+		m_Client->PostEvent(evt);
 	}
 }
 
@@ -237,9 +237,9 @@ void CvncviewerDlg::OnPaint()
 	PAINTSTRUCT ps;
 	CDC *pDC = BeginPaint(&ps);
 
-	if (m_RenderingEnabled && vnc_client) {
+	if (m_RenderingEnabled && m_Client) {
 		CBitmap *bitmap = CBitmap::FromHandle(
-			static_cast<HBITMAP>(vnc_client->GetDrawingContext()));
+			static_cast<HBITMAP>(m_Client->GetDrawingContext()));
 		if (bitmap) {
 			CDC dcMem;
 			LONG x, y, w, h;
@@ -248,7 +248,7 @@ void CvncviewerDlg::OnPaint()
 				int width, height;
 
 				m_SetupScaling = false;
-				vnc_client->GetScreenSize(width, height);
+				m_Client->GetScreenSize(width, height);
 				m_ServerRect.left = 0;
 				m_ServerRect.top = 0;
 				m_ServerRect.right = width;
@@ -256,12 +256,12 @@ void CvncviewerDlg::OnPaint()
 				DEBUGMSG(true, (_T("Server screen is %dx%d\r\n"), m_ServerRect.right, m_ServerRect.bottom));
 				/* decide if we need to fit */
 				if ((m_ServerRect.right > m_ClientRect.right) || (m_ServerRect.bottom > m_ClientRect.bottom)) {
-					vnc_client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
+					m_Client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
 					DEBUGMSG(true, (_T("Will fit the screen\r\n")));
 					m_NeedScaling = true;
 				}
 				if ((m_ServerRect.right < m_ClientRect.right) && (m_ServerRect.bottom < m_ClientRect.bottom)) {
-					vnc_client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
+					m_Client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
 					DEBUGMSG(true, (_T("Will expand\r\n")));
 					m_NeedScaling = true;
 				}
@@ -417,7 +417,7 @@ LRESULT CALLBACK CvncviewerDlg::SubWndProc(HWND hWnd, UINT message, WPARAM wPara
 }
 
 void CvncviewerDlg::HandleMapKey(bool long_press) {
-	if (vnc_client) {
+	if (m_Client) {
 		Client::event_t evt;
 		evt.what = Client::EVT_KEY;
 		if (long_press) {
@@ -427,7 +427,7 @@ void CvncviewerDlg::HandleMapKey(bool long_press) {
 			/* normal press */
 			evt.data.key = Client::KEY_BACK;
 		}
-		vnc_client->PostEvent(evt);
+		m_Client->PostEvent(evt);
 	}
 }
 
@@ -457,9 +457,9 @@ void CvncviewerDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CvncviewerDlg::Cleanup() {
 	SetHotkeyHandler(false);
-	if (vnc_client) {
-		delete vnc_client;
-		vnc_client = NULL;
+	if (m_Client) {
+		delete m_Client;
+		m_Client = NULL;
 	}
 	if (m_ConfigStorage) {
 		delete m_ConfigStorage;
