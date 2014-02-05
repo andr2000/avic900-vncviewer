@@ -28,6 +28,7 @@ public:
 	bool LoggingEnabled();
 	std::string GetServer();
 	bool NeedsVirtualInputHack();
+	bool CompressionEnabled();
 protected:
 	static ConfigStorage *m_Instance;
 	static const std::string SECTION_NAME;
