@@ -207,7 +207,7 @@ return TRUE;
 				}
 
 #ifdef WINCE
-				(*(uint8_t *)buf) += result;
+				(uint8_t *)buf += result;
 #else
 				buf+=result;
 #endif
