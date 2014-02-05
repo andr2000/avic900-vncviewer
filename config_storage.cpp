@@ -20,6 +20,13 @@ void ConfigStorage::Initialize(std::string &exe, std::string &ini) {
 	INIReader::Initialize(ini);
 	Clear();
 	m_Args.push_back(exe);
+	/* supported encodings */
+	m_Args.push_back("-encodings");
+	if (CompressionEnabled()) {
+		m_Args.push_back("tight zrle ultra copyrect hextile zlib corre rre raw");
+	} else {
+		m_Args.push_back("ultra copyrect hextile corre rre raw");
+	}
 	/* the last one MUST be the server ip + port */
 	m_Args.push_back(GetServer());
 	m_ArgC = m_Args.size();
@@ -61,4 +68,8 @@ bool ConfigStorage::LoggingEnabled() {
 	bool def = false;
 #endif
 	return GetBoolean(SECTION_NAME, "Logging", def);
+}
+
+bool ConfigStorage::CompressionEnabled() {
+	return GetBoolean(SECTION_NAME, "CompressionEnabled", false);
 }
