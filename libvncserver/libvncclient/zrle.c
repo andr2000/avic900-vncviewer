@@ -206,7 +206,11 @@ return TRUE;
 					return FALSE;
 				}
 
+#ifdef WINCE
+				(*(uint8_t *)buf) += result;
+#else
 				buf+=result;
+#endif
 				remaining-=result;
 			}
 	}
@@ -223,14 +227,18 @@ return TRUE;
 	return TRUE;
 }
 
+#ifndef WINCE
+#define __unaligned
+#endif
+
 #if REALBPP!=BPP && defined(UNCOMP) && UNCOMP!=0
 #if UNCOMP>0
-#define UncompressCPixel(pointer) ((*(CARDBPP*)pointer)>>UNCOMP)
+#define UncompressCPixel(pointer) ((*(CARDBPP __unaligned *)pointer)>>UNCOMP)
 #else
-#define UncompressCPixel(pointer) ((*(CARDBPP*)pointer)<<(-(UNCOMP)))
+#define UncompressCPixel(pointer) ((*(CARDBPP __unaligned *)pointer)<<(-(UNCOMP)))
 #endif
 #else
-#define UncompressCPixel(pointer) (*(CARDBPP*)pointer)
+#define UncompressCPixel(pointer) (*(CARDBPP __unaligned *)pointer)
 #endif
 
 static int HandleZRLETile(rfbClient* client,
