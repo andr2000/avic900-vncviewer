@@ -1,4 +1,5 @@
 *.ncb
 *.suo
+*.map
 Pocket PC 2003 (ARMV4)
 vncviewer.vcproj*user

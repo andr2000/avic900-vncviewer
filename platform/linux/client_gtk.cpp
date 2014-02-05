@@ -9,6 +9,9 @@ Client_Gtk::Client_Gtk() : Client() {
 
 Client_Gtk::~Client_Gtk() {
 	Cleanup();
+	if (m_FrameBuffer) {
+		delete m_FrameBuffer;
+	}
 }
 
 void Client_Gtk::Logger(const char *format, ...) {
@@ -40,6 +43,7 @@ rfbBool Client_Gtk::OnMallocFrameBuffer(rfbClient *client) {
 	client->updateRect.h = height;
 
 	/* create frambuffer */
+	m_FrameBuffer = new uint8_t[width * height * depth / sizeof(uint8_t)];
 	client->frameBuffer = m_FrameBuffer;
 	return TRUE;
 }
