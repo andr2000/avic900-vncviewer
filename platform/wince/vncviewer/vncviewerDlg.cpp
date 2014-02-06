@@ -20,7 +20,6 @@ CvncviewerDlg *CvncviewerDlg::m_Instance = NULL;
 CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CvncviewerDlg::IDD, pParent) {
 	m_Client = NULL;
-	m_RenderingEnabled = false;
 	m_HotkeyHwnd = NULL;
 	m_HotkeyWndProc = NULL;
 	m_Instance = this;
@@ -222,8 +221,7 @@ void CvncviewerDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 {
 	CDialog::OnActivate(nState, pWndOther, bMinimized);
 
-	m_RenderingEnabled = nState != WA_INACTIVE;
-	SetHotkeyHandler(m_RenderingEnabled);
+	SetHotkeyHandler(nState != WA_INACTIVE);
 }
 
 BOOL CvncviewerDlg::OnEraseBkgnd(CDC* pDC)
@@ -237,7 +235,7 @@ void CvncviewerDlg::OnPaint()
 	PAINTSTRUCT ps;
 	CDC *pDC = BeginPaint(&ps);
 
-	if (m_RenderingEnabled && m_Client) {
+	if (m_Client) {
 		CBitmap *bitmap = CBitmap::FromHandle(
 			static_cast<HBITMAP>(m_Client->GetDrawingContext()));
 		if (bitmap) {
