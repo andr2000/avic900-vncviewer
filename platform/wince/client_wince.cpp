@@ -17,16 +17,16 @@ Client_WinCE::~Client_WinCE() {
 }
 
 void Client_WinCE::Logger(const char *format, ...) {
-    va_list args;
-    char buf[LOG_BUF_SZ];
+	va_list args;
+	char buf[LOG_BUF_SZ];
 	wchar_t buf_w [LOG_BUF_SZ];
 
-    if(!rfbEnableClientLogging)
-      return;
-
-    va_start(args, format);
+	if (!rfbEnableClientLogging) {
+		return;
+	}
+	va_start(args, format);
 	_vsnprintf(buf, LOG_BUF_SZ, format, args);
-    va_end(args);
+	va_end(args);
 	mbstowcs(buf_w, buf, LOG_BUF_SZ);
 	DEBUGMSG(TRUE, (_T("%s\r\n"), buf_w));
 }
