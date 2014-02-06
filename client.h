@@ -66,6 +66,7 @@ protected:
 	int GetEvent(event_t &evt);
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
 	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) = 0;
+	virtual void OnShutdown() = 0;
 private:
 	bool m_NeedsVirtInpHack;
 	static int PollRFB(void *data);

@@ -20,6 +20,7 @@ Client::Client() {
 }
 
 Client::~Client() {
+	Cleanup();
 }
 
 void Client::Cleanup() {
@@ -175,11 +176,13 @@ int Client::Poll() {
 	result = WaitForMessage(m_Client, 500);
 	if (result < 0) {
 		/* terminating due to error */
+		OnShutdown();
 		return result;
 	}
 	if (result) {
 		if (!HandleRFBServerMessage(m_Client)) {
 			/* terminating due to error */
+			OnShutdown();
 			return -1;
 		}
 	}

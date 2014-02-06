@@ -93,3 +93,9 @@ void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, i
 	dlg->InvalidateRect(&ps, FALSE);
 	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
 }
+
+void Client_WinCE::OnShutdown() {
+	CDialog *dlg = static_cast<CDialog *>(m_Private);
+
+	dlg->PostMessage(WM_QUIT, 0, 0);
+}
