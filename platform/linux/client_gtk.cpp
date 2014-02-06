@@ -51,3 +51,6 @@ rfbBool Client_Gtk::OnMallocFrameBuffer(rfbClient *client) {
 void Client_Gtk::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
 	rfbClientLog("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\n", x, y, w, h);
 }
+
+void Client_Gtk::OnShutdown() {
+}

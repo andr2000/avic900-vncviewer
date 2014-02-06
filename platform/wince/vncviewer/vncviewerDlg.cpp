@@ -55,6 +55,7 @@ BEGIN_MESSAGE_MAP(CvncviewerDlg, CDialog)
 	ON_WM_ERASEBKGND()
 	ON_WM_PAINT()
 	ON_WM_TIMER()
+	ON_WM_DESTROY()
 END_MESSAGE_MAP()
 
 int CvncviewerDlg::Message(DWORD type, wchar_t *caption, wchar_t *format, ...) {
@@ -455,6 +456,10 @@ void CvncviewerDlg::OnTimer(UINT_PTR nIDEvent)
 
 void CvncviewerDlg::Cleanup() {
 	SetHotkeyHandler(false);
+	KillTimer(ID_TIMER_LONG_PRESS);
+#ifdef SHOW_POINTER_TRACE
+	KillTimer(ID_TIMER_TRACE);
+#endif
 	if (m_Client) {
 		delete m_Client;
 		m_Client = NULL;
@@ -464,8 +469,8 @@ void CvncviewerDlg::Cleanup() {
 	}
 }
 
-void CvncviewerDlg::OnOK()
+void CvncviewerDlg::OnDestroy()
 {
 	Cleanup();
-	CDialog::OnOK();
+	CDialog::OnDestroy();
 }

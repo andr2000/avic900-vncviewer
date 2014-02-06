@@ -24,6 +24,7 @@ protected:
 	void SetLogging();
 	rfbBool OnMallocFrameBuffer(rfbClient *client);
 	void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
+	void OnShutdown();
 private:
 	uint8_t *m_FrameBuffer;
 	HBITMAP m_hBmp;

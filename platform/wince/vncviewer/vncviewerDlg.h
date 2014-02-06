@@ -94,6 +94,6 @@ public:
 	afx_msg BOOL OnEraseBkgnd(CDC* pDC);
 	afx_msg void OnPaint();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
-	afx_msg void OnOK();
+	afx_msg void OnDestroy();
 	int CvncviewerDlg::Message(DWORD type, wchar_t *caption, wchar_t *format, ...);
 };
