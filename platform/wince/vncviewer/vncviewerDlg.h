@@ -64,7 +64,6 @@ private:
 
 	static const int CONNECT_MAX_TRY = 3;
 	Client *m_Client;
-	bool m_RenderingEnabled;
 	RECT m_ServerRect;
 	RECT m_ClientRect;
 	bool m_NeedScaling;
