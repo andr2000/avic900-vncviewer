@@ -55,6 +55,8 @@ protected:
 	std::deque< event_t > m_MessageQueue;
 	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
 	ConfigStorage *m_ConfigStorage;
+	long m_ForceRefreshToMs;
+	long m_LastRefreshTimeMs;
 
 	float m_ScalingFactorX;
 	float m_ScalingFactorY;
@@ -67,6 +69,7 @@ protected:
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
 	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) = 0;
 	virtual void OnShutdown() = 0;
+	virtual long GetTimeMs() = 0;
 private:
 	bool m_NeedsVirtInpHack;
 	static int PollRFB(void *data);

@@ -17,6 +17,8 @@ Client::Client() {
 	m_ScalingFactorX = 1.0f;
 	m_ScalingFactorY = 1.0f;
 	m_NeedScaling = false;
+	m_LastRefreshTimeMs = -1L;
+	m_ForceRefreshToMs = 0;
 }
 
 Client::~Client() {
@@ -52,6 +54,8 @@ int Client::Initialize(void *_private) {
 	SetLogging();
 	/* do we need to hack android's virtual input event? */
 	m_NeedsVirtInpHack = m_ConfigStorage->NeedsVirtualInputHack();
+	/* force screen refresh? */
+	m_ForceRefreshToMs = m_ConfigStorage->ForceRefreshToMs();
 	rfbClientLog("Initializing VNC Client\n");
 	m_Private = _private;
 	/* get new RFB client */
@@ -185,6 +189,11 @@ int Client::Poll() {
 			OnShutdown();
 			return -1;
 		}
+	}
+	if (m_ForceRefreshToMs && (GetTimeMs() - m_LastRefreshTimeMs > m_ForceRefreshToMs)) {
+		SendFramebufferUpdateRequest(m_Client, 0, 0, m_Client->width, m_Client->height, false);
+		m_LastRefreshTimeMs = GetTimeMs();
+		DEBUGMSG(TRUE, (_T("\r\nSendFramebufferUpdateRequest\r\n\r\n")));
 	}
 	/* checki if there are input events */
 	evt_count = 0;

@@ -25,6 +25,9 @@ protected:
 	rfbBool OnMallocFrameBuffer(rfbClient *client);
 	void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
 	void OnShutdown();
+	long GetTimeMs() {
+		return GetTickCount();
+	}
 private:
 	uint8_t *m_FrameBuffer;
 	HBITMAP m_hBmp;
