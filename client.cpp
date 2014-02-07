@@ -193,7 +193,7 @@ int Client::Poll() {
 	if (m_ForceRefreshToMs && (GetTimeMs() - m_LastRefreshTimeMs > m_ForceRefreshToMs)) {
 		SendFramebufferUpdateRequest(m_Client, 0, 0, m_Client->width, m_Client->height, false);
 		m_LastRefreshTimeMs = GetTimeMs();
-		DEBUGMSG(TRUE, (_T("\r\nSendFramebufferUpdateRequest\r\n\r\n")));
+		rfbClientLog("\nSendFramebufferUpdateRequest\n\n");
 	}
 	/* checki if there are input events */
 	evt_count = 0;

@@ -54,3 +54,10 @@ void Client_Gtk::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int
 
 void Client_Gtk::OnShutdown() {
 }
+
+long Client_Gtk::GetTimeMs() {
+	struct timeval  tv;
+
+	gettimeofday(&tv, NULL);
+	return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+}
