@@ -68,6 +68,12 @@ int CvncviewerDlg::Message(DWORD type, wchar_t *caption, wchar_t *format, ...) {
 	return MessageBox(msg_text, caption, type);
 }
 
+void CvncviewerDlg::ShowFullScreen() {
+	SHFullScreen(m_hWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
+	::ShowWindow(SHFindMenuBar(m_hWnd), SW_HIDE);
+	MoveWindow(&m_ClientRect, false);
+}
+
 BOOL CvncviewerDlg::OnInitDialog()
 {
 	int i;
@@ -104,11 +110,8 @@ BOOL CvncviewerDlg::OnInitDialog()
 	}
 
 	/* go full screen */
-	m_ClientRect.left = GetSystemMetrics(SM_XVIRTUALSCREEN);
-	m_ClientRect.right = m_ClientRect.left + GetSystemMetrics(SM_CXVIRTUALSCREEN);
-	m_ClientRect.top = GetSystemMetrics(SM_YVIRTUALSCREEN);
-	m_ClientRect.bottom = m_ClientRect.top + GetSystemMetrics(SM_CYVIRTUALSCREEN);
-	MoveWindow(&m_ClientRect, false);
+	SetRect(&m_ClientRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+	ShowFullScreen();
 
 	server = m_ConfigStorage->GetServer();
 	widestr = std::wstring(server.begin(), server.end());
@@ -223,6 +226,9 @@ void CvncviewerDlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 	CDialog::OnActivate(nState, pWndOther, bMinimized);
 
 	SetHotkeyHandler(nState != WA_INACTIVE);
+	if (nState != WA_INACTIVE) {
+		ShowFullScreen();
+	}
 }
 
 BOOL CvncviewerDlg::OnEraseBkgnd(CDC* pDC)
