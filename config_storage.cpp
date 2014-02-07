@@ -73,3 +73,7 @@ bool ConfigStorage::LoggingEnabled() {
 bool ConfigStorage::CompressionEnabled() {
 	return GetBoolean(SECTION_NAME, "CompressionEnabled", false);
 }
+
+long ConfigStorage::ForceRefreshToMs() {
+	return GetInteger(SECTION_NAME, "ForceRefreshToMs", 2000);
+}

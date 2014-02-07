@@ -29,6 +29,7 @@ public:
 	std::string GetServer();
 	bool NeedsVirtualInputHack();
 	bool CompressionEnabled();
+	long ForceRefreshToMs();
 protected:
 	static ConfigStorage *m_Instance;
 	static const std::string SECTION_NAME;

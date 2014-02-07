@@ -92,6 +92,7 @@ void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, i
 	}
 	dlg->InvalidateRect(&ps, FALSE);
 	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
+	m_LastRefreshTimeMs = GetTimeMs();
 }
 
 void Client_WinCE::OnShutdown() {
