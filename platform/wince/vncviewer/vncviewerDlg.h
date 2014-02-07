@@ -74,6 +74,7 @@ private:
 	void SetHotkeyHandler(bool set);
 	void HandleMapKey(bool long_press);
 	void Cleanup();
+	void ShowFullScreen();
 #ifdef SHOW_POINTER_TRACE
 	enum trace_point_type_e {
 		TRACE_POINT_DOWN,
