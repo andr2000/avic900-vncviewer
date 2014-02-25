@@ -77,3 +77,7 @@ bool ConfigStorage::CompressionEnabled() {
 long ConfigStorage::ForceRefreshToMs() {
 	return GetInteger(SECTION_NAME, "ForceRefreshToMs", 2000);
 }
+
+bool ConfigStorage::IsScreenRotated() {
+	return GetBoolean(SECTION_NAME, "IsScreenRotated", true);
+}

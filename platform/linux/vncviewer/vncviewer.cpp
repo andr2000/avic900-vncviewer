@@ -61,6 +61,46 @@ int main(int argc, char *argv[]) {
 			vnc_client->PostEvent(evt);
 			break;
 		}
+		case 'w':
+		{
+			Client::event_t evt;
+
+			fprintf(stdout, "KEY_UP\n");
+			evt.what = Client::EVT_KEY;
+			evt.data.key = Client::KEY_UP;
+			vnc_client->PostEvent(evt);
+			break;
+		}
+		case 's':
+		{
+			Client::event_t evt;
+
+			fprintf(stdout, "KEY_DOWN\n");
+			evt.what = Client::EVT_KEY;
+			evt.data.key = Client::KEY_DOWN;
+			vnc_client->PostEvent(evt);
+			break;
+		}
+		case 'a':
+		{
+			Client::event_t evt;
+
+			fprintf(stdout, "KEY_LEFT\n");
+			evt.what = Client::EVT_KEY;
+			evt.data.key = Client::KEY_LEFT;
+			vnc_client->PostEvent(evt);
+			break;
+		}
+		case 'd':
+		{
+			Client::event_t evt;
+
+			fprintf(stdout, "KEY_RIGHT\n");
+			evt.what = Client::EVT_KEY;
+			evt.data.key = Client::KEY_RIGHT;
+			vnc_client->PostEvent(evt);
+			break;
+		}
 		default:
 			break;
 		}
