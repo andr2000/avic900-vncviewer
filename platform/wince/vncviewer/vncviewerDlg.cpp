@@ -2,7 +2,6 @@
 #include "vncviewer.h"
 #include "vncviewerDlg.h"
 
-#include "client_factory.h"
 #include "config_storage.h"
 
 #ifdef _DEBUG
@@ -389,32 +388,88 @@ void CvncviewerDlg::SetHotkeyHandler(bool set) {
 LRESULT CALLBACK CvncviewerDlg::SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	CvncviewerDlg *dlg = CvncviewerDlg::GetInstance();
 
-	if (dlg && (WM_HOTKEY == message) && (HW_BTN_MAP == LOWORD(wParam))) {
-		if (LOWORD(lParam) == 0x0) {
-			/* pressed */
-			DEBUGMSG(true, (_T("MAP pressed\r\n")));
-			if (!dlg->m_FilterAutoRepeat && !dlg->m_LongPress) {
-				/* start processing long press */
-				dlg->SetTimer(ID_TIMER_LONG_PRESS, ID_TIMER_LONG_PRESS_DELAY, NULL);
-				dlg->m_FilterAutoRepeat = true;
-			}
-			return 1;
-		} else if (LOWORD(lParam) == 0x1000) {
-			/* released */
-			DEBUGMSG(true, (_T("MAP released\r\n")));
-			if (dlg->m_FilterAutoRepeat) {
-				dlg->m_FilterAutoRepeat = false;
-				dlg->KillTimer(ID_TIMER_LONG_PRESS);
-			}
-			if (dlg->m_LongPress) {
-				/* already handled by the timer */
-				dlg->m_LongPress = false;
+	if (dlg && (WM_HOTKEY == message)) {
+		Client::event_t evt;
+		evt.what = Client::EVT_KEY;
+
+		switch (LOWORD(wParam)) {
+			case HW_BTN_MAP:
+			{
+				if (LOWORD(lParam) == 0x0) {
+					/* pressed */
+					DEBUGMSG(true, (_T("MAP pressed\r\n")));
+					if (!dlg->m_FilterAutoRepeat && !dlg->m_LongPress) {
+						/* start processing long press */
+						dlg->SetTimer(ID_TIMER_LONG_PRESS, ID_TIMER_LONG_PRESS_DELAY, NULL);
+						dlg->m_FilterAutoRepeat = true;
+					}
+					return 1;
+				} else if (LOWORD(lParam) == 0x1000) {
+					/* released */
+					DEBUGMSG(true, (_T("MAP released\r\n")));
+					if (dlg->m_FilterAutoRepeat) {
+						dlg->m_FilterAutoRepeat = false;
+						dlg->KillTimer(ID_TIMER_LONG_PRESS);
+					}
+					if (dlg->m_LongPress) {
+						/* already handled by the timer */
+						dlg->m_LongPress = false;
+						return 1;
+					}
+					dlg->HandleMapKey(false);
+				}
+				/* eat the key */
 				return 1;
 			}
-			dlg->HandleMapKey(false);
+			case HW_BTN_UP:
+			{
+				if (LOWORD(lParam) == 0x0) {
+					/* pressed */
+					DEBUGMSG(true, (_T("UP pressed\r\n")));
+					evt.data.key = Client::KEY_UP;
+					dlg->SendEvent(evt);
+				}
+				/* eat the key */
+				return 1;
+			}
+			case HW_BTN_DOWN:
+			{
+				if (LOWORD(lParam) == 0x0) {
+					/* pressed */
+					DEBUGMSG(true, (_T("DOWN pressed\r\n")));
+					evt.data.key = Client::KEY_DOWN;
+					dlg->SendEvent(evt);
+				}
+				/* eat the key */
+				return 1;
+			}
+			case HW_BTN_LEFT:
+			{
+				if (LOWORD(lParam) == 0x0) {
+					/* pressed */
+					DEBUGMSG(true, (_T("LEFT pressed\r\n")));
+					evt.data.key = Client::KEY_LEFT;
+					dlg->SendEvent(evt);
+				}
+				/* eat the key */
+				return 1;
+			}
+			case HW_BTN_RIGHT:
+			{
+				if (LOWORD(lParam) == 0x0) {
+					/* pressed */
+					DEBUGMSG(true, (_T("RIGHT pressed\r\n")));
+					evt.data.key = Client::KEY_RIGHT;
+					dlg->SendEvent(evt);
+				}
+				/* eat the key */
+				return 1;
+			}
+			default:
+			{
+				break;
+			}
 		}
-		/* eat the key */
-		return 1;
 	}
 	/* skip this message and pass it to the adressee */
 	return CallWindowProc(dlg->m_HotkeyWndProc,
@@ -422,16 +477,20 @@ LRESULT CALLBACK CvncviewerDlg::SubWndProc(HWND hWnd, UINT message, WPARAM wPara
 }
 
 void CvncviewerDlg::HandleMapKey(bool long_press) {
+	Client::event_t evt;
+	evt.what = Client::EVT_KEY;
+	if (long_press) {
+		/* long press */
+		evt.data.key = Client::KEY_HOME;
+	} else {
+		/* normal press */
+		evt.data.key = Client::KEY_BACK;
+	}
+	SendEvent(evt);
+}
+
+void CvncviewerDlg::SendEvent(Client::event_t &evt) {
 	if (m_Client) {
-		Client::event_t evt;
-		evt.what = Client::EVT_KEY;
-		if (long_press) {
-			/* long press */
-			evt.data.key = Client::KEY_HOME;
-		} else {
-			/* normal press */
-			evt.data.key = Client::KEY_BACK;
-		}
 		m_Client->PostEvent(evt);
 	}
 }
