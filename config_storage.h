@@ -30,6 +30,7 @@ public:
 	bool NeedsVirtualInputHack();
 	bool CompressionEnabled();
 	long ForceRefreshToMs();
+	bool IsScreenRotated();
 protected:
 	static ConfigStorage *m_Instance;
 	static const std::string SECTION_NAME;

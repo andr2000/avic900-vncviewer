@@ -19,6 +19,7 @@ Client::Client() {
 	m_NeedScaling = false;
 	m_LastRefreshTimeMs = -1L;
 	m_ForceRefreshToMs = 0;
+	m_IsScreenRotated = false;
 }
 
 Client::~Client() {
@@ -56,6 +57,8 @@ int Client::Initialize(void *_private) {
 	m_NeedsVirtInpHack = m_ConfigStorage->NeedsVirtualInputHack();
 	/* force screen refresh? */
 	m_ForceRefreshToMs = m_ConfigStorage->ForceRefreshToMs();
+	/* is the screen rotated? If so handle Arrows differently */
+	m_IsScreenRotated  = m_ConfigStorage->IsScreenRotated();
 	rfbClientLog("Initializing VNC Client\n");
 	m_Private = _private;
 	/* get new RFB client */
@@ -151,6 +154,31 @@ int Client::GetEvent(event_t &evt) {
 
 void Client::HandleKey(key_t key) {
 	uint32_t rfb_key;
+
+	/* Unfortunately, when screen rotates key mappings for Up/Down/Left/Right
+	 * are not handled accordingly, e.g. in Landscape you press Left to go Up etc.
+	 * We cannot sense if screen is rotated by means of OnFrameBufferAllocate,
+	 * e.g. it always returns the same width and height. So, use a configuration key for that
+	 */
+	if (m_IsScreenRotated) {
+		/* remap keys */
+		switch (key) {
+		case KEY_UP:
+			key = KEY_RIGHT;
+			break;
+		case KEY_DOWN:
+			key = KEY_LEFT;
+			break;
+		case KEY_LEFT:
+			key = KEY_UP;
+			break;
+		case KEY_RIGHT:
+			key = KEY_DOWN;
+			break;
+		default:
+			break;
+		}
+	}
 	switch (key) {
 	case KEY_BACK:
 		rfb_key = XK_Escape;
@@ -159,6 +187,22 @@ void Client::HandleKey(key_t key) {
 	case KEY_HOME:
 		rfb_key = XK_Home;
 		rfbClientLog("Key event: KEY_HOME\n");
+		break;
+	case KEY_UP:
+		rfb_key = XK_Up;
+		rfbClientLog("Key event: KEY_UP\n");
+		break;
+	case KEY_DOWN:
+		rfb_key = XK_Down;
+		rfbClientLog("Key event: KEY_DOWN\n");
+		break;
+	case KEY_LEFT:
+		rfb_key = XK_Left;
+		rfbClientLog("Key event: KEY_LEFT\n");
+		break;
+	case KEY_RIGHT:
+		rfb_key = XK_Right;
+		rfbClientLog("Key event: KEY_RIGHT\n");
 		break;
 	default:
 		return;

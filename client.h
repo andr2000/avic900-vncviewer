@@ -30,7 +30,11 @@ public:
 	};
 	enum key_t {
 		KEY_BACK,
-		KEY_HOME
+		KEY_HOME,
+		KEY_UP,
+		KEY_DOWN,
+		KEY_LEFT,
+		KEY_RIGHT
 	};
 	struct event_t {
 		event_type_t what;
@@ -61,6 +65,7 @@ protected:
 	float m_ScalingFactorX;
 	float m_ScalingFactorY;
 	bool m_NeedScaling;
+	bool m_IsScreenRotated;
 
 	virtual void SetLogging() = 0;
 	int Poll();
