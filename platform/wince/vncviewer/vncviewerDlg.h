@@ -4,7 +4,8 @@
 #include <deque>
 #endif
 
-class Client;
+#include "client_factory.h"
+
 class ConfigStorage;
 
 class CvncviewerDlg : public CDialog {
@@ -73,6 +74,7 @@ private:
 	static LRESULT CALLBACK SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	void SetHotkeyHandler(bool set);
 	void HandleMapKey(bool long_press);
+	void SendEvent(Client::event_t &evt);
 	void Cleanup();
 	void ShowFullScreen();
 #ifdef SHOW_POINTER_TRACE
