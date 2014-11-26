@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 	vnc_client = ClientFactory::GetInstance();
 	if (NULL == vnc_client) {
 		fprintf(stderr, "Failed to instantiate VNC client\n");
- 		return -1;
+		return -1;
 	}
 	if (vnc_client->Initialize(static_cast<void *>(NULL)) < 0) {
 	fprintf(stderr, "Failed to initialize VNC client\n");
