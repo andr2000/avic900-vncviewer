@@ -4,6 +4,7 @@ include $(CLEAR_VARS)
 LIBVNCSERVER_ROOT:=../../../libvncserver/
 
 LOCAL_SRC_FILES += \
+	vncserver.cpp \
 	$(LIBVNCSERVER_ROOT)/libvncserver/main.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/rfbserver.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/rfbregion.c \
@@ -41,7 +42,7 @@ LOCAL_CFLAGS  += -Wall -O3 \
 	-DLIBVNCSERVER_HAVE_LIBSSL \
 	-DLIBVNCSERVER_WITH_WEBSOCKETS
 
-LOCAL_LDLIBS +=  -llog -lz -ldl 
+LOCAL_LDLIBS +=  -llog -lz -ldl
 
 LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH) \
