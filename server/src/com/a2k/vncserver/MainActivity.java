@@ -36,6 +36,7 @@ public class MainActivity extends Activity
 					Intent intent = new Intent(MainActivity.this, VncProjectionActivity.class);
 					startActivity(intent);
 					m_ButtonStartStop.setText("Stop");
+					finish();
 				}
 				m_ProjectionStarted ^= true;
 			}
