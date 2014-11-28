@@ -22,6 +22,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".VncProjectionActivity"
+            android:label="@string/title_activity_vnc_projection"
+            android:theme="@android:style/Theme.NoDisplay" >
+        </activity>
     </application>
 
 </manifest>

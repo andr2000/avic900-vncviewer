@@ -1,9 +1,11 @@
 package com.a2k.vncserver;
 
-public class VncServerProto {
+public class VncServerProto
+{
 	public native String getVersion();
 
-	static {
+	static
+	{
 		System.loadLibrary("vncserver");
 	}
 }
