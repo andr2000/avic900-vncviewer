@@ -3,6 +3,7 @@ package com.a2k.vncserver;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -18,6 +19,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
+
+import java.io.IOException;
+import java.io.FileOutputStream;
 
 import com.a2k.vncserver.VncServerProto;
 
@@ -121,7 +125,32 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	@Override
 	public void onSurfaceTextureUpdated(SurfaceTexture surface)
 	{
-		Log.d(TAG, "onSurfaceTextureUpdated");
+		Bitmap bmp = m_TextureView.getBitmap();
+
+		FileOutputStream out = null;
+		try
+		{
+			out = new FileOutputStream("/data/data/com.a2k.vncserver/1.png");
+			bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		finally
+		{
+			try
+			{
+				if (out != null)
+				{
+					out.close();
+				}
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
