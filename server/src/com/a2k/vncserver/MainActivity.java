@@ -11,10 +11,12 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.a2k.vncserver.VncServerProto;
@@ -53,8 +55,15 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
-		m_TextureView = (TextureView)findViewById(R.id.textureView);
+		m_TextureView = new TextureView(this);
 		m_TextureView.setSurfaceTextureListener(this);
+
+		addContentView(m_TextureView, new FrameLayout.LayoutParams(
+			FrameLayout.LayoutParams.WRAP_CONTENT,
+			/*FrameLayout.LayoutParams.WRAP_CONTENT*/ 700,
+			Gravity.BOTTOM
+			)
+		);
 
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setEnabled(false);
