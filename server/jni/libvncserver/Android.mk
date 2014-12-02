@@ -42,7 +42,7 @@ LOCAL_CFLAGS  += -Wall -O3 \
 	-DLIBVNCSERVER_HAVE_LIBSSL \
 	-DLIBVNCSERVER_WITH_WEBSOCKETS
 
-LOCAL_LDLIBS +=  -llog -lz -ldl
+LOCAL_LDLIBS +=  -llog -lz -ldl -ljnigraphics
 
 LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH) \

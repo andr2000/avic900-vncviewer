@@ -22,6 +22,7 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.FileOutputStream;
+import java.lang.System;
 
 import com.a2k.vncserver.VncServerProto;
 
@@ -39,6 +40,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private MediaProjectionManager m_ProjectionManager;
 	private MediaProjection m_MediaProjection;
 	private VirtualDisplay m_VirtualDisplay;
+
+	private Bitmap m_Bitmap;
 
 	private Button m_ButtonStartStop;
 	private boolean m_ProjectionStarted;
@@ -125,31 +128,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	@Override
 	public void onSurfaceTextureUpdated(SurfaceTexture surface)
 	{
-		Bitmap bmp = m_TextureView.getBitmap();
-
-		FileOutputStream out = null;
-		try
+		long t = System.currentTimeMillis();
+		m_Bitmap = Bitmap.createBitmap(600, 700, Bitmap.Config.RGB_565);
+		m_Bitmap = m_TextureView.getBitmap(m_Bitmap);
+		t = System.currentTimeMillis() - t;
+		Log.d(TAG, "ms = " + t);
+		if (m_Bitmap != null)
 		{
-			out = new FileOutputStream("/data/data/com.a2k.vncserver/1.png");
-			bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-		finally
-		{
-			try
-			{
-				if (out != null)
-				{
-					out.close();
-				}
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
+			m_VncProto.updateScreen(m_Bitmap);
 		}
 	}
 
