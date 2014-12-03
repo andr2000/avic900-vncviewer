@@ -1,6 +1,7 @@
 #include <android/log.h>
 #include <dlfcn.h>
 #include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <stdlib.h>
 
 #include "AndroidGraphicBuffer.h"
@@ -248,7 +249,7 @@ AndroidGraphicBuffer::AndroidGraphicBuffer(int width, int height,
 	m_Width(next_pow2(width)), m_Height(next_pow2(height)), m_Usage(usage), m_Format(format),
 	m_Handle(nullptr), m_EGLImage(nullptr)
 {
-	LOG("Rounded to the next power of 2 is %dx%d", m_Width, m_Height);
+	LOG("Size rounded to the next power of 2 (%dx%d)", m_Width, m_Height);
 }
 
 AndroidGraphicBuffer::~AndroidGraphicBuffer()
@@ -449,14 +450,12 @@ bool AndroidGraphicBuffer::bind()
 	{
 		return false;
 	}
-
 	if (!ensureEGLImage())
 	{
 		LOG("No valid EGLImage!");
 		return false;
 	}
-
 	clearGLError();
-	sGLFunctions.fImageTargetTexture2DOES(GL_TEXTURE_2D, m_EGLImage);
+	sGLFunctions.fImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, m_EGLImage);
 	return ensureNoGLError("glEGLImageTargetTexture2DOES");
 }

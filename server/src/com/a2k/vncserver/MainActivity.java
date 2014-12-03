@@ -9,6 +9,9 @@ import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.opengl.GLES11Ext;
+import android.opengl.GLES20;
+import android.opengl.GLUtils;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -23,18 +26,23 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.FileOutputStream;
 import java.lang.System;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
+import com.a2k.vncserver.Gles;
 import com.a2k.vncserver.VncJni;
 
-public class MainActivity extends Activity implements TextureView.SurfaceTextureListener
+public class MainActivity extends Activity implements TextureView.SurfaceTextureListener,
+	SurfaceTexture.OnFrameAvailableListener
 {
-	public static final String TAG = "vncserver";
+	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
 
 	private int m_ScreenDensity;
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
 	private Surface m_Surface;
+	private SurfaceTexture m_SurfaceTexture;
 	private TextureView m_TextureView;
 
 	private MediaProjectionManager m_ProjectionManager;
@@ -47,6 +55,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private boolean m_ProjectionStarted;
 
 	private VncJni m_VncJni = new VncJni();
+	private Gles m_Gles = new Gles();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -55,11 +64,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 		setContentView(R.layout.activity_main);
 
 		Log.d(TAG, m_VncJni.protoGetVersion());
-		
-		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(100, 100);
-		Log.d(TAG, "m_GraphicBuffer = " + m_GraphicBuffer);
-		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
-		m_VncJni.glPutGraphicsBuffer(m_GraphicBuffer);
 		
 		DisplayMetrics metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -114,7 +118,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	{
 		m_DisplayWidth = width;
 		m_DisplayHeight = height;
-		m_Surface = new Surface(m_TextureView.getSurfaceTexture());
+
+		m_Gles.initGL(surface);
+		m_Gles.setupTexture(width, height);
+		int texture = m_Gles.getTexture();
+
+		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(width, height);
+		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
+
+		m_SurfaceTexture = new SurfaceTexture(texture);
+		m_SurfaceTexture.setOnFrameAvailableListener(this);
+		m_Surface = new Surface(m_SurfaceTexture);
+		
 		m_ButtonStartStop.setEnabled(true);
 		m_ButtonStartStop.setText("Start");
 	}
@@ -133,6 +148,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	@Override
 	public void onSurfaceTextureUpdated(SurfaceTexture surface)
 	{
+		Log.d(TAG, "onSurfaceTextureUpdated");
+	}
+
+	@Override
+	public void onFrameAvailable(SurfaceTexture surfaceTexture)
+	{
+		Log.d(TAG, "onFrameAvailable");
 	}
 
 	@Override
