@@ -3,10 +3,12 @@ package com.a2k.vncserver;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
+import android.media.MediaPlayer;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.opengl.GLES11Ext;
@@ -58,6 +60,9 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
 	private VncJni m_VncJni = new VncJni();
 	private Gles m_Gles = new Gles();
+	private Object m_ThreadStarted = new Object();
+
+	private MediaPlayer player;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -115,6 +120,25 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 		}
 	}
 
+	private void startPlayer()
+	{
+		player = new MediaPlayer();
+
+		try
+		{
+			AssetFileDescriptor afd = getAssets().openFd("big_buck_bunny.mp4");
+			player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+			player.setSurface(m_Surface);
+			player.setLooping(true);
+			player.prepare();
+			player.start();
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException("Could not open input video!");
+		}
+	}
+
 	@Override
 	public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
 	{
@@ -125,6 +149,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 		m_Running = true;
 		Thread thrd = new Thread(this);
 		thrd.start();
+		synchronized(m_ThreadStarted)
+		{
+			try
+			{
+				m_ThreadStarted.wait();
+			}
+			catch(InterruptedException e)
+			{
+			}
+		}
+
+		startPlayer();
 
 		m_ButtonStartStop.setText("Start");
 		m_ButtonStartStop.setEnabled(true);
@@ -166,14 +202,18 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 		m_Gles.setupTexture(m_DisplayWidth, m_DisplayHeight);
 		int texture = m_Gles.getTexture();
 
-		//m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(m_DisplayWidth, m_DisplayHeight);
-		//m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
+		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(m_DisplayWidth, m_DisplayHeight);
+		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
 
 		m_SurfaceTexture = new SurfaceTexture(texture);
 		m_SurfaceTexture.setOnFrameAvailableListener(this);
 		m_Surface = new Surface(m_SurfaceTexture);
 		Log.d(TAG, "GLES initialized");
 
+		synchronized(m_ThreadStarted)
+		{
+			m_ThreadStarted.notifyAll();
+		}
 		while (m_Running)
 		{
 			long loopStart = System.currentTimeMillis();
