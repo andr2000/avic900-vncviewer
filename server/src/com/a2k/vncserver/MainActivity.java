@@ -33,7 +33,7 @@ import com.a2k.vncserver.Gles;
 import com.a2k.vncserver.VncJni;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener,
-	SurfaceTexture.OnFrameAvailableListener
+	SurfaceTexture.OnFrameAvailableListener, Runnable
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
@@ -44,6 +44,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private Surface m_Surface;
 	private SurfaceTexture m_SurfaceTexture;
 	private TextureView m_TextureView;
+	private boolean m_FrameAvailable;
+	private boolean m_Running;
 
 	private MediaProjectionManager m_ProjectionManager;
 	private MediaProjection m_MediaProjection;
@@ -116,32 +118,28 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	@Override
 	public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
 	{
+		Log.d(TAG, "onSurfaceTextureAvailable");
 		m_DisplayWidth = width;
 		m_DisplayHeight = height;
 
-		m_Gles.initGL(surface);
-		m_Gles.setupTexture(width, height);
-		int texture = m_Gles.getTexture();
+		m_Running = true;
+		Thread thrd = new Thread(this);
+		thrd.start();
 
-		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(width, height);
-		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
-
-		m_SurfaceTexture = new SurfaceTexture(texture);
-		m_SurfaceTexture.setOnFrameAvailableListener(this);
-		m_Surface = new Surface(m_SurfaceTexture);
-		
-		m_ButtonStartStop.setEnabled(true);
 		m_ButtonStartStop.setText("Start");
+		m_ButtonStartStop.setEnabled(true);
 	}
 
 	@Override
 	public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height)
 	{
+		Log.d(TAG, "onSurfaceTextureSizeChanged");
 	}
 
 	@Override
 	public boolean onSurfaceTextureDestroyed(SurfaceTexture surface)
 	{
+		Log.d(TAG, "onSurfaceTextureDestroyed");
 		return false;
 	}
 
@@ -155,6 +153,62 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	public void onFrameAvailable(SurfaceTexture surfaceTexture)
 	{
 		Log.d(TAG, "onFrameAvailable");
+		synchronized(this)
+		{
+			m_FrameAvailable = true;
+		}
+	}
+
+	@Override
+	public void run()
+	{
+		m_Gles.initGL(m_TextureView.getSurfaceTexture());
+		m_Gles.setupTexture(m_DisplayWidth, m_DisplayHeight);
+		int texture = m_Gles.getTexture();
+
+		//m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(m_DisplayWidth, m_DisplayHeight);
+		//m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
+
+		m_SurfaceTexture = new SurfaceTexture(texture);
+		m_SurfaceTexture.setOnFrameAvailableListener(this);
+		m_Surface = new Surface(m_SurfaceTexture);
+		Log.d(TAG, "GLES initialized");
+
+		while (m_Running)
+		{
+			long loopStart = System.currentTimeMillis();
+			boolean draw = false;
+			synchronized (this)
+			{
+				draw = m_FrameAvailable;
+				if (m_FrameAvailable)
+				{
+					m_SurfaceTexture.updateTexImage();
+					//m_SurfaceTexture.getTransformMatrix(videoTextureTransform);
+					m_FrameAvailable = false;
+				}
+			}
+
+			if (draw)
+			{
+				m_Gles.swapBufers();
+			}
+
+			long waitDelta = 16 - (System.currentTimeMillis() - loopStart);    // Targeting 60 fps, no need for faster
+			if (waitDelta > 0)
+			{
+				try
+				{
+					Thread.sleep(waitDelta);
+				}
+				catch (InterruptedException e)
+				{
+					continue;
+				}
+			}
+		}
+//		deinitGLComponents();
+//		deinitGL();
 	}
 
 	@Override
