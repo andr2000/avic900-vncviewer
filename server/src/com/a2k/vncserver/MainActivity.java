@@ -46,7 +46,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private Button m_ButtonStartStop;
 	private boolean m_ProjectionStarted;
 
-	private static VncServerProto m_VncProto = new VncServerProto();
+	private VncServerProto m_VncProto = new VncServerProto();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
