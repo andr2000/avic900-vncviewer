@@ -107,4 +107,10 @@ public class Gles
 	{
 		return m_EglTextures[0];
 	}
+
+	public void swapBufers()
+	{
+		m_Egl.eglSwapBuffers(m_EglDisplay, m_EglSurface);
+	}
+
 }
