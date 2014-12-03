@@ -4,7 +4,8 @@ include $(CLEAR_VARS)
 LIBVNCSERVER_ROOT:=../../../libvncserver/
 
 LOCAL_SRC_FILES += \
-	vncserver.cpp \
+	vncjni.cpp \
+	AndroidGraphicBuffer.cpp \
 	$(LIBVNCSERVER_ROOT)/libvncserver/main.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/rfbserver.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/rfbregion.c \

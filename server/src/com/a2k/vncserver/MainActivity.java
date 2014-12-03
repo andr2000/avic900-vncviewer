@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.FileOutputStream;
 import java.lang.System;
 
-import com.a2k.vncserver.VncServerProto;
+import com.a2k.vncserver.VncJni;
 
 public class MainActivity extends Activity implements TextureView.SurfaceTextureListener
 {
@@ -41,12 +41,12 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private MediaProjection m_MediaProjection;
 	private VirtualDisplay m_VirtualDisplay;
 
-	private Bitmap m_Bitmap;
+	private long m_GraphicBuffer;
 
 	private Button m_ButtonStartStop;
 	private boolean m_ProjectionStarted;
 
-	private VncServerProto m_VncProto = new VncServerProto();
+	private VncJni m_VncJni = new VncJni();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -54,8 +54,13 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		Log.d(TAG, m_VncProto.getVersion());
-
+		Log.d(TAG, m_VncJni.protoGetVersion());
+		
+		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(100, 100);
+		Log.d(TAG, "m_GraphicBuffer = " + m_GraphicBuffer);
+		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
+		m_VncJni.glPutGraphicsBuffer(m_GraphicBuffer);
+		
 		DisplayMetrics metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(metrics);
 		m_ScreenDensity = metrics.densityDpi;
@@ -128,15 +133,6 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	@Override
 	public void onSurfaceTextureUpdated(SurfaceTexture surface)
 	{
-		long t = System.currentTimeMillis();
-		m_Bitmap = Bitmap.createBitmap(600, 700, Bitmap.Config.RGB_565);
-		m_Bitmap = m_TextureView.getBitmap(m_Bitmap);
-		t = System.currentTimeMillis() - t;
-		Log.d(TAG, "ms = " + t);
-		if (m_Bitmap != null)
-		{
-			m_VncProto.updateScreen(m_Bitmap);
-		}
 	}
 
 	@Override
