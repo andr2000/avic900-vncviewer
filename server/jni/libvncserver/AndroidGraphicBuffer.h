@@ -1,15 +1,10 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#ifndef ANDROIDGRAPHICBBUFFER_H_
+#define ANDROIDGRAPHICBBUFFER_H_
 
-#ifndef AndroidGraphicBuffer_h_
-#define AndroidGraphicBuffer_h_
+#include <stdint.h>
 
-typedef void* EGLImageKHR;
-typedef void* EGLClientBuffer;
-
-namespace mozilla {
+typedef void *EGLImageKHR;
+typedef void *EGLClientBuffer;
 
 /**
  * This class allows access to Android's direct texturing mechanism. Locking
@@ -23,47 +18,66 @@ namespace mozilla {
 class AndroidGraphicBuffer
 {
 public:
-  enum {
-    UsageSoftwareRead = 1,
-    UsageSoftwareWrite = 1 << 1,
-    UsageTexture = 1 << 2,
-    UsageTarget = 1 << 3,
-    Usage2D = 1 << 4
-  };
+	enum gfxUsage {
+		UsageSoftwareRead = 1,
+		UsageSoftwareWrite = 1 << 1,
+		UsageTexture = 1 << 2,
+		UsageTarget = 1 << 3,
+		Usage2D = 1 << 4
+	};
 
-  AndroidGraphicBuffer(uint32_t width, uint32_t height, uint32_t usage, gfxImageFormat format);
-  virtual ~AndroidGraphicBuffer();
+	enum gfxImageFormat {
+		ARGB32,		/* ARGB data in native endianness, using premultiplied alpha */
+		RGB24,		/* xRGB data in native endianness */
+		A8,			/* Only an alpha channel */
+		A1,			/* Packed transparency information (one byte refers to 8 pixels) */
+		RGB16_565,	/* RGB_565 data in native endianness */
+		Unknown
+	};
 
-  int Lock(uint32_t usage, unsigned char **bits);
-  int Lock(uint32_t usage, const nsIntRect& rect, unsigned char **bits);
-  int Unlock();
-  bool Reallocate(uint32_t aWidth, uint32_t aHeight, gfxImageFormat aFormat);
+	struct rect {
+		int x;
+		int y;
+		int width;
+		int height;
+	};
 
-  uint32_t Width() { return mWidth; }
-  uint32_t Height() { return mHeight; }
+	AndroidGraphicBuffer(int width, int height, gfxUsage usage, gfxImageFormat format);
+	virtual ~AndroidGraphicBuffer();
 
-  bool Bind();
+	int lock(gfxUsage usage, unsigned char **bits);
+	int lock(gfxUsage usage, const rect &rect, unsigned char **bits);
+	int unlock();
+	bool reallocate(int aWidth, int aHeight, gfxImageFormat aFormat);
 
-  static bool IsBlacklisted();
+	int getWidth()
+	{
+		return m_Width;
+	}
+	int getHeight()
+	{
+		return m_Height;
+	}
+
+	bool bind();
 
 private:
-  uint32_t mWidth;
-  uint32_t mHeight;
-  uint32_t mUsage;
-  gfxImageFormat mFormat;
+	uint32_t m_Width;
+	uint32_t m_Height;
+	gfxUsage m_Usage;
+	gfxImageFormat m_Format;
 
-  bool EnsureInitialized();
-  bool EnsureEGLImage();
+	bool ensureInitialized();
+	bool ensureEGLImage();
 
-  void DestroyBuffer();
-  bool EnsureBufferCreated();
+	void destroyBuffer();
+	bool ensureBufferCreated();
 
-  uint32_t GetAndroidUsage(uint32_t aUsage);
-  uint32_t GetAndroidFormat(gfxImageFormat aFormat);
+	uint32_t getAndroidUsage(gfxUsage aUsage);
+	uint32_t getAndroidFormat(gfxImageFormat aFormat);
 
-  void *mHandle;
-  void *mEGLImage;
+	void *m_Handle;
+	void *m_EGLImage;
 };
 
-} /* mozilla */
-#endif /* AndroidGraphicBuffer_h_ */
+#endif /* ANDROIDGRAPHICBBUFFER_H_ */
