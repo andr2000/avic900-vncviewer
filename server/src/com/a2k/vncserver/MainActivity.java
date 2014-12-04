@@ -46,7 +46,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private Surface m_Surface;
 	private SurfaceTexture m_SurfaceTexture;
 	private TextureView m_TextureView;
-	private boolean m_FrameAvailable;
+	private boolean m_FrameAvailable = false;
 	private boolean m_Running;
 
 	private MediaProjectionManager m_ProjectionManager;
@@ -62,7 +62,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private Gles m_Gles = new Gles();
 	private Object m_ThreadStarted = new Object();
 
-	private MediaPlayer player;
+	private MediaPlayer m_MediaPlayer;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -122,16 +122,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
 	private void startPlayer()
 	{
-		player = new MediaPlayer();
+		m_MediaPlayer = new MediaPlayer();
 
 		try
 		{
 			AssetFileDescriptor afd = getAssets().openFd("big_buck_bunny.mp4");
-			player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-			player.setSurface(m_Surface);
-			player.setLooping(true);
-			player.prepare();
-			player.start();
+			m_MediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+			m_MediaPlayer.setSurface(m_Surface);
+			m_MediaPlayer.setLooping(true);
+			m_MediaPlayer.prepare();
+			m_MediaPlayer.start();
 		}
 		catch (IOException e)
 		{
@@ -199,11 +199,14 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	public void run()
 	{
 		m_Gles.initGL(m_TextureView.getSurfaceTexture());
+		m_Gles.setupVertexBuffer();
 		m_Gles.setupTexture(m_DisplayWidth, m_DisplayHeight);
 		int texture = m_Gles.getTexture();
 
 		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(m_DisplayWidth, m_DisplayHeight);
 		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
+
+		m_Gles.loadShaders();
 
 		m_SurfaceTexture = new SurfaceTexture(texture);
 		m_SurfaceTexture.setOnFrameAvailableListener(this);
@@ -214,6 +217,8 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 		{
 			m_ThreadStarted.notifyAll();
 		}
+		float[] videoTextureTransform = new float[16];
+		m_Gles.setViewport(m_TextureView.getWidth(), m_TextureView.getHeight());
 		while (m_Running)
 		{
 			long loopStart = System.currentTimeMillis();
@@ -224,16 +229,16 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 				if (m_FrameAvailable)
 				{
 					m_SurfaceTexture.updateTexImage();
-					//m_SurfaceTexture.getTransformMatrix(videoTextureTransform);
+					m_SurfaceTexture.getTransformMatrix(videoTextureTransform);
 					m_FrameAvailable = false;
 				}
 			}
 
 			if (draw)
 			{
+				m_Gles.draw(videoTextureTransform);
 				m_Gles.swapBufers();
 			}
-
 			long waitDelta = 16 - (System.currentTimeMillis() - loopStart);    // Targeting 60 fps, no need for faster
 			if (waitDelta > 0)
 			{
