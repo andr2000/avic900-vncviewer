@@ -46,6 +46,7 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private Surface m_Surface;
 	private SurfaceTexture m_SurfaceTexture;
 	private TextureView m_TextureView;
+	private final Object m_FrameAvailableLock = new Object();
 	private boolean m_FrameAvailable = false;
 	private boolean m_Running;
 
@@ -63,6 +64,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private Object m_ThreadStarted = new Object();
 
 	private MediaPlayer m_MediaPlayer;
+
+	private int m_FrameCounter = 0;
+	private int m_UpdateCounter = 0;
+	private int m_DrawCounter = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -182,16 +187,19 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	@Override
 	public void onSurfaceTextureUpdated(SurfaceTexture surface)
 	{
-		Log.d(TAG, "onSurfaceTextureUpdated");
+		m_UpdateCounter++;
+		Log.d(TAG, "onSurfaceTextureUpdated " + m_UpdateCounter);
 	}
 
 	@Override
 	public void onFrameAvailable(SurfaceTexture surfaceTexture)
 	{
-		Log.d(TAG, "onFrameAvailable");
-		synchronized(this)
+		m_FrameCounter++;
+		Log.d(TAG, "onFrameAvailable " + m_FrameCounter);
+		synchronized(m_FrameAvailableLock)
 		{
 			m_FrameAvailable = true;
+			m_FrameAvailableLock.notify();
 		}
 	}
 
@@ -221,36 +229,26 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 		m_Gles.setViewport(m_TextureView.getWidth(), m_TextureView.getHeight());
 		while (m_Running)
 		{
-			long loopStart = System.currentTimeMillis();
-			boolean draw = false;
-			synchronized (this)
+			synchronized (m_FrameAvailableLock)
 			{
-				draw = m_FrameAvailable;
-				if (m_FrameAvailable)
+				while (!m_FrameAvailable)
 				{
-					m_SurfaceTexture.updateTexImage();
-					m_SurfaceTexture.getTransformMatrix(videoTextureTransform);
-					m_FrameAvailable = false;
+					try
+					{
+						m_FrameAvailableLock.wait();
+					}
+					catch (InterruptedException e)
+					{
+					}
 				}
+				m_FrameAvailable = false;
 			}
-
-			if (draw)
-			{
-				m_Gles.draw(videoTextureTransform);
-				m_Gles.swapBufers();
-			}
-			long waitDelta = 16 - (System.currentTimeMillis() - loopStart);    // Targeting 60 fps, no need for faster
-			if (waitDelta > 0)
-			{
-				try
-				{
-					Thread.sleep(waitDelta);
-				}
-				catch (InterruptedException e)
-				{
-					continue;
-				}
-			}
+			m_DrawCounter++;
+			Log.d(TAG, "draw " + m_DrawCounter);
+			m_SurfaceTexture.updateTexImage();
+			m_SurfaceTexture.getTransformMatrix(videoTextureTransform);
+			m_Gles.draw(videoTextureTransform);
+			m_Gles.swapBufers();
 		}
 //		deinitGLComponents();
 //		deinitGL();
