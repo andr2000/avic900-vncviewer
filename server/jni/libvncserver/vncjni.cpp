@@ -51,7 +51,9 @@ extern "C"
 		jint width, jint height)
 	{
 		AndroidGraphicBuffer *buf = new AndroidGraphicBuffer(width, height,
-			AndroidGraphicBuffer::UsageSoftwareRead, AndroidGraphicBuffer::ARGB32);
+			(AndroidGraphicBuffer::GRALLOC_USAGE_HW_TEXTURE |
+			AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN),
+			AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGBA_8888);
 		return reinterpret_cast<jlong>(buf);
 	}
 
@@ -72,12 +74,23 @@ extern "C"
 		long long start = currentTimeInMilliseconds();
 		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
 		uint8_t *ptr;
-		p->lock(AndroidGraphicBuffer::UsageSoftwareRead, &ptr);
+		p->lock(AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN, &ptr);
 		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * 4);
 		p->unlock();
+		int n = p->getWidth() * p->getHeight() * 4;
+		bool hasData = false;
+		while (n--)
+		{
+			if (gPixels[n] != 0)
+			{
+				hasData = true;
+				break;
+			}
+		}
 		long long delta = currentTimeInMilliseconds() - start;
-		LOGD("glOnFrameAvailable done for %dx%d in %dms",
-			p->getWidth(), p->getHeight(), static_cast<int>(delta));
+		LOGD("glOnFrameAvailable (%dx%d) is %sempty, read in %dms",
+			p->getWidth(), p->getHeight(), hasData ? "not " : "",
+			static_cast<int>(delta));
 		dumpBuffer(64, gPixels);
 	}
 }
