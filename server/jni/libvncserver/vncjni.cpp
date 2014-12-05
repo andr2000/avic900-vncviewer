@@ -46,4 +46,10 @@ extern "C"
 		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
 		return p->bind();
 	}
+
+	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glOnFrameAvailable(JNIEnv *env, jobject obj, jlong buffer)
+	{
+		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
+		LOGD("glOnFrameAvailable");
+	}
 }
