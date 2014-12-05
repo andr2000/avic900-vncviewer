@@ -3,6 +3,7 @@ package com.a2k.vncserver;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
@@ -13,15 +14,16 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Surface;
+import android.view.TextureView.SurfaceTextureListener;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.a2k.vncserver.Gles;
 import com.a2k.vncserver.VncJni;
-import com.a2k.vncserver.VideoSurfaceView;
 
-public class MainActivity extends Activity implements VideoSurfaceView.OnSurfaceCreatedListener 
+public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvailableListener
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
@@ -30,6 +32,8 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
 	private Surface m_Surface;
+	private SurfaceTexture m_SurfaceTexture;
+	private long m_GraphicBuffer;
 
 	private MediaProjectionManager m_ProjectionManager;
 	private MediaProjection m_MediaProjection;
@@ -39,9 +43,8 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 	private boolean m_ProjectionStarted;
 
 	private VncJni m_VncJni = new VncJni();
+	private Gles m_Gles = new Gles();
 	
-	private VideoSurfaceView m_VideoSurfaceView;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -56,16 +59,6 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
-		m_VideoSurfaceView = new VideoSurfaceView(this, m_VncJni);
-		m_VideoSurfaceView.setOnSurfaceCreatedListener(this);
-
-		//setContentView(m_VideoSurfaceView);
-		addContentView(m_VideoSurfaceView, new FrameLayout.LayoutParams(
-			FrameLayout.LayoutParams.WRAP_CONTENT,
-			/*FrameLayout.LayoutParams.WRAP_CONTENT*/ 700,
-			Gravity.BOTTOM
-			)
-		);
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
 		{
@@ -75,19 +68,13 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 				{
 					stopScreenSharing();
 					m_ButtonStartStop.setText("Start");
-					m_ProjectionStarted = false;
 				}
 				else
 				{
-					if (m_Surface != null)
-					{
-						m_ButtonStartStop.setText("Stop");
-						m_DisplayWidth = m_VideoSurfaceView.getWidth();
-						m_DisplayHeight = m_VideoSurfaceView.getHeight();
-						shareScreen();
-						m_ProjectionStarted = true;
-					}
+					m_ButtonStartStop.setText("Stop");
+					shareScreen();
 				}
+				m_ProjectionStarted ^= true;
 			}
 		});
 	}
@@ -101,12 +88,6 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 			m_MediaProjection.stop();
 			m_MediaProjection = null;
 		}
-	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		m_VideoSurfaceView.onResume();
 	}
 
 	@Override
@@ -130,7 +111,13 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 	{
 		if (m_Surface == null)
 		{
-			return;
+			m_Gles.initGL();
+			m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(m_DisplayWidth, m_DisplayHeight);
+			m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
+			m_SurfaceTexture = new SurfaceTexture(m_Gles.getTexture());
+			m_SurfaceTexture.setOnFrameAvailableListener(MainActivity.this);
+			m_SurfaceTexture.setDefaultBufferSize(m_DisplayWidth, m_DisplayHeight);
+			m_Surface = new Surface(m_SurfaceTexture);
 		}
 		if (m_MediaProjection == null)
 		{
@@ -144,6 +131,7 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 
 	private void stopScreenSharing()
 	{
+		m_Gles.deinitGL();
 		if (m_VirtualDisplay != null)
 		{
 			m_VirtualDisplay.release();
@@ -159,8 +147,10 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
 	}
 
-	public void onSurfaceCreated(Surface surface)
+	public void onFrameAvailable(SurfaceTexture surfaceTexture)
 	{
-		m_Surface = surface;
+		m_SurfaceTexture.updateTexImage();
+		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
+		m_Gles.swapBufers();
 	}
 }
