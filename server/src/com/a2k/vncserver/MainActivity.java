@@ -19,7 +19,6 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Surface;
-import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -31,11 +30,10 @@ import java.lang.System;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import com.a2k.vncserver.Gles;
 import com.a2k.vncserver.VncJni;
+import com.a2k.vncserver.VideoSurfaceView;
 
-public class MainActivity extends Activity implements TextureView.SurfaceTextureListener,
-	SurfaceTexture.OnFrameAvailableListener, Runnable
+public class MainActivity extends Activity
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
@@ -44,30 +42,19 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
 	private Surface m_Surface;
-	private SurfaceTexture m_SurfaceTexture;
-	private TextureView m_TextureView;
-	private final Object m_FrameAvailableLock = new Object();
-	private boolean m_FrameAvailable = false;
-	private boolean m_Running;
 
 	private MediaProjectionManager m_ProjectionManager;
 	private MediaProjection m_MediaProjection;
 	private VirtualDisplay m_VirtualDisplay;
 
-	private long m_GraphicBuffer;
-
 	private Button m_ButtonStartStop;
 	private boolean m_ProjectionStarted;
 
 	private VncJni m_VncJni = new VncJni();
-	private Gles m_Gles = new Gles();
-	private Object m_ThreadStarted = new Object();
+	
+	private VideoSurfaceView m_VideoSurfaceView;
 
 	private MediaPlayer m_MediaPlayer;
-
-	private int m_FrameCounter = 0;
-	private int m_UpdateCounter = 0;
-	private int m_DrawCounter = 0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -83,16 +70,26 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
-		m_TextureView = new TextureView(this);
-		m_TextureView.setSurfaceTextureListener(this);
+		m_MediaPlayer = new MediaPlayer();
+		try
+		{
+			AssetFileDescriptor afd = getAssets().openFd("big_buck_bunny.mp4");
+			m_MediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+			m_MediaPlayer.setLooping(true);
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException("Could not open input video!");
+		}
+		m_VideoSurfaceView = new VideoSurfaceView(this, m_MediaPlayer, m_VncJni);
 
-		addContentView(m_TextureView, new FrameLayout.LayoutParams(
+		//setContentView(m_VideoSurfaceView);
+		addContentView(m_VideoSurfaceView, new FrameLayout.LayoutParams(
 			FrameLayout.LayoutParams.WRAP_CONTENT,
 			/*FrameLayout.LayoutParams.WRAP_CONTENT*/ 700,
 			Gravity.BOTTOM
 			)
 		);
-
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setEnabled(false);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
@@ -101,17 +98,22 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 			{
 				if (m_ProjectionStarted)
 				{
-					stopScreenSharing();
+					//stopScreenSharing();
+					m_MediaPlayer.stop();
 					m_ButtonStartStop.setText("Start");
 				}
 				else
 				{
 					m_ButtonStartStop.setText("Stop");
-					shareScreen();
+					//shareScreen();
+					m_MediaPlayer.start();
 				}
 				m_ProjectionStarted ^= true;
 			}
 		});
+		
+		m_ButtonStartStop.setText("Start");
+		m_ButtonStartStop.setEnabled(true);
 	}
 
 	@Override
@@ -125,133 +127,10 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 		}
 	}
 
-	private void startPlayer()
-	{
-		m_MediaPlayer = new MediaPlayer();
-
-		try
-		{
-			AssetFileDescriptor afd = getAssets().openFd("big_buck_bunny.mp4");
-			m_MediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-			m_MediaPlayer.setSurface(m_Surface);
-			m_MediaPlayer.setLooping(true);
-			m_MediaPlayer.prepare();
-			m_MediaPlayer.start();
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("Could not open input video!");
-		}
-	}
-
 	@Override
-	public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
-	{
-		Log.d(TAG, "onSurfaceTextureAvailable");
-		m_DisplayWidth = width;
-		m_DisplayHeight = height;
-
-		m_Running = true;
-		Thread thrd = new Thread(this);
-		thrd.start();
-		synchronized(m_ThreadStarted)
-		{
-			try
-			{
-				m_ThreadStarted.wait();
-			}
-			catch(InterruptedException e)
-			{
-			}
-		}
-
-		startPlayer();
-
-		m_ButtonStartStop.setText("Start");
-		m_ButtonStartStop.setEnabled(true);
-	}
-
-	@Override
-	public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height)
-	{
-		Log.d(TAG, "onSurfaceTextureSizeChanged");
-	}
-
-	@Override
-	public boolean onSurfaceTextureDestroyed(SurfaceTexture surface)
-	{
-		Log.d(TAG, "onSurfaceTextureDestroyed");
-		return false;
-	}
-
-	@Override
-	public void onSurfaceTextureUpdated(SurfaceTexture surface)
-	{
-		m_UpdateCounter++;
-		Log.d(TAG, "onSurfaceTextureUpdated " + m_UpdateCounter);
-	}
-
-	@Override
-	public void onFrameAvailable(SurfaceTexture surfaceTexture)
-	{
-		m_FrameCounter++;
-		Log.d(TAG, "onFrameAvailable " + m_FrameCounter);
-		synchronized(m_FrameAvailableLock)
-		{
-			m_FrameAvailable = true;
-			m_FrameAvailableLock.notify();
-		}
-	}
-
-	@Override
-	public void run()
-	{
-		m_Gles.initGL(m_TextureView.getSurfaceTexture());
-		m_Gles.setupVertexBuffer();
-		m_Gles.setupTexture(m_DisplayWidth, m_DisplayHeight);
-		int texture = m_Gles.getTexture();
-
-		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(m_DisplayWidth, m_DisplayHeight);
-		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
-
-		m_Gles.loadShaders();
-
-		m_SurfaceTexture = new SurfaceTexture(texture);
-		m_SurfaceTexture.setOnFrameAvailableListener(this);
-		m_Surface = new Surface(m_SurfaceTexture);
-		Log.d(TAG, "GLES initialized");
-
-		synchronized(m_ThreadStarted)
-		{
-			m_ThreadStarted.notifyAll();
-		}
-		float[] videoTextureTransform = new float[16];
-		m_Gles.setViewport(m_TextureView.getWidth(), m_TextureView.getHeight());
-		while (m_Running)
-		{
-			synchronized (m_FrameAvailableLock)
-			{
-				while (!m_FrameAvailable)
-				{
-					try
-					{
-						m_FrameAvailableLock.wait();
-					}
-					catch (InterruptedException e)
-					{
-					}
-				}
-				m_FrameAvailable = false;
-			}
-			m_DrawCounter++;
-			Log.d(TAG, "draw " + m_DrawCounter);
-			m_SurfaceTexture.updateTexImage();
-			m_SurfaceTexture.getTransformMatrix(videoTextureTransform);
-			m_Gles.draw(videoTextureTransform);
-			m_Gles.swapBufers();
-		}
-//		deinitGLComponents();
-//		deinitGL();
+	protected void onResume() {
+		super.onResume();
+		m_VideoSurfaceView.onResume();
 	}
 
 	@Override
@@ -302,23 +181,5 @@ public class MainActivity extends Activity implements TextureView.SurfaceTexture
 			m_DisplayWidth, m_DisplayHeight, m_ScreenDensity,
 			DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
-	}
-
-	private void resizeVirtualDisplay()
-	{
-		if (m_VirtualDisplay != null)
-		{
-			m_VirtualDisplay.resize(m_DisplayWidth, m_DisplayHeight, m_ScreenDensity);
-		}
-	}
-
-	private class MediaProjectionCallback extends MediaProjection.Callback
-	{
-		@Override
-		public void onStop()
-		{
-			m_MediaProjection = null;
-			stopScreenSharing();
-		}
 	}
 }
