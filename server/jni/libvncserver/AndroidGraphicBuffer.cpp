@@ -244,7 +244,7 @@ static __attribute__((noinline)) unsigned next_pow2(unsigned x)
 	return x + 1;
 }
 AndroidGraphicBuffer::AndroidGraphicBuffer(int width, int height,
-	AndroidGraphicBuffer::gfxUsage usage,
+	uint32_t usage,
 	AndroidGraphicBuffer::gfxImageFormat format) :
 	m_Width(next_pow2(width)), m_Height(next_pow2(height)), m_Usage(usage), m_Format(format),
 	m_Handle(nullptr), m_EGLImage(nullptr)
@@ -314,7 +314,7 @@ bool AndroidGraphicBuffer::ensureInitialized()
 	return true;
 }
 
-int AndroidGraphicBuffer::lock(AndroidGraphicBuffer::gfxUsage aUsage,
+int AndroidGraphicBuffer::lock(uint32_t aUsage,
 	unsigned char **bits)
 {
 	if (!ensureInitialized())
@@ -324,7 +324,7 @@ int AndroidGraphicBuffer::lock(AndroidGraphicBuffer::gfxUsage aUsage,
 	return sGLFunctions.fGraphicBufferLock(m_Handle, getAndroidUsage(aUsage), bits);
 }
 
-int AndroidGraphicBuffer::lock(AndroidGraphicBuffer::gfxUsage aUsage,
+int AndroidGraphicBuffer::lock(uint32_t aUsage,
 	const AndroidGraphicBuffer::rect& aRect, unsigned char **bits)
 {
 	if (!ensureInitialized())
@@ -372,7 +372,7 @@ bool AndroidGraphicBuffer::reallocate(int aWidth, int aHeight,
 	return true;
 }
 
-uint32_t AndroidGraphicBuffer::getAndroidUsage(gfxUsage aUsage)
+uint32_t AndroidGraphicBuffer::getAndroidUsage(uint32_t aUsage)
 {
 	uint32_t flags = 0;
 

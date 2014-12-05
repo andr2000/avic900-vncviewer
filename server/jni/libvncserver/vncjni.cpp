@@ -8,6 +8,7 @@
 
 #define MODULE_NAME "vncjni"
 
+uint8_t gPixels[1024 * 1024 * 4];
 
 extern "C"
 {
@@ -49,7 +50,15 @@ extern "C"
 
 	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glOnFrameAvailable(JNIEnv *env, jobject obj, jlong buffer)
 	{
+		long long start = currentTimeInMilliseconds();
+#if 0
 		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
-		LOGD("glOnFrameAvailable");
+		uint8_t *ptr;
+		p->lock(AndroidGraphicBuffer::UsageTexture | AndroidGraphicBuffer::UsageSoftwareRead, &ptr);
+		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * 4);
+		p->unlock();
+#endif
+		long long delta = currentTimeInMilliseconds() - start;
+		LOGD("glOnFrameAvailable %dms", static_cast<int>(delta));
 	}
 }

@@ -18,7 +18,7 @@ typedef void *EGLClientBuffer;
 class AndroidGraphicBuffer
 {
 public:
-	enum gfxUsage {
+	enum {
 		UsageSoftwareRead = 1,
 		UsageSoftwareWrite = 1 << 1,
 		UsageTexture = 1 << 2,
@@ -42,11 +42,11 @@ public:
 		int height;
 	};
 
-	AndroidGraphicBuffer(int width, int height, gfxUsage usage, gfxImageFormat format);
+	AndroidGraphicBuffer(int width, int height, uint32_t usage, gfxImageFormat format);
 	virtual ~AndroidGraphicBuffer();
 
-	int lock(gfxUsage usage, unsigned char **bits);
-	int lock(gfxUsage usage, const rect &rect, unsigned char **bits);
+	int lock(uint32_t usage, unsigned char **bits);
+	int lock(uint32_t usage, const rect &rect, unsigned char **bits);
 	int unlock();
 	bool reallocate(int aWidth, int aHeight, gfxImageFormat aFormat);
 
@@ -64,7 +64,7 @@ public:
 private:
 	uint32_t m_Width;
 	uint32_t m_Height;
-	gfxUsage m_Usage;
+	uint32_t m_Usage;
 	gfxImageFormat m_Format;
 
 	bool ensureInitialized();
@@ -73,7 +73,7 @@ private:
 	void destroyBuffer();
 	bool ensureBufferCreated();
 
-	uint32_t getAndroidUsage(gfxUsage aUsage);
+	uint32_t getAndroidUsage(uint32_t aUsage);
 	uint32_t getAndroidFormat(gfxImageFormat aFormat);
 
 	void *m_Handle;
