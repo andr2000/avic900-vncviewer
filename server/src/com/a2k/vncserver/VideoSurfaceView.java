@@ -16,7 +16,6 @@ class VideoSurfaceView extends GLSurfaceView {
 
     VideoRender mRenderer;
 
-	private long m_GraphicBuffer;
 	private VncJni m_VncJni = null;
 
     public VideoSurfaceView(Context context, VncJni vncJni) {
@@ -56,10 +55,6 @@ class VideoSurfaceView extends GLSurfaceView {
     	}
     }
 
-    public void setSurfaceSize(int width, int height)
-    {
-        mRenderer.setSurfaceSize(width, height);
-    }
     /**
      * A GLSurfaceView implementation that wraps TextureRender.  Used to render frames from a
      * video decoder to a View.
@@ -70,15 +65,20 @@ class VideoSurfaceView extends GLSurfaceView {
 
         private TextureRender mTextureRender;
         private Surface mSurface;
+        private int mWidth;
+        private int mHeight;
         private SurfaceTexture mSurfaceTexture;
         private boolean updateSurface = false;
         
         private VideoSurfaceView m_Parent;
+        private long m_GraphicBuffer;
 
-    	private VncJni m_VncJni;
+        private VncJni m_VncJni;
 
         public VideoRender(Context context, VideoSurfaceView parent) {
-        	m_Parent = parent;
+            m_Parent = parent;
+            mWidth = 1024;
+            mHeight = 1024;
             mTextureRender = new TextureRender();
         }
 
@@ -86,15 +86,11 @@ class VideoSurfaceView extends GLSurfaceView {
             m_VncJni = vncJni;
         }
 
-        public void setSurfaceSize(int width, int height)
-        {
-            mSurfaceTexture.setDefaultBufferSize(width, height);
-        }
-
         public void onDrawFrame(GL10 glUnused) {
             synchronized(this) {
                 if (updateSurface) {
                     mSurfaceTexture.updateTexImage();
+                    m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
                     updateSurface = false;
                 }
             }
@@ -109,13 +105,15 @@ class VideoSurfaceView extends GLSurfaceView {
         public void onSurfaceCreated(GL10 glUnused, EGLConfig config) {
         	Log.d(TAG, "onSurfaceCreated");
             mTextureRender.surfaceCreated();
-
+            m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(mWidth, mHeight);
+            m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
             /*
              * Create the SurfaceTexture that will feed this textureID,
              * and pass it to the MediaPlayer
              */
             mSurfaceTexture = new SurfaceTexture(mTextureRender.getTextureId());
             mSurfaceTexture.setOnFrameAvailableListener(this);
+            mSurfaceTexture.setDefaultBufferSize(mWidth, mHeight);
             mSurface = new Surface(mSurfaceTexture);
             m_Parent.onSurfaceCreated(mSurface);
 

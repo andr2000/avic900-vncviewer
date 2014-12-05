@@ -162,6 +162,5 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 	public void onSurfaceCreated(Surface surface)
 	{
 		m_Surface = surface;
-		m_VideoSurfaceView.setSurfaceSize(m_DisplayWidth, m_DisplayHeight);
 	}
 }

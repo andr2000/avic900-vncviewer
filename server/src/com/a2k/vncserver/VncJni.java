@@ -9,6 +9,7 @@ public class VncJni
 	public native long glGetGraphicsBuffer(int width, int height);
 	public native void glPutGraphicsBuffer(long buffer);
 	public native boolean glBindGraphicsBuffer(long buffer);
+	public native void glOnFrameAvailable(long buffer);
 
 	static
 	{
