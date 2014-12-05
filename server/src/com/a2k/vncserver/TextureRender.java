@@ -1,6 +1,5 @@
 package com.a2k.vncserver;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;

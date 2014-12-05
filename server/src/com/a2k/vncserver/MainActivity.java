@@ -3,18 +3,12 @@ package com.a2k.vncserver;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.AssetFileDescriptor;
-import android.graphics.Bitmap;
-import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
-import android.media.MediaPlayer;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
-import android.opengl.GLES11Ext;
-import android.opengl.GLES20;
-import android.opengl.GLUtils;
 import android.os.Bundle;
+import android.provider.MediaStore.Video.VideoColumns;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -24,16 +18,10 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
-import java.io.IOException;
-import java.io.FileOutputStream;
-import java.lang.System;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
 import com.a2k.vncserver.VncJni;
 import com.a2k.vncserver.VideoSurfaceView;
 
-public class MainActivity extends Activity
+public class MainActivity extends Activity implements VideoSurfaceView.OnSurfaceCreatedListener 
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
@@ -54,8 +42,6 @@ public class MainActivity extends Activity
 	
 	private VideoSurfaceView m_VideoSurfaceView;
 
-	private MediaPlayer m_MediaPlayer;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -70,18 +56,8 @@ public class MainActivity extends Activity
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
-		m_MediaPlayer = new MediaPlayer();
-		try
-		{
-			AssetFileDescriptor afd = getAssets().openFd("big_buck_bunny.mp4");
-			m_MediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-			m_MediaPlayer.setLooping(true);
-		}
-		catch (IOException e)
-		{
-			throw new RuntimeException("Could not open input video!");
-		}
-		m_VideoSurfaceView = new VideoSurfaceView(this, m_MediaPlayer, m_VncJni);
+		m_VideoSurfaceView = new VideoSurfaceView(this, m_VncJni);
+		m_VideoSurfaceView.setOnSurfaceCreatedListener(this);
 
 		//setContentView(m_VideoSurfaceView);
 		addContentView(m_VideoSurfaceView, new FrameLayout.LayoutParams(
@@ -91,7 +67,6 @@ public class MainActivity extends Activity
 			)
 		);
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
-		m_ButtonStartStop.setEnabled(false);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
 		{
 			public void onClick(View v)
@@ -99,25 +74,22 @@ public class MainActivity extends Activity
 				if (m_ProjectionStarted)
 				{
 					stopScreenSharing();
-					//m_MediaPlayer.stop();
 					m_ButtonStartStop.setText("Start");
+					m_ProjectionStarted = false;
 				}
 				else
 				{
-					m_ButtonStartStop.setText("Stop");
-					m_DisplayWidth = m_VideoSurfaceView.getWidth();
-					m_DisplayHeight = m_VideoSurfaceView.getHeight();
-					m_VideoSurfaceView.setSurfaceSize(m_DisplayWidth, m_DisplayHeight);
-					m_Surface = m_VideoSurfaceView.getSurface();
-					shareScreen();
-					//m_MediaPlayer.start();
+					if (m_Surface != null)
+					{
+						m_ButtonStartStop.setText("Stop");
+						m_DisplayWidth = m_VideoSurfaceView.getWidth();
+						m_DisplayHeight = m_VideoSurfaceView.getHeight();
+						shareScreen();
+						m_ProjectionStarted = true;
+					}
 				}
-				m_ProjectionStarted ^= true;
 			}
 		});
-		
-		m_ButtonStartStop.setText("Start");
-		m_ButtonStartStop.setEnabled(true);
 	}
 
 	@Override
@@ -185,5 +157,11 @@ public class MainActivity extends Activity
 			m_DisplayWidth, m_DisplayHeight, m_ScreenDensity,
 			DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
+	}
+
+	public void onSurfaceCreated(Surface surface)
+	{
+		m_Surface = surface;
+		m_VideoSurfaceView.setSurfaceSize(m_DisplayWidth, m_DisplayHeight);
 	}
 }
