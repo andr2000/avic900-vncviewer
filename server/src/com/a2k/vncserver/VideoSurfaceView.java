@@ -59,6 +59,15 @@ class VideoSurfaceView extends GLSurfaceView {
         }
     }
 
+    public Surface getSurface()
+    {
+    	return mRenderer.getSurface();
+    }
+
+    public void setSurfaceSize(int width, int height)
+    {
+        mRenderer.setSurfaceSize(width, height);
+    }
     /**
      * A GLSurfaceView implementation that wraps TextureRender.  Used to render frames from a
      * video decoder to a View.
@@ -91,6 +100,11 @@ class VideoSurfaceView extends GLSurfaceView {
             return mSurface;
         }
 
+        public void setSurfaceSize(int width, int height)
+        {
+            mSurfaceTexture.setDefaultBufferSize(width, height);
+        }
+
         public void onDrawFrame(GL10 glUnused) {
             synchronized(this) {
                 if (updateSurface) {
@@ -103,6 +117,7 @@ class VideoSurfaceView extends GLSurfaceView {
         }
 
         public void onSurfaceChanged(GL10 glUnused, int width, int height) {
+        	Log.d(TAG, "onSurfaceChanged");
         }
 
         public void onSurfaceCreated(GL10 glUnused, EGLConfig config) {
@@ -117,14 +132,16 @@ class VideoSurfaceView extends GLSurfaceView {
             mSurfaceTexture.setOnFrameAvailableListener(this);
 
             mSurface = new Surface(mSurfaceTexture);
-            mMediaPlayer.setSurface(mSurface);
-            mSurface.release();
+            //mMediaPlayer.setSurface(mSurface);
+            //mSurface.release();
 
+            /*
             try {
                 mMediaPlayer.prepare();
             } catch (IOException t) {
                 Log.e(TAG, "media player prepare failed");
             }
+            */
 
             synchronized(this) {
                 updateSurface = false;
@@ -132,6 +149,7 @@ class VideoSurfaceView extends GLSurfaceView {
         }
 
         synchronized public void onFrameAvailable(SurfaceTexture surface) {
+            Log.d(TAG, "onFrameAvailable");
             updateSurface = true;
         }
     }  // End of class VideoRender.

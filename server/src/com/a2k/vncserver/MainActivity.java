@@ -98,15 +98,19 @@ public class MainActivity extends Activity
 			{
 				if (m_ProjectionStarted)
 				{
-					//stopScreenSharing();
-					m_MediaPlayer.stop();
+					stopScreenSharing();
+					//m_MediaPlayer.stop();
 					m_ButtonStartStop.setText("Start");
 				}
 				else
 				{
 					m_ButtonStartStop.setText("Stop");
-					//shareScreen();
-					m_MediaPlayer.start();
+					m_DisplayWidth = m_VideoSurfaceView.getWidth();
+					m_DisplayHeight = m_VideoSurfaceView.getHeight();
+					m_VideoSurfaceView.setSurfaceSize(m_DisplayWidth, m_DisplayHeight);
+					m_Surface = m_VideoSurfaceView.getSurface();
+					shareScreen();
+					//m_MediaPlayer.start();
 				}
 				m_ProjectionStarted ^= true;
 			}
