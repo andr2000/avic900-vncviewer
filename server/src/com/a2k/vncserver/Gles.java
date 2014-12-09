@@ -59,6 +59,7 @@ public class Gles
 	private int[] getConfig()
 	{
 		return new int[] {
+			EGL10.EGL_SURFACE_TYPE, EGL10.EGL_PBUFFER_BIT,
 			EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 			EGL10.EGL_RED_SIZE, 8,
 			EGL10.EGL_GREEN_SIZE, 8,
