@@ -2,6 +2,7 @@ package com.a2k.vncserver;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
@@ -9,6 +10,7 @@ import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore.Video.VideoColumns;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -42,6 +44,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private Button m_ButtonStartStop;
 	private boolean m_ProjectionStarted;
 
+	private String m_PngOutputFile;
+
 	private VncJni m_VncJni = new VncJni();
 	private Gles m_Gles = new Gles();
 	
@@ -58,6 +62,9 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_ScreenDensity = metrics.densityDpi;
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+
+		ContextWrapper c = new ContextWrapper(this);
+		m_PngOutputFile = c.getFilesDir().getPath() + "/surface.png";
 
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
@@ -150,6 +157,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	public void onFrameAvailable(SurfaceTexture surfaceTexture)
 	{
 		m_SurfaceTexture.updateTexImage();
+		Gles.saveFrame(m_PngOutputFile, m_DisplayWidth, m_DisplayHeight);
 		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
 		m_Gles.swapBufers();
 	}
