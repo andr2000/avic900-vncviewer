@@ -4,6 +4,12 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import android.graphics.Bitmap;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -130,5 +136,39 @@ public class Gles
 	{
 		m_Egl.eglSwapBuffers(m_EglDisplay, m_EglSurface);
 		checkGlError("Swap buffers");
+	}
+
+	public static void saveFrame(String filename, int width, int height)
+	{
+		ByteBuffer mPixelBuf = ByteBuffer.allocateDirect(width * height * 4);
+		mPixelBuf.order(ByteOrder.LITTLE_ENDIAN);
+
+		mPixelBuf.rewind();
+		GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, mPixelBuf);
+
+		BufferedOutputStream bos = null;
+		try
+		{
+			bos = new BufferedOutputStream(new FileOutputStream(filename));
+			Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+			mPixelBuf.rewind();
+			bmp.copyPixelsFromBuffer(mPixelBuf);
+			bmp.compress(Bitmap.CompressFormat.PNG, 90, bos);
+			bmp.recycle();
+		}
+		catch (FileNotFoundException e)
+		{
+		}
+		finally
+		{
+			try
+			{
+				if (bos != null) bos.close();
+			}
+			catch (IOException e)
+			{
+			}
+		}
+		Log.d(TAG, "Saved " + width + "x" + height + " frame as '" + filename + "'");
 	}
 }
