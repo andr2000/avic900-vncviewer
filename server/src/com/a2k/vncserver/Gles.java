@@ -23,6 +23,8 @@ import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.util.Log;
 
+import com.a2k.vncserver.TextureRender;
+
 public class Gles
 {
 	public static final String TAG = "Gles";
@@ -32,6 +34,8 @@ public class Gles
 	private EGLContext m_EglContext;
 	private EGLSurface m_EglSurface;
 	private int m_EglTextures[] = new int[1];
+
+	private TextureRender m_TextureRender;
 
 	public void checkGlError(String op)
 	{
@@ -83,7 +87,7 @@ public class Gles
 		return m_Egl.eglCreateContext(eglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attribList);
 	}
 
-	public void initGL()
+	public void initGL(int width, int height)
 	{
 		m_Egl = (EGL10)EGLContext.getEGL();
 		m_EglDisplay = m_Egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
@@ -95,8 +99,8 @@ public class Gles
 		m_EglContext = createContext(m_Egl, m_EglDisplay, eglConfig);
 		int surfaceAttribs[] =
 		{
-				EGL10.EGL_WIDTH, 1,
-				EGL10.EGL_HEIGHT, 1,
+				EGL10.EGL_WIDTH, width,
+				EGL10.EGL_HEIGHT, height,
 				EGL10.EGL_NONE
 		};
 		m_EglSurface = m_Egl.eglCreatePbufferSurface(m_EglDisplay, eglConfig, surfaceAttribs);
@@ -109,11 +113,12 @@ public class Gles
 			throw new RuntimeException("GL Make current error: " + GLUtils.getEGLErrorString(m_Egl.eglGetError()));
 		}
 		/* Generate the actual texture */
-		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 		GLES20.glGenTextures(1, m_EglTextures, 0);
 		checkGlError("Texture generate");
 		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, m_EglTextures[0]);
 		checkGlError("Texture bind");
+		m_TextureRender = new TextureRender(getTexture());
+		m_TextureRender.surfaceCreated();
 		Log.d(TAG, "OpenGL initialized");
 	}
 
@@ -136,6 +141,11 @@ public class Gles
 	{
 		m_Egl.eglSwapBuffers(m_EglDisplay, m_EglSurface);
 		checkGlError("Swap buffers");
+	}
+
+	public void draw(SurfaceTexture surfaceTexture)
+	{
+		m_TextureRender.drawFrame(surfaceTexture);
 	}
 
 	public static void saveFrame(String filename, int width, int height)
