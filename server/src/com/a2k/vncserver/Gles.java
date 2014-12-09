@@ -16,6 +16,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
+import javax.microedition.khronos.opengles.GL11Ext;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
@@ -33,6 +34,12 @@ public class Gles
 	private EGLDisplay m_EglDisplay;
 	private EGLContext m_EglContext;
 	private EGLSurface m_EglSurface;
+	private int m_FrameBuffer;
+	private int m_DepthBuffer;
+
+	private VncJni m_VncJni;
+	private long m_GraphicBuffer;
+
 	private static final int TEX_SURFACE_TEXTURE = 0;
 	private static final int TEX_RENDER_TEXTURE = 1;
 	private static final int TEX_NUMBER = 2;
@@ -72,7 +79,6 @@ public class Gles
 	private int[] getConfig()
 	{
 		return new int[] {
-			EGL10.EGL_SURFACE_TYPE, EGL10.EGL_PBUFFER_BIT,
 			EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 			EGL10.EGL_RED_SIZE, 8,
 			EGL10.EGL_GREEN_SIZE, 8,
@@ -90,8 +96,9 @@ public class Gles
 		return m_Egl.eglCreateContext(eglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attribList);
 	}
 
-	public void initGL(int width, int height)
+	public void initGL(VncJni vncJni, int width, int height)
 	{
+		m_VncJni = vncJni;
 		m_Egl = (EGL10)EGLContext.getEGL();
 		m_EglDisplay = m_Egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
 
@@ -118,6 +125,52 @@ public class Gles
 		/* Generate textures */
 		GLES20.glGenTextures(TEX_NUMBER, m_EglTextures, 0);
 		checkGlError("Textures generated");
+
+		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, m_EglTextures[TEX_RENDER_TEXTURE]);
+		checkGlError("Bind rendering texture");
+		GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+		GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+		GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+		GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+		checkGlError("glTexParameter");
+		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(width, height);
+		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
+		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
+
+		/* Create framebuffer object and bind it */
+		int[] values = new int[1];
+		GLES20.glGenFramebuffers(1, values, 0);
+		checkGlError("Framebuffer generated");
+		m_FrameBuffer = values[0];
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, m_FrameBuffer);
+		checkGlError("Framebuffer bound");
+
+		GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
+			GLES20.GL_TEXTURE_2D, m_EglTextures[TEX_RENDER_TEXTURE], 0);
+		checkGlError("glFramebufferTexture2DOES");
+
+		/* Create a depth buffer and bind it */
+		GLES20.glGenRenderbuffers(1, values, 0);
+		checkGlError("Render buffer generated");
+		m_DepthBuffer = values[0];
+		GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, m_DepthBuffer);
+		checkGlError("Render buffer bound");
+
+		/* Allocate storage for the depth buffer */
+		GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER, GLES20.GL_DEPTH_COMPONENT16, width, height);
+		checkGlError("Render buffer storage created");
+
+		/* Attach the depth buffer and the texture (color buffer) to the framebuffer object */
+		GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER, GLES20.GL_DEPTH_ATTACHMENT,
+			GLES20.GL_RENDERBUFFER, m_DepthBuffer);
+		checkGlError("Depth render buffer attached");
+
+		int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
+		if (status != GLES20.GL_FRAMEBUFFER_COMPLETE)
+		{
+			Log.e(TAG, "Framebuffer is not OK");
+		}
+
 		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, getTexture());
 		checkGlError("Texture bind");
 		m_TextureRender = new TextureRender(getTexture());
@@ -148,7 +201,9 @@ public class Gles
 
 	public void draw(SurfaceTexture surfaceTexture)
 	{
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, m_FrameBuffer);
 		m_TextureRender.drawFrame(surfaceTexture);
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 	}
 
 	public static void saveFrame(String filename, int width, int height)

@@ -118,7 +118,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		if (m_Surface == null)
 		{
-			m_Gles.initGL(m_DisplayWidth, m_DisplayHeight);
+			m_Gles.initGL(m_VncJni, m_DisplayWidth, m_DisplayHeight);
 			m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(m_DisplayWidth, m_DisplayHeight);
 			m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
 			m_SurfaceTexture = new SurfaceTexture(m_Gles.getTexture());
@@ -158,8 +158,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		m_SurfaceTexture.updateTexImage();
 		m_Gles.draw(m_SurfaceTexture);
-		Gles.saveFrame(m_PngOutputFile, m_DisplayWidth, m_DisplayHeight);
 		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
+		Gles.saveFrame(m_PngOutputFile, m_DisplayWidth, m_DisplayHeight);
 		m_Gles.swapBufers();
 	}
 }
