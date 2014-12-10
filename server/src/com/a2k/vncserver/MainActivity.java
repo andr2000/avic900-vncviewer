@@ -3,12 +3,13 @@ package com.a2k.vncserver;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.provider.MediaStore.Video.VideoColumns;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -21,7 +22,8 @@ import android.widget.Toast;
 import com.a2k.vncserver.VncJni;
 import com.a2k.vncserver.VideoSurfaceView;
 
-public class MainActivity extends Activity implements VideoSurfaceView.OnSurfaceCreatedListener 
+public class MainActivity extends Activity implements Renderer.OnSurfaceTextureCreatedListener,
+	SurfaceTexture.OnFrameAvailableListener
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
@@ -41,6 +43,7 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 	private VncJni m_VncJni = new VncJni();
 	
 	private VideoSurfaceView m_VideoSurfaceView;
+	private Renderer m_Renderer;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -56,8 +59,10 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
-		m_VideoSurfaceView = new VideoSurfaceView(this, m_VncJni);
-		m_VideoSurfaceView.setOnSurfaceCreatedListener(this);
+		m_Renderer = new Renderer(m_VncJni, m_DisplayWidth, m_DisplayHeight);
+		m_Renderer.setOnSurfaceTextureCreatedListener(this);
+		m_VideoSurfaceView = new VideoSurfaceView(this, m_Renderer);
+		m_VideoSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
 		//setContentView(m_VideoSurfaceView);
 		addContentView(m_VideoSurfaceView, new FrameLayout.LayoutParams(
@@ -82,8 +87,6 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 					if (m_Surface != null)
 					{
 						m_ButtonStartStop.setText("Stop");
-						m_DisplayWidth = m_VideoSurfaceView.getWidth();
-						m_DisplayHeight = m_VideoSurfaceView.getHeight();
 						shareScreen();
 						m_ProjectionStarted = true;
 					}
@@ -104,7 +107,8 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 	}
 
 	@Override
-	protected void onResume() {
+	protected void onResume()
+	{
 		super.onResume();
 		m_VideoSurfaceView.onResume();
 	}
@@ -159,8 +163,17 @@ public class MainActivity extends Activity implements VideoSurfaceView.OnSurface
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
 	}
 
-	public void onSurfaceCreated(Surface surface)
+	public void onSurfaceTextureCreated(SurfaceTexture surfaceTexture)
 	{
-		m_Surface = surface;
+		Log.d(TAG, "onSurfaceCreated");
+		surfaceTexture.setOnFrameAvailableListener(this);
+		m_Surface = new Surface(surfaceTexture);
+	}
+
+
+	public void onFrameAvailable(SurfaceTexture surfaceTexture)
+	{
+		Log.d(TAG, "onFrameAvailable");
+		m_VideoSurfaceView.requestRender();
 	}
 }
