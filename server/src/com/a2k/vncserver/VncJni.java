@@ -11,6 +11,8 @@ public class VncJni
 	public native boolean glBindGraphicsBuffer(long buffer);
 	public native void glOnFrameAvailable(long buffer);
 
+	public native void glUpdateScreen(Bitmap bitmap);
+	
 	static
 	{
 		System.loadLibrary("vncserver");

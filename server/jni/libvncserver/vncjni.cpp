@@ -1,4 +1,5 @@
 #include <android/log.h>
+#include <android/bitmap.h>
 #include <jni.h>
 #include <string.h>
 #include <stdio.h>
@@ -91,6 +92,36 @@ extern "C"
 		LOGD("glOnFrameAvailable (%dx%d) is %sempty, read in %dms",
 			p->getWidth(), p->getHeight(), hasData ? "not " : "",
 			static_cast<int>(delta));
+		dumpBuffer(64, gPixels);
+	}
+
+	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glUpdateScreen(JNIEnv *env, jobject obj, jobject bitmap)
+	{
+		long long start = currentTimeInMilliseconds();
+		AndroidBitmapInfo info;
+		int ret;
+		if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0)
+		{
+			LOGE("AndroidBitmap_getInfo() failed, error=%d", ret);
+			return;
+		}
+		if (info.format != ANDROID_BITMAP_FORMAT_RGB_565)
+		{
+			LOGE("Bitmap format is not RGB_565!");
+			return;
+		}
+		void *bitmapPixels;
+		if ((ret = AndroidBitmap_lockPixels(env, bitmap, &bitmapPixels)) < 0)
+		{
+			LOGE("AndroidBitmap_lockPixels() failed, error=%d", ret);
+			return;
+		}
+		int stride = info.stride;
+		memcpy(gPixels, bitmapPixels, info.height * info.width * 2);
+		AndroidBitmap_unlockPixels(env, bitmap);
+		long long delta = currentTimeInMilliseconds() - start;
+		LOGD("glUpdateScreen (%dx%d), read in %dms",
+			info.width, info.height, static_cast<int>(delta));
 		dumpBuffer(64, gPixels);
 	}
 }

@@ -159,7 +159,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_SurfaceTexture.updateTexImage();
 		m_Gles.draw(m_SurfaceTexture);
 		Gles.saveFrame(m_PngOutputFile, m_DisplayWidth, m_DisplayHeight);
-		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
+		//m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
+		m_VncJni.glUpdateScreen(m_Gles.getBitmap());
 		m_Gles.swapBufers();
 	}
 }

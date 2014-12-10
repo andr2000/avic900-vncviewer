@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
@@ -34,7 +35,7 @@ public class Gles
 	private EGLContext m_EglContext;
 	private EGLSurface m_EglSurface;
 	private int m_EglTextures[] = new int[1];
-
+	private Bitmap m_Pixmap;
 	private TextureRender m_TextureRender;
 
 	public void checkGlError(String op)
@@ -49,34 +50,91 @@ public class Gles
 	private EGLConfig chooseEglConfig()
 	{
 		int[] configsCount = new int[1];
-		EGLConfig[] configs = new EGLConfig[1];
 		int[] configSpec = getConfig();
 
-		if (!m_Egl.eglChooseConfig(m_EglDisplay, configSpec, configs, 1, configsCount))
+		if (!m_Egl.eglChooseConfig(m_EglDisplay, /*configSpec*/null, null, 0, configsCount))
+		{
+			throw new IllegalArgumentException("Failed to get number of configs: " + GLUtils.getEGLErrorString(m_Egl.eglGetError()));
+		}
+		EGLConfig[] configs = new EGLConfig[configsCount[0]];
+		if (!m_Egl.eglChooseConfig(m_EglDisplay, /*configSpec*/null, configs, configsCount[0], configsCount))
 		{
 			throw new IllegalArgumentException("Failed to choose config: " + GLUtils.getEGLErrorString(m_Egl.eglGetError()));
 		}
 		else if (configsCount[0] > 0)
 		{
-			return configs[0];
+			int numPairs = 0;
+			while (configSpec[numPairs] != EGL10.EGL_NONE)
+			{
+				numPairs += 2;
+			}
+			numPairs /= 2;
+			int[] attr = new int[1];
+			for (int i = 0; i < configsCount[0]; i++)
+			{
+				Log.d(TAG, "\n\nEGLConfig[" + i + "]:");
+				dumpConfig(configs[i]);
+				int match = 0;
+				for (int j = 0, idx = 0; j < numPairs; j++, idx += 2)
+				{
+					m_Egl.eglGetConfigAttrib(m_EglDisplay, configs[i], configSpec[idx], attr);
+					if (configSpec[idx] == EGL10.EGL_SURFACE_TYPE)
+					{
+						if ((attr[0] & configSpec[idx + 1]) == configSpec[idx + 1])
+						{
+							match++;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else if (configSpec[idx] == EGL10.EGL_RENDERABLE_TYPE)
+					{
+						if ((attr[0] & configSpec[idx + 1]) == configSpec[idx + 1])
+						{
+							match++;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else if (attr[0] == configSpec[idx + 1])
+					{
+						match++;
+					}
+					else
+					{
+						break;
+					}
+				}
+				if (match == numPairs)
+				{
+					return configs[i]; 
+				}
+			}
+			return null;
 		}
 		return null;
 	}
 
 	private static final int EGL_OPENGL_ES2_BIT = 4;
 	private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+	private static final int GGL_PIXEL_FORMAT_RGB_565 = 4;
 
 	private int[] getConfig()
 	{
 		return new int[] {
-			EGL10.EGL_SURFACE_TYPE, EGL10.EGL_PBUFFER_BIT,
+			EGL10.EGL_SURFACE_TYPE, EGL10.EGL_PIXMAP_BIT,
 			EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-			EGL10.EGL_RED_SIZE, 8,
-			EGL10.EGL_GREEN_SIZE, 8,
-			EGL10.EGL_BLUE_SIZE, 8,
-			EGL10.EGL_ALPHA_SIZE, 8,
+			EGL10.EGL_NATIVE_VISUAL_ID, GGL_PIXEL_FORMAT_RGB_565,
+			EGL10.EGL_RED_SIZE, 5,
+			EGL10.EGL_GREEN_SIZE, 6,
+			EGL10.EGL_BLUE_SIZE, 5,
+			EGL10.EGL_ALPHA_SIZE, 0,
 			EGL10.EGL_DEPTH_SIZE, 0,
-			EGL10.EGL_STENCIL_SIZE, 0,
+			EGL10.EGL_BUFFER_SIZE, 16,
 			EGL10.EGL_NONE
 		};
 	}
@@ -85,6 +143,35 @@ public class Gles
 	{
 		int[] attribList = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE };
 		return m_Egl.eglCreateContext(eglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attribList);
+	}
+	
+	private void dumpConfig(EGLConfig eglConfig)
+	{
+		int[] att = new int[1];
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_SURFACE_TYPE, att);
+		Log.d(TAG, "EGL_SURFACE_TYPE " + att[0]);
+		if ((att[0] & EGL10.EGL_PIXMAP_BIT) != EGL10.EGL_PIXMAP_BIT)
+		{
+			Log.d(TAG, "Failed to choose EGL_PIXMAP_BIT");
+		}
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_RENDERABLE_TYPE, att);
+		Log.d(TAG, "EGL_RENDERABLE_TYPE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_RED_SIZE, att);
+		Log.d(TAG, "EGL_RED_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_GREEN_SIZE, att);
+		Log.d(TAG, "EGL_GREEN_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_BLUE_SIZE, att);
+		Log.d(TAG, "EGL_BLUE_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_ALPHA_SIZE, att);
+		Log.d(TAG, "EGL_ALPHA_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_DEPTH_SIZE, att);
+		Log.d(TAG, "EGL_DEPTH_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_CONFIG_ID, att);
+		Log.d(TAG, "EGL_CONFIG_ID " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_NATIVE_VISUAL_ID, att);
+		Log.d(TAG, "EGL_NATIVE_VISUAL_ID " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_BUFFER_SIZE, att);
+		Log.d(TAG, "EGL_BUFFER_SIZE " + att[0]);
 	}
 
 	public void initGL(int width, int height)
@@ -97,13 +184,18 @@ public class Gles
 
 		EGLConfig eglConfig = chooseEglConfig();
 		m_EglContext = createContext(m_Egl, m_EglDisplay, eglConfig);
+		/* create pixmap buffer */
+		m_Pixmap = Bitmap.createBitmap(width, height, Config.RGB_565);
+		m_Pixmap.setHasAlpha(false);
+		m_Pixmap.setPremultiplied(false);
 		int surfaceAttribs[] =
 		{
-				EGL10.EGL_WIDTH, width,
-				EGL10.EGL_HEIGHT, height,
+				//EGL10.EGL_WIDTH, width,
+				//EGL10.EGL_HEIGHT, height,
 				EGL10.EGL_NONE
 		};
-		m_EglSurface = m_Egl.eglCreatePbufferSurface(m_EglDisplay, eglConfig, surfaceAttribs);
+		dumpConfig(eglConfig);
+		m_EglSurface = m_Egl.eglCreatePixmapSurface(m_EglDisplay, eglConfig, m_Pixmap, /*surfaceAttribs*/null);
 		if ((m_EglSurface == null) || (m_EglSurface == EGL10.EGL_NO_SURFACE))
 		{
 			throw new RuntimeException("GL Error: " + GLUtils.getEGLErrorString(m_Egl.eglGetError()));
@@ -135,6 +227,11 @@ public class Gles
 	public int getTexture()
 	{
 		return m_EglTextures[0];
+	}
+	
+	public Bitmap getBitmap()
+	{
+		return m_Pixmap;
 	}
 
 	public void swapBufers()
