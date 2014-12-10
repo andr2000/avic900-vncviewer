@@ -33,10 +33,7 @@ public class Gles
 	private EGLDisplay m_EglDisplay;
 	private EGLContext m_EglContext;
 	private EGLSurface m_EglSurface;
-	private static final int TEX_SURFACE_TEXTURE = 0;
-	private static final int TEX_RENDER_TEXTURE = 1;
-	private static final int TEX_NUMBER = 2;
-	private int[] m_EglTextures = new int[TEX_NUMBER];
+	private int m_EglTextures[] = new int[1];
 
 	private TextureRender m_TextureRender;
 
@@ -115,10 +112,10 @@ public class Gles
 		{
 			throw new RuntimeException("GL Make current error: " + GLUtils.getEGLErrorString(m_Egl.eglGetError()));
 		}
-		/* Generate textures */
-		GLES20.glGenTextures(TEX_NUMBER, m_EglTextures, 0);
-		checkGlError("Textures generated");
-		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, getTexture());
+		/* Generate the actual texture */
+		GLES20.glGenTextures(1, m_EglTextures, 0);
+		checkGlError("Texture generate");
+		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, m_EglTextures[0]);
 		checkGlError("Texture bind");
 		m_TextureRender = new TextureRender(getTexture());
 		m_TextureRender.surfaceCreated();
@@ -127,7 +124,7 @@ public class Gles
 
 	public void deinitGL()
 	{
-		GLES20.glDeleteTextures(TEX_NUMBER, m_EglTextures, 0);
+		GLES20.glDeleteTextures(1, m_EglTextures, 0);
 		m_Egl.eglMakeCurrent(m_EglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
 		m_Egl.eglDestroySurface(m_EglDisplay, m_EglSurface);
 		m_Egl.eglDestroyContext(m_EglDisplay, m_EglContext);
@@ -137,7 +134,7 @@ public class Gles
 	
 	public int getTexture()
 	{
-		return m_EglTextures[TEX_SURFACE_TEXTURE];
+		return m_EglTextures[0];
 	}
 
 	public void swapBufers()
