@@ -19,6 +19,7 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLU;
 import android.opengl.Matrix;
+import android.os.Environment;
 import android.util.Log;
 import android.view.Surface;
 
@@ -125,12 +126,17 @@ class TextureRender
 		return m_EglTextures[TEX_SURFACE_TEXTURE];
 	}
 
+	private int m_SaveCounter = 20;
 	public void drawFrame(SurfaceTexture st)
 	{
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, m_FrameBuffer);
 		draw(st);
-		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
+		if (--m_SaveCounter == 0)
+		{
+			saveFrame(Environment.getExternalStorageDirectory() + "/surface.png", m_Width, m_Height);
+		}
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 	}
 
 	public void draw(SurfaceTexture st)
@@ -514,7 +520,7 @@ class TextureRender
 		{
 			fos = new FileOutputStream(filename);
 			Bitmap bmp = Bitmap.createBitmap(colors, width, height, Bitmap.Config.ARGB_8888);
-			bmp.compress(Bitmap.CompressFormat.PNG, 90, fos);
+			bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
 			bmp.recycle();
 		}
 		catch (IOException ioe)
