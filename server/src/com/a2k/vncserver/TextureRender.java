@@ -335,8 +335,6 @@ class TextureRender
 		dumpConfig(eglConfig);
 		int surfaceAttribs[] =
 		{
-			EGL10.EGL_WIDTH, 1,
-			EGL10.EGL_HEIGHT, 1,
 			EGL10.EGL_NONE
 		};
 		m_EglSurface = m_Egl.eglCreateWindowSurface(m_EglDisplay, eglConfig, nativeWindow, surfaceAttribs);
