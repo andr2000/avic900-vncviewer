@@ -99,5 +99,17 @@ extern "C"
 			static_cast<int>(_unlock - _memcpy),
 			static_cast<int>(_done - _unlock));
 		dumpBuffer(64, gPixels);
+
+		static int i = 20;
+		if (--i == 0)
+		{
+			FILE *f = fopen("/sdcard/surface.data", "w+b");
+			if (f)
+			{
+				fwrite(gPixels, 1, p->getWidth() * p->getHeight() * 4, f);
+				fclose(f);
+			}
+		}
+
 	}
 }
