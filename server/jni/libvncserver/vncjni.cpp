@@ -71,12 +71,15 @@ extern "C"
 
 	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glOnFrameAvailable(JNIEnv *env, jobject obj, jlong buffer)
 	{
-		long long start = currentTimeInMilliseconds();
 		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
 		uint8_t *ptr;
+		long long start = currentTimeInMilliseconds();
 		p->lock(AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN, &ptr);
+		long long _lock = currentTimeInMilliseconds();
 		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * 4);
+		long long _memcpy = currentTimeInMilliseconds();
 		p->unlock();
+		long long _unlock = currentTimeInMilliseconds();
 		int n = p->getWidth() * p->getHeight() * 4;
 		bool hasData = false;
 		while (n--)
@@ -87,10 +90,14 @@ extern "C"
 				break;
 			}
 		}
-		long long delta = currentTimeInMilliseconds() - start;
-		LOGD("glOnFrameAvailable (%dx%d) is %sempty, read in %dms",
+		long long _done = currentTimeInMilliseconds();
+		LOGD("glOnFrameAvailable (%dx%d) is %sempty, read in %dms, lock %dms, memcpy %dms, unlock %dms, check %dms",
 			p->getWidth(), p->getHeight(), hasData ? "not " : "",
-			static_cast<int>(delta));
+			static_cast<int>(_done - start),
+			static_cast<int>(_lock - start),
+			static_cast<int>(_memcpy - _lock),
+			static_cast<int>(_unlock - _memcpy),
+			static_cast<int>(_done - _unlock));
 		dumpBuffer(64, gPixels);
 	}
 }

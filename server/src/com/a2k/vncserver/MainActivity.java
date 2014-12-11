@@ -10,22 +10,19 @@ import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore.Video.VideoColumns;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Surface;
-import android.view.TextureView.SurfaceTextureListener;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
-import com.a2k.vncserver.Gles;
 import com.a2k.vncserver.VncJni;
+import com.a2k.vncserver.VideoSurfaceView;
 
-public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvailableListener
+public class MainActivity extends Activity implements VideoSurfaceView.VideoSurfaceViewListener
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
@@ -34,8 +31,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
 	private Surface m_Surface;
-	private SurfaceTexture m_SurfaceTexture;
-	private long m_GraphicBuffer;
 
 	private MediaProjectionManager m_ProjectionManager;
 	private MediaProjection m_MediaProjection;
@@ -47,8 +42,9 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private String m_PngOutputFile;
 
 	private VncJni m_VncJni = new VncJni();
-	private Gles m_Gles = new Gles();
 	
+	private VideoSurfaceView m_VideoSurfaceView;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -66,6 +62,15 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		ContextWrapper c = new ContextWrapper(this);
 		m_PngOutputFile = c.getFilesDir().getPath() + "/surface.png";
 
+		m_VideoSurfaceView = new VideoSurfaceView(this, m_VncJni, m_DisplayWidth, m_DisplayHeight);
+		m_VideoSurfaceView.setVideoSurfaceViewListener(this);
+
+		addContentView(m_VideoSurfaceView, new FrameLayout.LayoutParams(
+			FrameLayout.LayoutParams.WRAP_CONTENT,
+			/*FrameLayout.LayoutParams.WRAP_CONTENT*/ 700,
+			Gravity.BOTTOM
+			)
+		);
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
 		{
@@ -78,8 +83,11 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				}
 				else
 				{
-					m_ButtonStartStop.setText("Stop");
-					shareScreen();
+					if (m_Surface != null)
+					{
+						m_ButtonStartStop.setText("Stop");
+						shareScreen();
+					}
 				}
 				m_ProjectionStarted ^= true;
 			}
@@ -118,13 +126,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		if (m_Surface == null)
 		{
-			m_Gles.initGL(m_VncJni, m_DisplayWidth, m_DisplayHeight);
-			m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(m_DisplayWidth, m_DisplayHeight);
-			m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
-			m_SurfaceTexture = new SurfaceTexture(m_Gles.getTexture());
-			m_SurfaceTexture.setOnFrameAvailableListener(MainActivity.this);
-			m_SurfaceTexture.setDefaultBufferSize(m_DisplayWidth, m_DisplayHeight);
-			m_Surface = new Surface(m_SurfaceTexture);
+			return;
 		}
 		if (m_MediaProjection == null)
 		{
@@ -138,7 +140,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	private void stopScreenSharing()
 	{
-		m_Gles.deinitGL();
 		if (m_VirtualDisplay != null)
 		{
 			m_VirtualDisplay.release();
@@ -154,12 +155,9 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
 	}
 
-	public void onFrameAvailable(SurfaceTexture surfaceTexture)
+	public void onSurfaceTextureCreated(SurfaceTexture surfaceTexture)
 	{
-		m_SurfaceTexture.updateTexImage();
-		m_Gles.draw(m_SurfaceTexture);
-		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
-		Gles.saveFrame(m_PngOutputFile, m_DisplayWidth, m_DisplayHeight);
-		m_Gles.swapBufers();
+		Log.d(TAG, "onSurfaceCreated");
+		m_Surface = new Surface(surfaceTexture);
 	}
 }
