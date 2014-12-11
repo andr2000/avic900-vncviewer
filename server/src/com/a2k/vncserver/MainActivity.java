@@ -64,6 +64,7 @@ public class MainActivity extends Activity implements Renderer.RendererListener,
 		m_Renderer = new Renderer(m_VncJni, m_DisplayWidth, m_DisplayHeight);
 		m_Renderer.setRendererListener(this);
 		m_VideoSurfaceView = new VideoSurfaceView(this, m_Renderer);
+		m_VideoSurfaceView.setDebugFlags(GLSurfaceView.DEBUG_LOG_GL_CALLS);
 		m_VideoSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
 		//setContentView(m_VideoSurfaceView);
