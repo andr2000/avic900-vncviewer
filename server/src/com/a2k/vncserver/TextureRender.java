@@ -6,16 +6,42 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.egl.EGLDisplay;
+import javax.microedition.khronos.egl.EGLSurface;
+import javax.microedition.khronos.opengles.GL11ExtensionPack;
+
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.util.Log;
+import android.view.Surface;
+
+import com.a2k.vncserver.VncJni;
 
 class TextureRender
 {
 	private static final String TAG = "TextureRender";
+
+	private VncJni m_VncJni;
+	private int m_Width;
+	private int m_Height;
+
+	private EGL10 m_Egl;
+	private EGLDisplay m_EglDisplay;
+	private EGLContext m_EglContext;
+	private EGLSurface m_EglSurface;
+
+	private static final int TEX_SURFACE_TEXTURE = 0;
+	private static final int TEX_RENDER_TEXTURE = 1;
+	private static final int TEX_NUMBER = 2;
+	private int[] m_EglTextures = new int[TEX_NUMBER];
+	private int m_FrameBuffer;
+	private long m_GraphicBuffer;
 
 	private static final int FLOAT_SIZE_BYTES = 4;
 	private static final int TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * FLOAT_SIZE_BYTES;
@@ -52,18 +78,39 @@ class TextureRender
 		"  gl_FragColor = texture2D(sTexture, vTextureCoord);\n" +
 		"}\n";
 
+	private static final int EGL_OPENGL_ES2_BIT = 4;
+	private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+	private static final int GGL_PIXEL_FORMAT_RGB_565 = 4;
+
+	private int[] getConfig()
+	{
+		return new int[] {
+			EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
+			EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+			EGL10.EGL_RED_SIZE, 8,
+			EGL10.EGL_GREEN_SIZE, 8,
+			EGL10.EGL_BLUE_SIZE, 8,
+			EGL10.EGL_ALPHA_SIZE, 8,
+			EGL10.EGL_DEPTH_SIZE, 0,
+			EGL10.EGL_STENCIL_SIZE, 0,
+			EGL10.EGL_NONE
+		};
+	}
+
 	private float[] m_MVPMatrix = new float[16];
 	private float[] m_STMatrix = new float[16];
 
 	private int m_Program;
-	private int m_TextureID = -12345;
 	private int m_uMVPMatrixHandle;
 	private int m_uSTMatrixHandle;
 	private int m_aPositionHandle;
 	private int m_aTextureHandle;
 
-	public TextureRender()
+	public TextureRender(VncJni vncJni, int width, int height)
 	{
+		m_VncJni = vncJni;
+		m_Width = width;
+		m_Height = height;
 		m_TriangleVertices = ByteBuffer.allocateDirect(
 			m_TriangleVerticesData.length * FLOAT_SIZE_BYTES)
 			.order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -74,10 +121,18 @@ class TextureRender
 
 	public int getTextureId()
 	{
-		return m_TextureID;
+		return m_EglTextures[TEX_SURFACE_TEXTURE];
 	}
 
 	public void drawFrame(SurfaceTexture st)
+	{
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, m_FrameBuffer);
+		draw(st);
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
+	}
+
+	public void draw(SurfaceTexture st)
 	{
 		checkGlError("onDrawFrame start");
 		st.getTransformMatrix(m_STMatrix);
@@ -89,7 +144,7 @@ class TextureRender
 		checkGlError("glUseProgram");
 
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, m_TextureID);
+		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, getTextureId());
 
 		m_TriangleVertices.position(TRIANGLE_VERTICES_DATA_POS_OFFSET);
 		GLES20.glVertexAttribPointer(m_aPositionHandle, 3, GLES20.GL_FLOAT, false,
@@ -114,8 +169,207 @@ class TextureRender
 		GLES20.glFinish();
 	}
 
-	public void surfaceCreated()
+	public void swapBuffers()
 	{
+		m_Egl.eglSwapBuffers(m_EglDisplay, m_EglSurface);
+	}
+
+	private EGLConfig chooseEglConfig()
+	{
+		int[] configsCount = new int[1];
+		int[] configSpec = getConfig();
+
+		/* get number of configurations */
+		if (!m_Egl.eglChooseConfig(m_EglDisplay, null, null, 0, configsCount))
+		{
+			throw new IllegalArgumentException("Failed to get number of configs: " +
+				Integer.toHexString(m_Egl.eglGetError()));
+		}
+		/* read all */
+		EGLConfig[] configs = new EGLConfig[configsCount[0]];
+		if (!m_Egl.eglChooseConfig(m_EglDisplay, null, configs, configsCount[0], configsCount))
+		{
+			throw new IllegalArgumentException("Failed to choose config: " +
+				Integer.toHexString(m_Egl.eglGetError()));
+		}
+		else if (configsCount[0] > 0)
+		{
+			/* find number of paisr in the configudation we want */
+			int numPairs = 0;
+			while (configSpec[numPairs] != EGL10.EGL_NONE)
+			{
+				numPairs += 2;
+			}
+			numPairs /= 2;
+			/* find configuration that suits */
+			int[] attr = new int[1];
+			for (int i = 0; i < configsCount[0]; i++)
+			{
+				int match = 0;
+				for (int j = 0, idx = 0; j < numPairs; j++, idx += 2)
+				{
+					m_Egl.eglGetConfigAttrib(m_EglDisplay, configs[i], configSpec[idx], attr);
+					if (configSpec[idx] == EGL10.EGL_SURFACE_TYPE)
+					{
+						if ((attr[0] & configSpec[idx + 1]) == configSpec[idx + 1])
+						{
+							match++;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else if (configSpec[idx] == EGL10.EGL_RENDERABLE_TYPE)
+					{
+						if ((attr[0] & configSpec[idx + 1]) == configSpec[idx + 1])
+						{
+							match++;
+						}
+						else
+						{
+							break;
+						}
+					}
+					else if (attr[0] == configSpec[idx + 1])
+					{
+						match++;
+					}
+					else
+					{
+						break;
+					}
+				}
+				if (match == numPairs)
+				{
+					return configs[i];
+				}
+			}
+			return null;
+		}
+		return null;
+	}
+
+	private void dumpConfig(EGLConfig eglConfig)
+	{
+		int[] att = new int[1];
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_SURFACE_TYPE, att);
+		Log.d(TAG, "EGL_SURFACE_TYPE " + att[0]);
+		if ((att[0] & EGL10.EGL_WINDOW_BIT) != EGL10.EGL_WINDOW_BIT)
+		{
+			Log.d(TAG, "Failed to choose EGL_WINDOW_BIT");
+		}
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_RENDERABLE_TYPE, att);
+		Log.d(TAG, "EGL_RENDERABLE_TYPE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_RED_SIZE, att);
+		Log.d(TAG, "EGL_RED_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_GREEN_SIZE, att);
+		Log.d(TAG, "EGL_GREEN_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_BLUE_SIZE, att);
+		Log.d(TAG, "EGL_BLUE_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_ALPHA_SIZE, att);
+		Log.d(TAG, "EGL_ALPHA_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_DEPTH_SIZE, att);
+		Log.d(TAG, "EGL_DEPTH_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_CONFIG_ID, att);
+		Log.d(TAG, "EGL_CONFIG_ID " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_STENCIL_SIZE, att);
+		Log.d(TAG, "EGL_STENCIL_SIZE " + att[0]);
+		m_Egl.eglGetConfigAttrib(m_EglDisplay, eglConfig, EGL10.EGL_BUFFER_SIZE, att);
+		Log.d(TAG, "EGL_BUFFER_SIZE " + att[0]);
+	}
+
+	private EGLContext createContext(EGL10 egl, EGLDisplay eglDisplay, EGLConfig eglConfig)
+	{
+		int[] attribList =
+		{
+			EGL_CONTEXT_CLIENT_VERSION, 2,
+			EGL10.EGL_NONE
+		};
+		return m_Egl.eglCreateContext(eglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attribList);
+	}
+
+	private int createFrameBuffer(int width, int height, int targetTextureId)
+	{
+		int framebuffer;
+		int[] framebuffers = new int[1];
+		GLES20.glGenFramebuffers(1, framebuffers, 0);
+		framebuffer = framebuffers[0];
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, framebuffer);
+
+		int depthbuffer;
+		int[] renderbuffers = new int[1];
+		GLES20.glGenRenderbuffers(1, renderbuffers, 0);
+		depthbuffer = renderbuffers[0];
+
+		GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, depthbuffer);
+		GLES20.glRenderbufferStorage(GLES20.GL_RENDERBUFFER,
+			GLES20.GL_DEPTH_COMPONENT16, width, height);
+		GLES20.glFramebufferRenderbuffer(GLES20.GL_FRAMEBUFFER,
+			GLES20.GL_DEPTH_ATTACHMENT, GLES20.GL_RENDERBUFFER, depthbuffer);
+
+		GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER,
+			GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D,
+			targetTextureId, 0);
+		int status = GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER);
+		if (status != GLES20.GL_FRAMEBUFFER_COMPLETE)
+		{
+			throw new RuntimeException("Framebuffer is not complete: " +
+				Integer.toHexString(status));
+		}
+		GLES20.glBindFramebuffer(GL11ExtensionPack.GL_FRAMEBUFFER_OES, 0);
+		return framebuffer;
+	}
+
+	private void initGL(Surface nativeWindow, int width, int height)
+	{
+		m_Egl = (EGL10)EGLContext.getEGL();
+		m_EglDisplay = m_Egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+
+		int[] version = new int[2];
+		m_Egl.eglInitialize(m_EglDisplay, version);
+
+		EGLConfig eglConfig = chooseEglConfig();
+		m_EglContext = createContext(m_Egl, m_EglDisplay, eglConfig);
+		dumpConfig(eglConfig);
+		int surfaceAttribs[] =
+		{
+			EGL10.EGL_WIDTH, 1,
+			EGL10.EGL_HEIGHT, 1,
+			EGL10.EGL_NONE
+		};
+		m_EglSurface = m_Egl.eglCreateWindowSurface(m_EglDisplay, eglConfig, nativeWindow, surfaceAttribs);
+		if ((m_EglSurface == null) || (m_EglSurface == EGL10.EGL_NO_SURFACE))
+		{
+			throw new RuntimeException("GL Error: " + Integer.toHexString(m_Egl.eglGetError()));
+		}
+		if (!m_Egl.eglMakeCurrent(m_EglDisplay, m_EglSurface, m_EglSurface, m_EglContext))
+		{
+			throw new RuntimeException("GL Make current error: " + Integer.toHexString(m_Egl.eglGetError()));
+		}
+		/* Generate textures */
+		GLES20.glGenTextures(TEX_NUMBER, m_EglTextures, 0);
+		checkGlError("Textures generated");
+		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, m_EglTextures[TEX_RENDER_TEXTURE]);
+		checkGlError("glBindTexture TEX_RENDER_TEXTURE");
+		GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0,
+			GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
+		checkGlError("glTexImage2D");
+		GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+		GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+		GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+		GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+		checkGlError("glTexParameter");
+		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(width, height);
+		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
+		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
+		m_FrameBuffer = createFrameBuffer(width, height, m_EglTextures[TEX_RENDER_TEXTURE]);
+		Log.d(TAG, "OpenGL initialized");
+	}
+
+	public void surfaceCreated(Surface nativeWindow)
+	{
+		initGL(nativeWindow, m_Width, m_Height);
 		m_Program = createProgram(VERTEX_SHADER, FRAGMENT_SHADER);
 		if (m_Program == 0)
 		{
@@ -147,19 +401,6 @@ class TextureRender
 		{
 			throw new RuntimeException("Could not get attrib location for uSTMatrix");
 		}
-
-		int[] textures = new int[1];
-		GLES20.glGenTextures(1, textures, 0);
-
-		m_TextureID = textures[0];
-		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, m_TextureID);
-		checkGlError("glBindTexture mTextureID");
-
-		GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-		GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-		GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-		GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
-		checkGlError("glTexParameter");
 	}
 
 	public void changeFragmentShader(String fragmentShader)
