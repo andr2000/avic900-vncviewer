@@ -1,5 +1,6 @@
 #include <android/log.h>
 #include <dlfcn.h>
+#include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <stdlib.h>
@@ -8,48 +9,17 @@
 
 #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AndroidGraphicBuffer" , ## args)
 
-#define EGL_NATIVE_BUFFER_ANDROID 0x3140
-#define EGL_IMAGE_PRESERVED_KHR   0x30D2
-
-typedef void *EGLContext;
-typedef void *EGLDisplay;
-typedef uint32_t EGLenum;
-typedef int32_t EGLint;
-typedef uint32_t EGLBoolean;
-
-#define EGL_TRUE 1
-#define EGL_FALSE 0
-#define EGL_NONE 0x3038
-#define EGL_NO_CONTEXT (EGLContext)0
-#define EGL_DEFAULT_DISPLAY  (void*)0
-
 #define ANDROID_LIBUI_PATH "libui.so"
-#define ANDROID_GLES_PATH "libGLESv2.so"
-#define ANDROID_EGL_PATH "libEGL.so"
 
 // Really I have no idea, but this should be big enough
 #define GRAPHIC_BUFFER_SIZE 1024
 
 static bool gTryRealloc = true;
 
-struct ARect
-{
-	int32_t left;
-	int32_t top;
-	int32_t right;
-	int32_t bottom;
-};
-
 static class GLFunctions
 {
 public:
-	constexpr GLFunctions() : fGetDisplay(nullptr),
-		fEGLGetError(nullptr),
-		fCreateImageKHR(nullptr),
-		fDestroyImageKHR(nullptr),
-		fImageTargetTexture2DOES(nullptr),
-		fBindTexture(nullptr),
-		fGLGetError(nullptr),
+	constexpr GLFunctions() :
 		fGraphicBufferCtor(nullptr),
 		fGraphicBufferDtor(nullptr),
 		fGraphicBufferLock(nullptr),
@@ -60,25 +30,6 @@ public:
 		m_Initialized(false)
 	{
 	}
-
-	typedef EGLDisplay (* pfnGetDisplay)(void *display_id);
-	pfnGetDisplay fGetDisplay;
-	typedef EGLint (* pfnEGLGetError)(void);
-	pfnEGLGetError fEGLGetError;
-
-	typedef EGLImageKHR (* pfnCreateImageKHR)(EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
-	pfnCreateImageKHR fCreateImageKHR;
-	typedef EGLBoolean (* pfnDestroyImageKHR)(EGLDisplay dpy, EGLImageKHR image);
-	pfnDestroyImageKHR fDestroyImageKHR;
-
-	typedef void (* pfnImageTargetTexture2DOES)(GLenum target, EGLImageKHR image);
-	pfnImageTargetTexture2DOES fImageTargetTexture2DOES;
-
-	typedef void (* pfnBindTexture)(GLenum target, GLuint texture);
-	pfnBindTexture fBindTexture;
-
-	typedef GLenum (* pfnGLGetError)();
-	pfnGLGetError fGLGetError;
 
 	typedef void (*pfnGraphicBufferCtor)(void*, uint32_t w, uint32_t h, uint32_t format, uint32_t usage);
 	pfnGraphicBufferCtor fGraphicBufferCtor;
@@ -108,41 +59,7 @@ public:
 			return true;
 		}
 
-		void *handle = dlopen(ANDROID_EGL_PATH, RTLD_LAZY);
-		if (!handle)
-		{
-			LOG("Couldn't load EGL library");
-			return false;
-		}
-
-		fGetDisplay = (pfnGetDisplay)dlsym(handle, "eglGetDisplay");
-		fEGLGetError = (pfnEGLGetError)dlsym(handle, "eglGetError");
-		fCreateImageKHR = (pfnCreateImageKHR)dlsym(handle, "eglCreateImageKHR");
-		fDestroyImageKHR = (pfnDestroyImageKHR)dlsym(handle, "eglDestroyImageKHR");
-
-		if (!fGetDisplay || !fEGLGetError || !fCreateImageKHR || !fDestroyImageKHR)
-		{
-			LOG("Failed to find some EGL functions");
-			return false;
-		}
-
-		handle = dlopen(ANDROID_GLES_PATH, RTLD_LAZY);
-		if (!handle) {
-			LOG("Couldn't load GL library");
-			return false;
-		}
-
-		fImageTargetTexture2DOES = (pfnImageTargetTexture2DOES)dlsym(handle, "glEGLImageTargetTexture2DOES");
-		fBindTexture = (pfnBindTexture)dlsym(handle, "glBindTexture");
-		fGLGetError = (pfnGLGetError)dlsym(handle, "glGetError");
-
-		if (!fImageTargetTexture2DOES || !fBindTexture || !fGLGetError)
-		{
-			LOG("Failed to find some GL functions");
-			return false;
-		}
-
-		handle = dlopen(ANDROID_LIBUI_PATH, RTLD_LAZY);
+		void *handle = dlopen(ANDROID_LIBUI_PATH, RTLD_LAZY);
 		if (!handle)
 		{
 			LOG("Couldn't load libui.so");
@@ -174,7 +91,7 @@ private:
 
 static void clearGLError()
 {
-	while (sGLFunctions.fGLGetError() != GL_NO_ERROR);
+	while (glGetError() != GL_NO_ERROR);
 }
 
 static bool ensureNoGLError(const char* name)
@@ -182,7 +99,7 @@ static bool ensureNoGLError(const char* name)
 	bool result = true;
 	GLuint error;
 
-	while ((error = sGLFunctions.fGLGetError()) != GL_NO_ERROR)
+	while ((error = glGetError()) != GL_NO_ERROR)
 	{
 		LOG("GL error [%s]: %40x\n", name, error);
 		result = false;
@@ -340,7 +257,7 @@ bool AndroidGraphicBuffer::ensureEGLImage()
 	EGLint eglImgAttrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE, EGL_NONE };
 	void *nativeBuffer = sGLFunctions.fGraphicBufferGetNativeBuffer(m_Handle);
 
-	m_EGLImage = sGLFunctions.fCreateImageKHR(sGLFunctions.fGetDisplay(EGL_DEFAULT_DISPLAY),
+	m_EGLImage = eglCreateImageKHR(eglGetDisplay(EGL_DEFAULT_DISPLAY),
 		EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, (EGLClientBuffer)nativeBuffer, eglImgAttrs);
 	return m_EGLImage != nullptr;
 }
@@ -357,6 +274,6 @@ bool AndroidGraphicBuffer::bind()
 		return false;
 	}
 	clearGLError();
-	sGLFunctions.fImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, m_EGLImage);
+	glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, m_EGLImage);
 	return ensureNoGLError("glEGLImageTargetTexture2DOES");
 }
