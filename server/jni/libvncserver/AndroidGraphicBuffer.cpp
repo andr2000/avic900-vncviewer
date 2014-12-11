@@ -274,6 +274,6 @@ bool AndroidGraphicBuffer::bind()
 		return false;
 	}
 	clearGLError();
-	glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, m_EGLImage);
+	glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, m_EGLImage);
 	return ensureNoGLError("glEGLImageTargetTexture2DOES");
 }

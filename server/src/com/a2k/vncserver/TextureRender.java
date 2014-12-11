@@ -318,7 +318,7 @@ class TextureRender
 			throw new RuntimeException("Framebuffer is not complete: " +
 				GLU.gluErrorString(status));
 		}
-		GLES20.glBindFramebuffer(GL11ExtensionPack.GL_FRAMEBUFFER_OES, 0);
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 		return framebuffer;
 	}
 
@@ -349,19 +349,19 @@ class TextureRender
 		/* Generate textures */
 		GLES20.glGenTextures(TEX_NUMBER, m_EglTextures, 0);
 		checkGlError("Textures generated");
-		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, m_EglTextures[TEX_RENDER_TEXTURE]);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, m_EglTextures[TEX_RENDER_TEXTURE]);
 		checkGlError("glBindTexture TEX_RENDER_TEXTURE");
 		GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0,
 			GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null);
 		checkGlError("glTexImage2D");
-		GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
-		GLES20.glTexParameterf(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-		GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
-		GLES20.glTexParameteri(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 		checkGlError("glTexParameter");
 		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(width, height);
 		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
-		GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, 0);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
 		m_FrameBuffer = createFrameBuffer(width, height, m_EglTextures[TEX_RENDER_TEXTURE]);
 		Log.d(TAG, "OpenGL initialized");
 	}
