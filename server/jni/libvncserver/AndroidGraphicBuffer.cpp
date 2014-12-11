@@ -119,7 +119,7 @@ static __attribute__((noinline)) unsigned next_pow2(unsigned x)
 }
 AndroidGraphicBuffer::AndroidGraphicBuffer(int width, int height,
 	uint32_t usage, uint32_t format) :
-	m_Width(next_pow2(width)), m_Height(next_pow2(height)), m_Usage(usage), m_Format(format),
+	m_Width(width), m_Height(height), m_Usage(usage), m_Format(format),
 	m_Handle(nullptr), m_EGLImage(nullptr)
 {
 	LOG("Size rounded to the next power of 2 (%dx%d)", m_Width, m_Height);
