@@ -22,7 +22,7 @@ import android.widget.Toast;
 import com.a2k.vncserver.VncJni;
 import com.a2k.vncserver.VideoSurfaceView;
 
-public class MainActivity extends Activity implements Renderer.OnSurfaceTextureCreatedListener,
+public class MainActivity extends Activity implements Renderer.RendererListener,
 	SurfaceTexture.OnFrameAvailableListener
 {
 	public static final String TAG = "MainActivity";
@@ -44,6 +44,8 @@ public class MainActivity extends Activity implements Renderer.OnSurfaceTextureC
 	
 	private VideoSurfaceView m_VideoSurfaceView;
 	private Renderer m_Renderer;
+	private boolean m_FrameDone = true;
+	private Object m_FrameDoneLock = new Object();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -60,7 +62,7 @@ public class MainActivity extends Activity implements Renderer.OnSurfaceTextureC
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
 		m_Renderer = new Renderer(m_VncJni, m_DisplayWidth, m_DisplayHeight);
-		m_Renderer.setOnSurfaceTextureCreatedListener(this);
+		m_Renderer.setRendererListener(this);
 		m_VideoSurfaceView = new VideoSurfaceView(this, m_Renderer);
 		m_VideoSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
@@ -170,10 +172,32 @@ public class MainActivity extends Activity implements Renderer.OnSurfaceTextureC
 		m_Surface = new Surface(surfaceTexture);
 	}
 
-
 	public void onFrameAvailable(SurfaceTexture surfaceTexture)
 	{
 		Log.d(TAG, "onFrameAvailable");
-		m_VideoSurfaceView.requestRender();
+		synchronized (m_FrameDoneLock)
+		{
+			m_FrameDone = false;
+			m_VideoSurfaceView.requestRender();
+			while (!m_FrameDone)
+			{
+				try
+				{
+					m_FrameDoneLock.wait();
+				}
+				catch (InterruptedException e)
+				{
+				}
+			}
+		}
+	}
+
+	public void onDrawDone()
+	{
+		synchronized (m_FrameDoneLock)
+		{
+			m_FrameDone = true;
+			m_FrameDoneLock.notifyAll();
+		}
 	}
 }

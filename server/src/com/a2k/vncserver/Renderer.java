@@ -27,22 +27,17 @@ class Renderer implements GLSurfaceView.Renderer
 		m_TextureRender = new TextureRender();
 	}
 
-	private OnSurfaceTextureCreatedListener onSurfaceTextureCreatedListener;
+	private RendererListener m_Listener;
 
-	public interface OnSurfaceTextureCreatedListener
+	public static interface RendererListener
 	{
-		void onSurfaceTextureCreated(SurfaceTexture surfaceTexture);
+		public void onSurfaceTextureCreated(SurfaceTexture surfaceTexture);
+		public void onDrawDone();
 	}
 
-	public void setOnSurfaceTextureCreatedListener(OnSurfaceTextureCreatedListener listener) {
-		onSurfaceTextureCreatedListener = listener;
-	}
-
-	public void onSurfaceTextureCreated(SurfaceTexture surfaceTexture) {
-		if (onSurfaceTextureCreatedListener != null)
-		{
-			onSurfaceTextureCreatedListener.onSurfaceTextureCreated(surfaceTexture);
-		}
+	public void setRendererListener(RendererListener listener)
+	{
+		m_Listener = listener;
 	}
 
 	public void onDrawFrame(GL10 glUnused)
@@ -51,6 +46,10 @@ class Renderer implements GLSurfaceView.Renderer
 		m_SurfaceTexture.updateTexImage();
 		m_TextureRender.drawFrame(m_SurfaceTexture);
 		//m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
+		if (m_Listener != null)
+		{
+			m_Listener.onDrawDone();
+		}
 	}
 
 	public void onSurfaceChanged(GL10 glUnused, int width, int height) {
@@ -65,6 +64,9 @@ class Renderer implements GLSurfaceView.Renderer
 		//m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
 		m_SurfaceTexture = new SurfaceTexture(m_TextureRender.getTextureId());
 		m_SurfaceTexture.setDefaultBufferSize(m_Width, m_Height);
-		onSurfaceTextureCreated(m_SurfaceTexture);
+		if (m_Listener != null)
+		{
+			m_Listener.onSurfaceTextureCreated(m_SurfaceTexture);
+		}
 	}
 }
