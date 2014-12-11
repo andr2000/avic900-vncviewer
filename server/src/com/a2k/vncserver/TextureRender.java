@@ -17,6 +17,7 @@ import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
+import android.opengl.GLU;
 import android.opengl.Matrix;
 import android.util.Log;
 import android.view.Surface;
@@ -183,14 +184,14 @@ class TextureRender
 		if (!m_Egl.eglChooseConfig(m_EglDisplay, null, null, 0, configsCount))
 		{
 			throw new IllegalArgumentException("Failed to get number of configs: " +
-				Integer.toHexString(m_Egl.eglGetError()));
+				GLU.gluErrorString(m_Egl.eglGetError()));
 		}
 		/* read all */
 		EGLConfig[] configs = new EGLConfig[configsCount[0]];
 		if (!m_Egl.eglChooseConfig(m_EglDisplay, null, configs, configsCount[0], configsCount))
 		{
 			throw new IllegalArgumentException("Failed to choose config: " +
-				Integer.toHexString(m_Egl.eglGetError()));
+				GLU.gluErrorString(m_Egl.eglGetError()));
 		}
 		else if (configsCount[0] > 0)
 		{
@@ -315,7 +316,7 @@ class TextureRender
 		if (status != GLES20.GL_FRAMEBUFFER_COMPLETE)
 		{
 			throw new RuntimeException("Framebuffer is not complete: " +
-				Integer.toHexString(status));
+				GLU.gluErrorString(status));
 		}
 		GLES20.glBindFramebuffer(GL11ExtensionPack.GL_FRAMEBUFFER_OES, 0);
 		return framebuffer;
@@ -341,11 +342,11 @@ class TextureRender
 		m_EglSurface = m_Egl.eglCreateWindowSurface(m_EglDisplay, eglConfig, nativeWindow, surfaceAttribs);
 		if ((m_EglSurface == null) || (m_EglSurface == EGL10.EGL_NO_SURFACE))
 		{
-			throw new RuntimeException("GL Error: " + Integer.toHexString(m_Egl.eglGetError()));
+			throw new RuntimeException("GL Error: 0x" + Integer.toHexString(m_Egl.eglGetError()));
 		}
 		if (!m_Egl.eglMakeCurrent(m_EglDisplay, m_EglSurface, m_EglSurface, m_EglContext))
 		{
-			throw new RuntimeException("GL Make current error: " + Integer.toHexString(m_Egl.eglGetError()));
+			throw new RuntimeException("GL Make current error: 0x" + Integer.toHexString(m_Egl.eglGetError()));
 		}
 		/* Generate textures */
 		GLES20.glGenTextures(TEX_NUMBER, m_EglTextures, 0);
@@ -472,8 +473,8 @@ class TextureRender
 		int error;
 		while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR)
 		{
-			Log.e(TAG, op + ": glError " + error);
-			throw new RuntimeException(op + ": glError " + error);
+			Log.e(TAG, op + ": glError 0x" + Integer.toHexString(error));
+			throw new RuntimeException(op + ": glError " + GLU.gluErrorString(error));
 		}
 	}
 
