@@ -1,6 +1,7 @@
 #include <android/log.h>
 #include <jni.h>
 #include <string.h>
+#include <stdio.h>
 #include <sys/time.h>
 
 #include "AndroidGraphicBuffer.h"
@@ -8,6 +9,7 @@
 
 #define MODULE_NAME "vncjni"
 
+uint8_t gPixels[1024 * 1024 * 4];
 
 extern "C"
 {
@@ -27,11 +29,31 @@ extern "C"
 		return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 	}
 
+	void dumpBuffer(int n, const uint8_t *buf)
+	{
+		int col;
+		char str[128];
+
+		while (n)
+		{
+			str[0] = '\0';
+			for (col = 0; (col < 16) && n; col++, n--)
+			{
+				char tmp[16];
+				sprintf(tmp, "%02X ", *buf++);
+				strcat(str, tmp);
+			}
+			LOGD("%s", str);
+		}
+	}
+
 	JNIEXPORT jlong JNICALL Java_com_a2k_vncserver_VncJni_glGetGraphicsBuffer(JNIEnv *env, jobject obj,
 		jint width, jint height)
 	{
 		AndroidGraphicBuffer *buf = new AndroidGraphicBuffer(width, height,
-			AndroidGraphicBuffer::UsageTexture, AndroidGraphicBuffer::ARGB32);
+			(AndroidGraphicBuffer::GRALLOC_USAGE_HW_TEXTURE |
+			AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN),
+			AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGBA_8888);
 		return reinterpret_cast<jlong>(buf);
 	}
 
@@ -50,6 +72,32 @@ extern "C"
 	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glOnFrameAvailable(JNIEnv *env, jobject obj, jlong buffer)
 	{
 		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
-		LOGD("glOnFrameAvailable");
+		uint8_t *ptr;
+		long long start = currentTimeInMilliseconds();
+		p->lock(AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN, &ptr);
+		long long _lock = currentTimeInMilliseconds();
+		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * 4);
+		long long _memcpy = currentTimeInMilliseconds();
+		p->unlock();
+		long long _unlock = currentTimeInMilliseconds();
+		int n = p->getWidth() * p->getHeight() * 4;
+		bool hasData = false;
+		while (n--)
+		{
+			if (gPixels[n] != 0)
+			{
+				hasData = true;
+				break;
+			}
+		}
+		long long _done = currentTimeInMilliseconds();
+		LOGD("glOnFrameAvailable (%dx%d) is %sempty, read in %dms, lock %dms, memcpy %dms, unlock %dms, check %dms",
+			p->getWidth(), p->getHeight(), hasData ? "not " : "",
+			static_cast<int>(_done - start),
+			static_cast<int>(_lock - start),
+			static_cast<int>(_memcpy - _lock),
+			static_cast<int>(_unlock - _memcpy),
+			static_cast<int>(_done - _unlock));
+		dumpBuffer(64, gPixels);
 	}
 }

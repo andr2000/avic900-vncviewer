@@ -8,7 +8,6 @@ import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -22,8 +21,7 @@ import android.widget.Toast;
 import com.a2k.vncserver.VncJni;
 import com.a2k.vncserver.VideoSurfaceView;
 
-public class MainActivity extends Activity implements Renderer.RendererListener,
-	SurfaceTexture.OnFrameAvailableListener
+public class MainActivity extends Activity implements VideoSurfaceView.VideoSurfaceViewListener
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
@@ -43,9 +41,6 @@ public class MainActivity extends Activity implements Renderer.RendererListener,
 	private VncJni m_VncJni = new VncJni();
 	
 	private VideoSurfaceView m_VideoSurfaceView;
-	private Renderer m_Renderer;
-	private boolean m_FrameDone = true;
-	private Object m_FrameDoneLock = new Object();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -61,13 +56,9 @@ public class MainActivity extends Activity implements Renderer.RendererListener,
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
-		m_Renderer = new Renderer(m_VncJni, m_DisplayWidth, m_DisplayHeight);
-		m_Renderer.setRendererListener(this);
-		m_VideoSurfaceView = new VideoSurfaceView(this, m_Renderer);
-		m_VideoSurfaceView.setDebugFlags(GLSurfaceView.DEBUG_LOG_GL_CALLS);
-		m_VideoSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+		m_VideoSurfaceView = new VideoSurfaceView(this, m_VncJni, m_DisplayWidth, m_DisplayHeight);
+		m_VideoSurfaceView.setVideoSurfaceViewListener(this);
 
-		//setContentView(m_VideoSurfaceView);
 		addContentView(m_VideoSurfaceView, new FrameLayout.LayoutParams(
 			FrameLayout.LayoutParams.WRAP_CONTENT,
 			/*FrameLayout.LayoutParams.WRAP_CONTENT*/ 700,
@@ -107,13 +98,6 @@ public class MainActivity extends Activity implements Renderer.RendererListener,
 			m_MediaProjection.stop();
 			m_MediaProjection = null;
 		}
-	}
-
-	@Override
-	protected void onResume()
-	{
-		super.onResume();
-		m_VideoSurfaceView.onResume();
 	}
 
 	@Override
@@ -169,36 +153,6 @@ public class MainActivity extends Activity implements Renderer.RendererListener,
 	public void onSurfaceTextureCreated(SurfaceTexture surfaceTexture)
 	{
 		Log.d(TAG, "onSurfaceCreated");
-		surfaceTexture.setOnFrameAvailableListener(this);
 		m_Surface = new Surface(surfaceTexture);
-	}
-
-	public void onFrameAvailable(SurfaceTexture surfaceTexture)
-	{
-		Log.d(TAG, "onFrameAvailable");
-		synchronized (m_FrameDoneLock)
-		{
-			m_FrameDone = false;
-			m_VideoSurfaceView.requestRender();
-			while (!m_FrameDone)
-			{
-				try
-				{
-					m_FrameDoneLock.wait();
-				}
-				catch (InterruptedException e)
-				{
-				}
-			}
-		}
-	}
-
-	public void onDrawDone()
-	{
-		synchronized (m_FrameDoneLock)
-		{
-			m_FrameDone = true;
-			m_FrameDoneLock.notifyAll();
-		}
 	}
 }
