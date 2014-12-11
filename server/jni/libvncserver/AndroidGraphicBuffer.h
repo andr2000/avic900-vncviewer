@@ -1,10 +1,8 @@
 #ifndef ANDROIDGRAPHICBBUFFER_H_
 #define ANDROIDGRAPHICBBUFFER_H_
 
+#include <EGL/eglext.h>
 #include <stdint.h>
-
-typedef void *EGLImageKHR;
-typedef void *EGLClientBuffer;
 
 /**
  * This class allows access to Android's direct texturing mechanism. Locking
@@ -100,7 +98,7 @@ private:
 	bool ensureBufferCreated();
 
 	void *m_Handle;
-	void *m_EGLImage;
+	EGLImageKHR m_EGLImage;
 };
 
 #endif /* ANDROIDGRAPHICBBUFFER_H_ */
