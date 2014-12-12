@@ -10,7 +10,7 @@ public class VncJni
 	public native void glPutGraphicsBuffer(long buffer);
 	public native boolean glBindGraphicsBuffer(long buffer);
 	public native void glOnFrameAvailable(long buffer);
-
+	public native void glDumpFrame(long buffer, String path);
 	static
 	{
 		System.loadLibrary("vncserver");

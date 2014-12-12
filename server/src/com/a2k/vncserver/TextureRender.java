@@ -134,7 +134,8 @@ class TextureRender
 		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
 		if (--m_SaveCounter == 0)
 		{
-			saveFrame(Environment.getExternalStorageDirectory() + "/surface.png", m_Width, m_Height);
+			saveFrame("/sdcard/surface.png", m_Width, m_Height);
+			m_VncJni.glDumpFrame(m_GraphicBuffer, "/sdcard/surface.data");
 		}
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 	}

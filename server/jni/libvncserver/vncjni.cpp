@@ -9,7 +9,9 @@
 
 #define MODULE_NAME "vncjni"
 
-uint8_t gPixels[1024 * 1024 * 4];
+#define PIXEL_FORMAT	AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGBA_8888
+#define BYTES_PER_PIXEL	4
+uint8_t gPixels[1024 * 1024 * BYTES_PER_PIXEL];
 
 extern "C"
 {
@@ -29,31 +31,13 @@ extern "C"
 		return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 	}
 
-	void dumpBuffer(int n, const uint8_t *buf)
-	{
-		int col;
-		char str[128];
-
-		while (n)
-		{
-			str[0] = '\0';
-			for (col = 0; (col < 16) && n; col++, n--)
-			{
-				char tmp[16];
-				sprintf(tmp, "%02X ", *buf++);
-				strcat(str, tmp);
-			}
-			LOGD("%s", str);
-		}
-	}
-
 	JNIEXPORT jlong JNICALL Java_com_a2k_vncserver_VncJni_glGetGraphicsBuffer(JNIEnv *env, jobject obj,
 		jint width, jint height)
 	{
 		AndroidGraphicBuffer *buf = new AndroidGraphicBuffer(width, height,
 			(AndroidGraphicBuffer::GRALLOC_USAGE_HW_TEXTURE |
 			AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN),
-			AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGBA_8888);
+			PIXEL_FORMAT);
 		return reinterpret_cast<jlong>(buf);
 	}
 
@@ -71,45 +55,32 @@ extern "C"
 
 	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glOnFrameAvailable(JNIEnv *env, jobject obj, jlong buffer)
 	{
+		long long start = currentTimeInMilliseconds();
 		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
 		uint8_t *ptr;
-		long long start = currentTimeInMilliseconds();
 		p->lock(AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN, &ptr);
-		long long _lock = currentTimeInMilliseconds();
-		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * 4);
-		long long _memcpy = currentTimeInMilliseconds();
+		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * BYTES_PER_PIXEL);
 		p->unlock();
-		long long _unlock = currentTimeInMilliseconds();
-		int n = p->getWidth() * p->getHeight() * 4;
-		bool hasData = false;
-		while (n--)
-		{
-			if (gPixels[n] != 0)
-			{
-				hasData = true;
-				break;
-			}
-		}
-		long long _done = currentTimeInMilliseconds();
-		LOGD("glOnFrameAvailable (%dx%d) is %sempty, read in %dms, lock %dms, memcpy %dms, unlock %dms, check %dms",
-			p->getWidth(), p->getHeight(), hasData ? "not " : "",
-			static_cast<int>(_done - start),
-			static_cast<int>(_lock - start),
-			static_cast<int>(_memcpy - _lock),
-			static_cast<int>(_unlock - _memcpy),
-			static_cast<int>(_done - _unlock));
-		dumpBuffer(64, gPixels);
+		long long done = currentTimeInMilliseconds();
+		LOGD("glOnFrameAvailable (%dx%d), done in %dms",
+			p->getWidth(), p->getHeight(), static_cast<int>(done - start));
+	}
 
-		static int i = 20;
-		if (--i == 0)
+	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glDumpFrame(JNIEnv *env, jobject obj, jlong buffer, jstring path)
+	{
+		const char *nativePath = env->GetStringUTFChars(path, JNI_FALSE);
+		FILE *f = fopen(nativePath, "w+b");
+		if (f)
 		{
-			FILE *f = fopen("/sdcard/surface.data", "w+b");
-			if (f)
-			{
-				fwrite(gPixels, 1, p->getWidth() * p->getHeight() * 4, f);
-				fclose(f);
-			}
+			AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
+			fwrite(gPixels, 1, p->getWidth() * p->getHeight() * BYTES_PER_PIXEL, f);
+			fclose(f);
+			LOGD("Frame saved at %s", nativePath);
 		}
-
+		else
+		{
+			LOGE("Failed to save frame at %s", nativePath);
+		}
+		env->ReleaseStringUTFChars(path, nativePath);
 	}
 }
