@@ -11,7 +11,6 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
-import javax.microedition.khronos.opengles.GL11ExtensionPack;
 
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
@@ -19,9 +18,7 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLU;
 import android.opengl.Matrix;
-import android.os.Environment;
 import android.util.Log;
-import android.view.Surface;
 
 import com.a2k.vncserver.VncJni;
 
@@ -44,6 +41,8 @@ class TextureRender
 	private int[] m_EglTextures = new int[TEX_NUMBER];
 	private int m_FrameBuffer;
 	private long m_GraphicBuffer;
+
+	private String m_DumpOutputDir;
 
 	private static final int FLOAT_SIZE_BYTES = 4;
 	private static final int TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * FLOAT_SIZE_BYTES;
@@ -82,12 +81,11 @@ class TextureRender
 
 	private static final int EGL_OPENGL_ES2_BIT = 4;
 	private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
-	private static final int GGL_PIXEL_FORMAT_RGB_565 = 4;
 
 	private int[] getConfig()
 	{
 		return new int[] {
-			EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
+			EGL10.EGL_SURFACE_TYPE, EGL10.EGL_PBUFFER_BIT,
 			EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 			EGL10.EGL_RED_SIZE, 8,
 			EGL10.EGL_GREEN_SIZE, 8,
@@ -121,6 +119,11 @@ class TextureRender
 		Matrix.setIdentityM(m_STMatrix, 0);
 	}
 
+	public void setDumpOutputDir(String outputDir)
+	{
+		m_DumpOutputDir = outputDir;
+	}
+
 	public int getTextureId()
 	{
 		return m_EglTextures[TEX_SURFACE_TEXTURE];
@@ -134,8 +137,9 @@ class TextureRender
 		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
 		if (--m_SaveCounter == 0)
 		{
-			saveFrame("/sdcard/surface.png", m_Width, m_Height);
-			m_VncJni.glDumpFrame(m_GraphicBuffer, "/sdcard/surface.data");
+			saveFrame(m_DumpOutputDir + "surface.png", m_Width, m_Height);
+			m_VncJni.glDumpFrame(m_GraphicBuffer, m_DumpOutputDir + "/surface.data");
+			m_SaveCounter = 20;
 		}
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 	}
@@ -203,7 +207,7 @@ class TextureRender
 		}
 		else if (configsCount[0] > 0)
 		{
-			/* find number of paisr in the configudation we want */
+			/* find number of pairs in the configuration we want */
 			int numPairs = 0;
 			while (configSpec[numPairs] != EGL10.EGL_NONE)
 			{
@@ -330,7 +334,7 @@ class TextureRender
 		return framebuffer;
 	}
 
-	private void initGL(Surface nativeWindow, int width, int height)
+	private void initGL(int width, int height)
 	{
 		m_Egl = (EGL10)EGLContext.getEGL();
 		m_EglDisplay = m_Egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
@@ -341,11 +345,14 @@ class TextureRender
 		EGLConfig eglConfig = chooseEglConfig();
 		m_EglContext = createContext(m_Egl, m_EglDisplay, eglConfig);
 		dumpConfig(eglConfig);
+		/* we always render to FBO */
 		int surfaceAttribs[] =
 		{
+			EGL10.EGL_WIDTH, 1,
+			EGL10.EGL_HEIGHT, 1,
 			EGL10.EGL_NONE
 		};
-		m_EglSurface = m_Egl.eglCreateWindowSurface(m_EglDisplay, eglConfig, nativeWindow, surfaceAttribs);
+		m_EglSurface = m_Egl.eglCreatePbufferSurface(m_EglDisplay, eglConfig, surfaceAttribs);
 		if ((m_EglSurface == null) || (m_EglSurface == EGL10.EGL_NO_SURFACE))
 		{
 			throw new RuntimeException("GL Error: 0x" + Integer.toHexString(m_Egl.eglGetError()));
@@ -371,9 +378,9 @@ class TextureRender
 		Log.d(TAG, "OpenGL initialized");
 	}
 
-	public void surfaceCreated(Surface nativeWindow)
+	public void start()
 	{
-		initGL(nativeWindow, m_Width, m_Height);
+		initGL(m_Width, m_Height);
 		m_Program = createProgram(VERTEX_SHADER, FRAGMENT_SHADER);
 		if (m_Program == 0)
 		{

@@ -12,17 +12,14 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.a2k.vncserver.VncJni;
-import com.a2k.vncserver.VideoSurfaceView;
 
-public class MainActivity extends Activity implements VideoSurfaceView.VideoSurfaceViewListener
+public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvailableListener
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
@@ -31,6 +28,8 @@ public class MainActivity extends Activity implements VideoSurfaceView.VideoSurf
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
 	private Surface m_Surface;
+	private TextureRender m_TextureRender;
+	private SurfaceTexture m_SurfaceTexture;
 
 	private MediaProjectionManager m_ProjectionManager;
 	private MediaProjection m_MediaProjection;
@@ -39,12 +38,8 @@ public class MainActivity extends Activity implements VideoSurfaceView.VideoSurf
 	private Button m_ButtonStartStop;
 	private boolean m_ProjectionStarted;
 
-	private String m_PngOutputFile;
-
 	private VncJni m_VncJni = new VncJni();
 	
-	private VideoSurfaceView m_VideoSurfaceView;
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -59,16 +54,6 @@ public class MainActivity extends Activity implements VideoSurfaceView.VideoSurf
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
-		ContextWrapper c = new ContextWrapper(this);
-		m_PngOutputFile = c.getFilesDir().getPath() + "/surface.png";
-
-		m_VideoSurfaceView = new VideoSurfaceView(this, m_VncJni, m_DisplayWidth, m_DisplayHeight);
-		m_VideoSurfaceView.setVideoSurfaceViewListener(this);
-
-		addContentView(m_VideoSurfaceView, new FrameLayout.LayoutParams(
-			1, 1, Gravity.BOTTOM
-			)
-		);
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
 		{
@@ -81,11 +66,8 @@ public class MainActivity extends Activity implements VideoSurfaceView.VideoSurf
 				}
 				else
 				{
-					if (m_Surface != null)
-					{
-						m_ButtonStartStop.setText("Stop");
-						shareScreen();
-					}
+					m_ButtonStartStop.setText("Stop");
+					shareScreen();
 				}
 				m_ProjectionStarted ^= true;
 			}
@@ -124,7 +106,13 @@ public class MainActivity extends Activity implements VideoSurfaceView.VideoSurf
 	{
 		if (m_Surface == null)
 		{
-			return;
+			m_TextureRender = new TextureRender(m_VncJni, m_DisplayWidth, m_DisplayHeight);
+			m_TextureRender.setDumpOutputDir("/sdcard/");
+			m_TextureRender.start();
+			m_SurfaceTexture = new SurfaceTexture(m_TextureRender.getTextureId());
+			m_SurfaceTexture.setDefaultBufferSize(m_DisplayWidth, m_DisplayHeight);
+			m_SurfaceTexture.setOnFrameAvailableListener(this);
+			m_Surface = new Surface(m_SurfaceTexture);
 		}
 		if (m_MediaProjection == null)
 		{
@@ -153,9 +141,11 @@ public class MainActivity extends Activity implements VideoSurfaceView.VideoSurf
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
 	}
 
-	public void onSurfaceTextureCreated(SurfaceTexture surfaceTexture)
+	public void onFrameAvailable(SurfaceTexture surfaceTexture)
 	{
-		Log.d(TAG, "onSurfaceCreated");
-		m_Surface = new Surface(surfaceTexture);
+		Log.d(TAG, "onFrameAvailable");
+		m_SurfaceTexture.updateTexImage();
+		m_TextureRender.drawFrame(m_SurfaceTexture);
+		m_TextureRender.swapBuffers();
 	}
 }
