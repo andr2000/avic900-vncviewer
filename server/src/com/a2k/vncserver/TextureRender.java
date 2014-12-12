@@ -68,6 +68,7 @@ class TextureRender
 		"void main() {\n" +
 		"  gl_Position = uMVPMatrix * aPosition;\n" +
 		"  vTextureCoord = (uSTMatrix * aTextureCoord).xy;\n" +
+		"  vTextureCoord = vec2(vTextureCoord.s, 1.0 - vTextureCoord.t);\n" +
 		"}\n";
 
 	private static final String FRAGMENT_SHADER =
