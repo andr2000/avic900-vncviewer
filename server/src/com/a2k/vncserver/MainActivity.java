@@ -66,9 +66,7 @@ public class MainActivity extends Activity implements VideoSurfaceView.VideoSurf
 		m_VideoSurfaceView.setVideoSurfaceViewListener(this);
 
 		addContentView(m_VideoSurfaceView, new FrameLayout.LayoutParams(
-			FrameLayout.LayoutParams.WRAP_CONTENT,
-			/*FrameLayout.LayoutParams.WRAP_CONTENT*/ 700,
-			Gravity.BOTTOM
+			1, 1, Gravity.BOTTOM
 			)
 		);
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
