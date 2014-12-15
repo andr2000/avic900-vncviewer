@@ -5,6 +5,7 @@ LIBVNCSERVER_ROOT:=../../../libvncserver/
 
 LOCAL_SRC_FILES += \
 	vncjni.cpp \
+	vncserver.cpp \
 	AndroidGraphicBuffer.cpp \
 	$(LIBVNCSERVER_ROOT)/libvncserver/main.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/rfbserver.c \
