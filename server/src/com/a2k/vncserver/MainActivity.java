@@ -2,7 +2,6 @@ package com.a2k.vncserver;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
@@ -10,6 +9,8 @@ import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Surface;
@@ -19,7 +20,8 @@ import android.widget.Toast;
 
 import com.a2k.vncserver.VncJni;
 
-public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvailableListener
+public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvailableListener,
+	VncJni.NotificationListener
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
@@ -46,6 +48,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
+		m_VncJni.setNotificationListener(this);
+		m_VncJni.init();
 		Log.d(TAG, m_VncJni.protoGetVersion());
 		
 		DisplayMetrics metrics = new DisplayMetrics();
@@ -84,6 +88,28 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			m_MediaProjection = null;
 		}
 	}
+
+	public void onNotification(int what, String message)
+	{
+		Message msg = new Message();
+		msg.what = what;
+		Bundle data = new Bundle();
+		data.putString("text", message);
+		msg.setData(data);
+		m_Handler.sendMessage(msg);
+	}
+
+	private Handler m_Handler = new Handler()
+	{
+		@Override
+		public void handleMessage(Message msg)
+		{
+			Bundle bundle = msg.getData();
+			Toast.makeText(MainActivity.this, bundle.getString("text"),
+				Toast.LENGTH_SHORT).show();
+			Log.d(TAG, "what = " + msg.what + " text = " + bundle.getString("text"));
+		}
+	};
 
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data)
