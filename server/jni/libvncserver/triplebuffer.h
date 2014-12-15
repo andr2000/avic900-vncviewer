@@ -23,7 +23,7 @@ public:
 		}
 		m_NewBufferAvailable = false;
 		int tmp;
-		tmp= m_Clean;
+		tmp = m_Clean;
 		m_Clean = m_Consumer;
 		m_Consumer = tmp;
 		return m_Buffer[m_Consumer];
@@ -33,7 +33,7 @@ public:
 	{
 		std::lock_guard<std::mutex> lock(m_Lock);
 		int tmp;
-		tmp= m_Clean;
+		tmp = m_Clean;
 		m_Clean = m_Producer;
 		m_Producer = tmp;
 		m_NewBufferAvailable = true;
