@@ -254,7 +254,20 @@ bool AndroidGraphicBuffer::ensureEGLImage()
 	{
 		return false;
 	}
-	EGLint eglImgAttrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE, EGL_NONE };
+	int khrFormat = 0;
+	if (m_Format == HAL_PIXEL_FORMAT_RGB_565)
+	{
+		khrFormat = EGL_FORMAT_RGB_565_KHR;
+	}
+	else if (m_Format == HAL_PIXEL_FORMAT_RGBA_8888)
+	{
+		khrFormat = EGL_FORMAT_RGBA_8888_KHR;
+	}
+	else
+	{
+		return false;
+	}
+	EGLint eglImgAttrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_MATCH_FORMAT_KHR,  khrFormat, EGL_NONE, EGL_NONE };
 	void *nativeBuffer = sGLFunctions.fGraphicBufferGetNativeBuffer(m_Handle);
 
 	m_EGLImage = eglCreateImageKHR(eglGetDisplay(EGL_DEFAULT_DISPLAY),

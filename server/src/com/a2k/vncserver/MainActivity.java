@@ -8,6 +8,7 @@ import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.opengl.GLES20;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -29,6 +30,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private int m_ScreenDensity;
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
+	private int m_PixelFormat = GLES20.GL_RGB565;
 	private Surface m_Surface;
 	private TextureRender m_TextureRender;
 	private SurfaceTexture m_SurfaceTexture;
@@ -132,7 +134,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		if (m_Surface == null)
 		{
-			m_TextureRender = new TextureRender(m_VncJni, m_DisplayWidth, m_DisplayHeight);
+			m_TextureRender = new TextureRender(m_VncJni, m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
 			m_TextureRender.setDumpOutputDir("/sdcard/");
 			m_TextureRender.start();
 			m_SurfaceTexture = new SurfaceTexture(m_TextureRender.getTextureId());
