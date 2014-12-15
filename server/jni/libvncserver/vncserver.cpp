@@ -117,6 +117,7 @@ void clientGoneClb(rfbClientPtr cl)
 
 void VncServer::clientGone(rfbClientPtr cl)
 {
+	LOGD("Client disconnected");
 	postEventToUI(CLIENT_DISCONNECTED, "Client disconnected");
 }
 
@@ -128,8 +129,19 @@ rfbNewClientAction clientHookClb(rfbClientPtr cl)
 
 rfbNewClientAction VncServer::clientHook(rfbClientPtr cl)
 {
+	LOGD("Client connected");
 	postEventToUI(CLIENT_CONNECTED, "Client connected");
 	return RFB_CLIENT_ACCEPT;
+}
+
+void rfbDefaultLog(const char *format, ...)
+{
+	va_list args;
+	char buf[256];
+	va_start(args, format);
+	vsprintf(buf, format, args);
+	LOGD("%s", buf);
+	va_end(args);
 }
 
 int VncServer::startServer(int width, int height, int pixelFormat)
@@ -151,6 +163,9 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	m_RfbScreenInfoPtr->deferUpdateTime = 0;
 	m_RfbScreenInfoPtr->port = VNC_PORT;
 
+	rfbLogEnable(true);
+	rfbLog = rfbDefaultLog;
+	rfbErr = rfbDefaultLog;
 	rfbInitServer(m_RfbScreenInfoPtr);
 	postEventToUI(SERVER_STARTED, "VNC server started");
 	return 0;
