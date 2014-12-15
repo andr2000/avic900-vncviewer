@@ -34,7 +34,7 @@ public class VncJni
 	public native void init();
 	public native String protoGetVersion();
 
-	public native long glGetGraphicsBuffer(int width, int height);
+	public native long glGetGraphicsBuffer(int width, int height, int pixelFormat);
 	public native void glPutGraphicsBuffer(long buffer);
 	public native boolean glBindGraphicsBuffer(long buffer);
 	public native void glOnFrameAvailable(long buffer);

@@ -1,4 +1,5 @@
 #include <android/log.h>
+#include <GLES2/gl2.h>
 #include <jni.h>
 #include <string.h>
 #include <stdio.h>
@@ -9,9 +10,8 @@
 
 #define MODULE_NAME "vncjni"
 
-#define PIXEL_FORMAT	AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGBA_8888
-#define BYTES_PER_PIXEL	4
-uint8_t gPixels[1024 * 1024 * BYTES_PER_PIXEL];
+int gBytesPerPixel;
+uint8_t gPixels[1024 * 1024 * 4];
 
 extern "C"
 {
@@ -52,12 +52,33 @@ extern "C"
 	}
 
 	JNIEXPORT jlong JNICALL Java_com_a2k_vncserver_VncJni_glGetGraphicsBuffer(JNIEnv *env, jobject obj,
-		jint width, jint height)
+		jint width, jint height, int pixelFormat)
 	{
+		int format = 0;
+		switch (pixelFormat)
+		{
+			case GL_RGBA:
+			{
+				format = AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGBA_8888;
+				gBytesPerPixel = 4;
+				break;
+			}
+			case GL_RGB565:
+			{
+				format = AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGB_565;
+				gBytesPerPixel = 2;
+				break;
+			}
+			default:
+			{
+				LOGE("Unsupported pixel format");
+				return 0;
+			}
+		}
 		AndroidGraphicBuffer *buf = new AndroidGraphicBuffer(width, height,
 			(AndroidGraphicBuffer::GRALLOC_USAGE_HW_TEXTURE |
 			AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN),
-			PIXEL_FORMAT);
+			format);
 		return reinterpret_cast<jlong>(buf);
 	}
 
@@ -79,7 +100,7 @@ extern "C"
 		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
 		uint8_t *ptr;
 		p->lock(AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN, &ptr);
-		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * BYTES_PER_PIXEL);
+		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * gBytesPerPixel);
 		p->unlock();
 		long long done = currentTimeInMilliseconds();
 		LOGD("glOnFrameAvailable (%dx%d), done in %dms",
@@ -93,7 +114,7 @@ extern "C"
 		if (f)
 		{
 			AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
-			fwrite(gPixels, 1, p->getWidth() * p->getHeight() * BYTES_PER_PIXEL, f);
+			fwrite(gPixels, 1, p->getWidth() * p->getHeight() * gBytesPerPixel, f);
 			fclose(f);
 			LOGD("Frame saved at %s", nativePath);
 		}

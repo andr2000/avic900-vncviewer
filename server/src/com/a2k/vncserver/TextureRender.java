@@ -1,7 +1,5 @@
 package com.a2k.vncserver;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -12,7 +10,6 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.egl.EGLSurface;
 
-import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
@@ -40,6 +37,7 @@ class TextureRender
 	private static final int TEX_NUMBER = 2;
 	private int[] m_EglTextures = new int[TEX_NUMBER];
 	private int m_FrameBuffer;
+	private int m_PixelFormat;
 	private long m_GraphicBuffer;
 
 	private String m_DumpOutputDir;
@@ -85,17 +83,36 @@ class TextureRender
 
 	private int[] getConfig()
 	{
-		return new int[] {
-			EGL10.EGL_SURFACE_TYPE, EGL10.EGL_PBUFFER_BIT,
-			EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-			EGL10.EGL_RED_SIZE, 8,
-			EGL10.EGL_GREEN_SIZE, 8,
-			EGL10.EGL_BLUE_SIZE, 8,
-			EGL10.EGL_ALPHA_SIZE, 8,
-			EGL10.EGL_DEPTH_SIZE, 0,
-			EGL10.EGL_STENCIL_SIZE, 0,
-			EGL10.EGL_NONE
-		};
+		if (m_PixelFormat == GLES20.GL_RGB565)
+		{
+			return new int[] {
+				EGL10.EGL_SURFACE_TYPE, EGL10.EGL_PBUFFER_BIT,
+				EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+				EGL10.EGL_RED_SIZE, 5,
+				EGL10.EGL_GREEN_SIZE, 6,
+				EGL10.EGL_BLUE_SIZE, 5,
+				EGL10.EGL_ALPHA_SIZE, 0,
+				EGL10.EGL_DEPTH_SIZE, 0,
+				EGL10.EGL_STENCIL_SIZE, 0,
+				EGL10.EGL_NONE
+			};
+		}
+		else if (m_PixelFormat == GLES20.GL_RGBA)
+		{
+			return new int[] {
+					EGL10.EGL_SURFACE_TYPE, EGL10.EGL_PBUFFER_BIT,
+					EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+					EGL10.EGL_RED_SIZE, 8,
+					EGL10.EGL_GREEN_SIZE, 8,
+					EGL10.EGL_BLUE_SIZE, 8,
+					EGL10.EGL_ALPHA_SIZE, 8,
+					EGL10.EGL_DEPTH_SIZE, 0,
+					EGL10.EGL_STENCIL_SIZE, 0,
+					EGL10.EGL_NONE
+				};
+		}
+		Log.d(TAG, "Unsupported pixel format " + m_PixelFormat);
+		return null;
 	}
 
 	private float[] m_MVPMatrix = new float[16];
@@ -107,11 +124,12 @@ class TextureRender
 	private int m_aPositionHandle;
 	private int m_aTextureHandle;
 
-	public TextureRender(VncJni vncJni, int width, int height)
+	public TextureRender(VncJni vncJni, int width, int height, int pixelFormat)
 	{
 		m_VncJni = vncJni;
 		m_Width = width;
 		m_Height = height;
+		m_PixelFormat = pixelFormat;
 		m_TriangleVertices = ByteBuffer.allocateDirect(
 			m_TriangleVerticesData.length * FLOAT_SIZE_BYTES)
 			.order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -138,7 +156,6 @@ class TextureRender
 		m_VncJni.glOnFrameAvailable(m_GraphicBuffer);
 		if (--m_SaveCounter == 0)
 		{
-			saveFrame(m_DumpOutputDir + "surface.png", m_Width, m_Height);
 			m_VncJni.glDumpFrame(m_GraphicBuffer, m_DumpOutputDir + "/surface.data");
 			m_SaveCounter = 20;
 		}
@@ -335,7 +352,7 @@ class TextureRender
 		return framebuffer;
 	}
 
-	private void initGL(int width, int height)
+	private void initGL(int width, int height, int pixelFormat)
 	{
 		m_Egl = (EGL10)EGLContext.getEGL();
 		m_EglDisplay = m_Egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
@@ -372,7 +389,7 @@ class TextureRender
 		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
 		GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 		checkGlError("glTexParameter");
-		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(width, height);
+		m_GraphicBuffer = m_VncJni.glGetGraphicsBuffer(width, height, pixelFormat);
 		m_VncJni.glBindGraphicsBuffer(m_GraphicBuffer);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
 		m_FrameBuffer = createFrameBuffer(width, height, m_EglTextures[TEX_RENDER_TEXTURE]);
@@ -381,7 +398,7 @@ class TextureRender
 
 	public void start()
 	{
-		initGL(m_Width, m_Height);
+		initGL(m_Width, m_Height, m_PixelFormat);
 		m_Program = createProgram(VERTEX_SHADER, FRAGMENT_SHADER);
 		if (m_Program == 0)
 		{
@@ -487,67 +504,5 @@ class TextureRender
 			Log.e(TAG, op + ": glError 0x" + Integer.toHexString(error));
 			throw new RuntimeException(op + ": glError " + GLU.gluErrorString(error));
 		}
-	}
-
-	public static void saveFrame(String filename, int width, int height)
-	{
-		// glReadPixels gives us a ByteBuffer filled with what is essentially big-endian RGBA
-		// data (i.e. a byte of red, followed by a byte of green...).  We need an int[] filled
-		// with native-order ARGB data to feed to Bitmap.
-		//
-		// If we implement this as a series of buf.get() calls, we can spend 2.5 seconds just
-		// copying data around for a 720p frame.  It's better to do a bulk get() and then
-		// rearrange the data in memory.  (For comparison, the PNG compress takes about 500ms
-		// for a trivial frame.)
-		//
-		// So... we set the ByteBuffer to little-endian, which should turn the bulk IntBuffer
-		// get() into a straight memcpy on most Android devices.  Our ints will hold ABGR data.
-		// Swapping B and R gives us ARGB.  We need about 30ms for the bulk get(), and another
-		// 270ms for the color swap.
-		//
-		// Making this even more interesting is the upside-down nature of GL, which means we
-		// may want to flip the image vertically here.
-
-		ByteBuffer buf = ByteBuffer.allocateDirect(width * height * 4);
-		buf.order(ByteOrder.LITTLE_ENDIAN);
-		GLES20.glReadPixels(0, 0, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf);
-		buf.rewind();
-
-		int pixelCount = width * height;
-		int[] colors = new int[pixelCount];
-		buf.asIntBuffer().get(colors);
-		for (int i = 0; i < pixelCount; i++)
-		{
-			int c = colors[i];
-			colors[i] = (c & 0xff00ff00) | ((c & 0x00ff0000) >> 16) | ((c & 0x000000ff) << 16);
-		}
-
-		FileOutputStream fos = null;
-		try
-		{
-			fos = new FileOutputStream(filename);
-			Bitmap bmp = Bitmap.createBitmap(colors, width, height, Bitmap.Config.ARGB_8888);
-			bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
-			bmp.recycle();
-		}
-		catch (IOException ioe)
-		{
-			throw new RuntimeException("Failed to write file " + filename, ioe);
-		}
-		finally
-		{
-			try
-			{
-				if (fos != null)
-				{
-					fos.close();
-				}
-			}
-			catch (IOException ioe2)
-			{
-				throw new RuntimeException("Failed to close file " + filename, ioe2);
-			}
-		}
-		Log.d(TAG, "Saved " + width + "x" + height + " frame as '" + filename + "'");
 	}
 }
