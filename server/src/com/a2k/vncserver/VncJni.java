@@ -11,6 +11,10 @@ import android.util.Log;
 
 public class VncJni
 {
+	public static final int SERVER_STARTED = 0;
+	public static final int CLIENT_CONNECTED = 1;
+	public static final int CLIENT_DISCONNECTED = 2;
+
 	private NotificationListener m_Listener;
 
 	public static interface NotificationListener
@@ -39,6 +43,8 @@ public class VncJni
 	public native boolean glBindGraphicsBuffer(long buffer);
 	public native void glOnFrameAvailable(long buffer);
 	public native void glDumpFrame(long buffer, String path);
+
+	public native int startServer(int width, int height, int pixelFormat);
 
 	static
 	{

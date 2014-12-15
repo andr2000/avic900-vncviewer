@@ -67,13 +67,12 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			{
 				if (m_ProjectionStarted)
 				{
-					stopScreenSharing();
 					m_ButtonStartStop.setText("Start");
 				}
 				else
 				{
 					m_ButtonStartStop.setText("Stop");
-					shareScreen();
+					m_VncJni.startServer(m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
 				}
 				m_ProjectionStarted ^= true;
 			}
@@ -107,9 +106,34 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		public void handleMessage(Message msg)
 		{
 			Bundle bundle = msg.getData();
-			Toast.makeText(MainActivity.this, bundle.getString("text"),
-				Toast.LENGTH_SHORT).show();
-			Log.d(TAG, "what = " + msg.what + " text = " + bundle.getString("text"));
+			switch (msg.what)
+			{
+				case VncJni.SERVER_STARTED:
+				{
+					Toast.makeText(MainActivity.this, bundle.getString("text"),
+						Toast.LENGTH_SHORT).show();
+					break;
+				}
+				case VncJni.CLIENT_CONNECTED:
+				{
+					Toast.makeText(MainActivity.this, bundle.getString("text"),
+						Toast.LENGTH_SHORT).show();
+					break;
+				}
+				case VncJni.CLIENT_DISCONNECTED:
+				{
+					Toast.makeText(MainActivity.this, bundle.getString("text"),
+						Toast.LENGTH_SHORT).show();
+					break;
+				}
+				default:
+				{
+					Toast.makeText(MainActivity.this, bundle.getString("text"),
+						Toast.LENGTH_SHORT).show();
+					Log.d(TAG, "what = " + msg.what + " text = " + bundle.getString("text"));
+					break;
+				}
+			}
 		}
 	};
 
