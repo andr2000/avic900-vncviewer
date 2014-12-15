@@ -107,22 +107,14 @@ static bool ensureNoGLError(const char* name)
 	return result;
 }
 
-static __attribute__((noinline)) unsigned next_pow2(unsigned x)
-{
-	x -= 1;
-	x |= (x >> 1);
-	x |= (x >> 2);
-	x |= (x >> 4);
-	x |= (x >> 8);
-	x |= (x >> 16);
-	return x + 1;
-}
 AndroidGraphicBuffer::AndroidGraphicBuffer(int width, int height,
-	uint32_t usage, uint32_t format) :
-	m_Width(width), m_Height(height), m_Usage(usage), m_Format(format),
+	uint32_t format) :
+	m_Width(width), m_Height(height),
+	m_Usage(AndroidGraphicBuffer::GRALLOC_USAGE_HW_TEXTURE | AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN),
+	m_Format(format),
 	m_Handle(nullptr), m_EGLImage(nullptr)
 {
-	LOG("Size rounded to the next power of 2 (%dx%d)", m_Width, m_Height);
+	LOG("Allocated graphic buffer (%dx%d)", m_Width, m_Height);
 }
 
 AndroidGraphicBuffer::~AndroidGraphicBuffer()
@@ -187,18 +179,16 @@ bool AndroidGraphicBuffer::ensureInitialized()
 	return true;
 }
 
-int AndroidGraphicBuffer::lock(uint32_t aUsage,
-	unsigned char **bits)
+int AndroidGraphicBuffer::lock(unsigned char **bits)
 {
 	if (!ensureInitialized())
 	{
 		return true;
 	}
-	return sGLFunctions.fGraphicBufferLock(m_Handle, aUsage, bits);
+	return sGLFunctions.fGraphicBufferLock(m_Handle, AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN, bits);
 }
 
-int AndroidGraphicBuffer::lock(uint32_t aUsage,
-	const AndroidGraphicBuffer::rect& aRect, unsigned char **bits)
+int AndroidGraphicBuffer::lock(const AndroidGraphicBuffer::rect& aRect, unsigned char **bits)
 {
 	if (!ensureInitialized())
 	{
@@ -210,7 +200,7 @@ int AndroidGraphicBuffer::lock(uint32_t aUsage,
 	rect.top = aRect.y;
 	rect.right = aRect.x + aRect.width;
 	rect.bottom = aRect.y + aRect.height;
-	return sGLFunctions.fGraphicBufferLockRect(m_Handle, aUsage, rect, bits);
+	return sGLFunctions.fGraphicBufferLockRect(m_Handle, AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN, rect, bits);
 }
 
 int AndroidGraphicBuffer::unlock()

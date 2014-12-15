@@ -75,10 +75,7 @@ extern "C"
 				return 0;
 			}
 		}
-		AndroidGraphicBuffer *buf = new AndroidGraphicBuffer(width, height,
-			(AndroidGraphicBuffer::GRALLOC_USAGE_HW_TEXTURE |
-			AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN),
-			format);
+		AndroidGraphicBuffer *buf = new AndroidGraphicBuffer(width, height, format);
 		return reinterpret_cast<jlong>(buf);
 	}
 
@@ -99,7 +96,7 @@ extern "C"
 		long long start = currentTimeInMilliseconds();
 		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
 		uint8_t *ptr;
-		p->lock(AndroidGraphicBuffer::GRALLOC_USAGE_SW_READ_OFTEN, &ptr);
+		p->lock(&ptr);
 		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * gBytesPerPixel);
 		p->unlock();
 		long long done = currentTimeInMilliseconds();
