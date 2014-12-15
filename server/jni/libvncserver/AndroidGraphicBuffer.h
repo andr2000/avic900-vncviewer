@@ -66,11 +66,11 @@ public:
 		int height;
 	};
 
-	AndroidGraphicBuffer(int width, int height, uint32_t usage, uint32_t format);
+	AndroidGraphicBuffer(int width, int height, uint32_t format);
 	virtual ~AndroidGraphicBuffer();
 
-	int lock(uint32_t usage, unsigned char **bits);
-	int lock(uint32_t usage, const rect &rect, unsigned char **bits);
+	int lock(unsigned char **bits);
+	int lock(const rect &rect, unsigned char **bits);
 	int unlock();
 	bool reallocate(int aWidth, int aHeight, uint32_t aFormat);
 
