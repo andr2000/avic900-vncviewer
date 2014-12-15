@@ -51,10 +51,12 @@ void VncServer::postEventToUI(int what, std::string text)
 	{
 		JNIEnv *env;
 		m_JavaVM->GetEnv((void **)&env, JNI_VERSION_1_4);
+		m_JavaVM->AttachCurrentThread(&env, 0);
 		jvalue jpar[2];
 		jpar[0].i = what;
 		jpar[1].l = env->NewStringUTF(text.c_str());
 		env->CallVoidMethodA(m_Object, m_NotificationClb, jpar);
+		env->DeleteLocalRef(jpar[1].l);
 	}
 	else
 	{
