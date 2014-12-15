@@ -149,6 +149,7 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 
 	m_RfbScreenInfoPtr->handleEventsEagerly = true;
 	m_RfbScreenInfoPtr->deferUpdateTime = 0;
+	m_RfbScreenInfoPtr->port = VNC_PORT;
 
 	rfbInitServer(m_RfbScreenInfoPtr);
 	postEventToUI(SERVER_STARTED, "VNC server started");
