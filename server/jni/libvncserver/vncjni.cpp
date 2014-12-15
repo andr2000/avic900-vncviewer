@@ -121,4 +121,10 @@ extern "C"
 		}
 		env->ReleaseStringUTFChars(path, nativePath);
 	}
+
+	JNIEXPORT jint JNICALL Java_com_a2k_vncserver_VncJni_startServer(JNIEnv *env, jobject obj,
+		jint width, jint height, jint pixelFormat)
+	{
+		return VncServer::getInstance().startServer(width, height, pixelFormat);
+	}
 }

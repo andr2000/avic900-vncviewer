@@ -1,4 +1,5 @@
 #include <android/log.h>
+#include <GLES2/gl2.h>
 
 #include "vncserver.h"
 
@@ -12,7 +13,15 @@ extern "C"
 }
 
 VncServer::VncServer() = default;
-VncServer::~VncServer() = default;
+
+VncServer::~VncServer()
+{
+	cleanup();
+}
+
+void VncServer::cleanup()
+{
+}
 
 void VncServer::setJavaVM(JavaVM *javaVM)
 {
@@ -62,4 +71,84 @@ void VncServer::allocateBuffers(int width, int height, int pixelFormat)
 		/* add to the buffer queue */
 		m_BufferQueue.add(i, m_GraphicBuffer[i].get());
 	}
+}
+
+void VncServer::setVncFramebuffer()
+{
+	//m_RfbScreenInfoPtr->frameBuffer =(char *)vncbuf;
+}
+
+rfbScreenInfoPtr VncServer::getRfbScreenInfoPtr()
+{
+	rfbScreenInfoPtr scr = nullptr;
+	int argc = 0;
+	switch (m_PixelFormat)
+	{
+		case GL_RGB565:
+		{
+			scr = rfbGetScreen(&argc, nullptr, m_Width , m_Height, 0 /* not used */ ,
+				3,  2);
+			scr->serverFormat.redShift = 11;
+			scr->serverFormat.greenShift = 5;
+			scr->serverFormat.blueShift = 0;
+			scr->serverFormat.bitsPerPixel = 16;
+			break;
+		}
+		case GL_RGBA:
+		{
+			scr = rfbGetScreen(&argc, nullptr, m_Width , m_Height, 0 /* not used */ ,
+				3,  4);
+			scr->serverFormat.redShift = 16;
+			scr->serverFormat.greenShift = 8;
+			scr->serverFormat.blueShift = 0;
+			scr->serverFormat.bitsPerPixel = 32;
+			break;
+		}
+	}
+	return scr;
+}
+
+void clientGoneClb(rfbClientPtr cl)
+{
+	return VncServer::getInstance().clientGone(cl);
+}
+
+void VncServer::clientGone(rfbClientPtr cl)
+{
+	postEventToUI(CLIENT_DISCONNECTED, "Client disconnected");
+}
+
+rfbNewClientAction clientHookClb(rfbClientPtr cl)
+{
+	cl->clientGoneHook=(ClientGoneHookPtr)clientGoneClb;
+	return VncServer::getInstance().clientHook(cl);
+}
+
+rfbNewClientAction VncServer::clientHook(rfbClientPtr cl)
+{
+	postEventToUI(CLIENT_CONNECTED, "Client connected");
+	return RFB_CLIENT_ACCEPT;
+}
+
+int VncServer::startServer(int width, int height, int pixelFormat)
+{
+	m_Width = width;
+	m_Height = height;
+	m_PixelFormat = pixelFormat;
+	LOGI("Starting VNC server (%dx%d), %s", m_Width, m_Height, m_PixelFormat == GL_RGB565 ? "RGB565" : "RGBA");
+	m_RfbScreenInfoPtr = getRfbScreenInfoPtr();
+	if (m_RfbScreenInfoPtr == nullptr)
+	{
+		LOGE("Failed to get RFB screen");
+		return -1;
+	}
+	m_RfbScreenInfoPtr->desktopName = DESKTOP_NAME;
+	m_RfbScreenInfoPtr->newClientHook = (rfbNewClientHookPtr)clientHookClb;
+
+	m_RfbScreenInfoPtr->handleEventsEagerly = true;
+	m_RfbScreenInfoPtr->deferUpdateTime = 0;
+
+	rfbInitServer(m_RfbScreenInfoPtr);
+	postEventToUI(SERVER_STARTED, "VNC server started");
+	return 0;
 }
