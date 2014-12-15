@@ -63,9 +63,10 @@ private:
 
 	void cleanup();
 
+	AndroidGraphicBuffer *m_VncBuffer { nullptr };
 	TripleBuffer<AndroidGraphicBuffer *> m_BufferQueue;
 	std::array<std::unique_ptr<AndroidGraphicBuffer>, 3> m_GraphicBuffer;
-	void allocateBuffers(int width, int height, int pixelFormat);
+	bool allocateBuffers(int width, int height, int pixelFormat);
 
 	rfbScreenInfoPtr m_RfbScreenInfoPtr;
 	rfbScreenInfoPtr getRfbScreenInfoPtr();
