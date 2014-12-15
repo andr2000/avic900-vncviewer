@@ -1,10 +1,12 @@
 #ifndef LIBVNCSERVER_VNCSERVER_H_
 #define LIBVNCSERVER_VNCSERVER_H_
 
+#include <atomic>
 #include <array>
 #include <jni.h>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include <string>
 
 #include "AndroidGraphicBuffer.h"
@@ -52,6 +54,10 @@ private:
 	int m_Width;
 	int m_Height;
 	int m_PixelFormat;
+
+	std::thread m_WorkerThread;
+	std::atomic<bool> m_Terminated { true };
+	void worker();
 
 	VncServer();
 

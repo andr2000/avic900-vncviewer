@@ -21,6 +21,11 @@ VncServer::~VncServer()
 
 void VncServer::cleanup()
 {
+	m_Terminated = true;
+	if (m_WorkerThread.joinable())
+	{
+		m_WorkerThread.join();
+	}
 }
 
 void VncServer::setJavaVM(JavaVM *javaVM)
@@ -167,6 +172,17 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	rfbLog = rfbDefaultLog;
 	rfbErr = rfbDefaultLog;
 	rfbInitServer(m_RfbScreenInfoPtr);
+
+	m_Terminated = false;
+	m_WorkerThread = std::thread(&VncServer::worker, this);
 	postEventToUI(SERVER_STARTED, "VNC server started");
 	return 0;
+}
+
+void VncServer::worker()
+{
+	while (!m_Terminated)
+	{
+		rfbRunEventLoop(m_RfbScreenInfoPtr, 40000, false);
+	}
 }
