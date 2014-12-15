@@ -69,20 +69,59 @@ void VncServer::postEventToUI(int what, std::string text)
 	}
 }
 
-void VncServer::allocateBuffers(int width, int height, int pixelFormat)
+bool VncServer::allocateBuffers(int width, int height, int pixelFormat)
 {
+	int format = 0;
+	switch (pixelFormat)
+	{
+		case GL_RGBA:
+		{
+			format = AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGBA_8888;
+			break;
+		}
+		case GL_RGB565:
+		{
+			format = AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGB_565;
+			break;
+		}
+		default:
+		{
+			LOGE("Unsupported pixel format");
+			return false;
+		}
+	}
 	for (size_t i = 0; i < m_GraphicBuffer.size(); i++)
 	{
 		/* allocate buffer */
-		m_GraphicBuffer[i].reset(new AndroidGraphicBuffer(width, height, pixelFormat));
+		m_GraphicBuffer[i].reset(new AndroidGraphicBuffer(width, height, format));
+		if (!m_GraphicBuffer[i]->allocate())
+		{
+			return false;
+		}
 		/* add to the buffer queue */
 		m_BufferQueue.add(i, m_GraphicBuffer[i].get());
 	}
+	return true;
 }
 
 void VncServer::setVncFramebuffer()
 {
-	//m_RfbScreenInfoPtr->frameBuffer =(char *)vncbuf;
+	if (m_VncBuffer)
+	{
+		m_VncBuffer->unlock();
+	}
+	AndroidGraphicBuffer *m_VncBuffer = m_BufferQueue.getConsumer();
+	if (m_VncBuffer)
+	{
+		unsigned char *vncbuf;
+		m_VncBuffer->lock(&vncbuf);
+		m_RfbScreenInfoPtr->frameBuffer = reinterpret_cast<char *>(vncbuf);
+		LOGD("Got new framebuffer");
+	}
+	else
+	{
+		LOGE("Failed to get new framebuffer");
+	}
 }
 
 rfbScreenInfoPtr VncServer::getRfbScreenInfoPtr()
@@ -157,6 +196,12 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	m_Height = height;
 	m_PixelFormat = pixelFormat;
 	LOGI("Starting VNC server (%dx%d), %s", m_Width, m_Height, m_PixelFormat == GL_RGB565 ? "RGB565" : "RGBA");
+
+	if (!allocateBuffers(m_Width, m_Height, m_PixelFormat))
+	{
+		return -1;
+	}
+
 	m_RfbScreenInfoPtr = getRfbScreenInfoPtr();
 	if (m_RfbScreenInfoPtr == nullptr)
 	{
@@ -169,6 +214,8 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	m_RfbScreenInfoPtr->handleEventsEagerly = true;
 	m_RfbScreenInfoPtr->deferUpdateTime = 0;
 	m_RfbScreenInfoPtr->port = VNC_PORT;
+
+	setVncFramebuffer();
 
 	rfbLogEnable(true);
 	rfbLog = rfbDefaultLog;
