@@ -116,12 +116,14 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				}
 				case VncJni.CLIENT_CONNECTED:
 				{
+					shareScreen();
 					Toast.makeText(MainActivity.this, bundle.getString("text"),
 						Toast.LENGTH_SHORT).show();
 					break;
 				}
 				case VncJni.CLIENT_DISCONNECTED:
 				{
+					stopScreenSharing();
 					Toast.makeText(MainActivity.this, bundle.getString("text"),
 						Toast.LENGTH_SHORT).show();
 					break;
