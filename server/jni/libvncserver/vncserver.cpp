@@ -11,9 +11,8 @@ extern "C"
 	#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, MODULE_NAME, __VA_ARGS__))
 }
 
-VncServer::~VncServer()
-{
-}
+VncServer::VncServer() = default;
+VncServer::~VncServer() = default;
 
 void VncServer::setJavaVM(JavaVM *javaVM)
 {
@@ -51,5 +50,16 @@ void VncServer::postEventToUI(int what, std::string text)
 	else
 	{
 		LOGE("onNotification method ID was not set");
+	}
+}
+
+void VncServer::allocateBuffers(int width, int height, int pixelFormat)
+{
+	for (size_t i = 0; i < m_GraphicBuffer.size(); i++)
+	{
+		/* allocate buffer */
+		m_GraphicBuffer[i].reset(new AndroidGraphicBuffer(width, height, pixelFormat));
+		/* add to the buffer queue */
+		m_BufferQueue.add(i, m_GraphicBuffer[i].get());
 	}
 }
