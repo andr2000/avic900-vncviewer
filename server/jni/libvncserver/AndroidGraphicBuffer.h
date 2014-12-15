@@ -72,6 +72,7 @@ public:
 	int lock(unsigned char **bits);
 	int lock(const rect &rect, unsigned char **bits);
 	int unlock();
+	bool allocate();
 	bool reallocate(int aWidth, int aHeight, uint32_t aFormat);
 
 	int getWidth()

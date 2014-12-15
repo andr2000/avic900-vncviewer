@@ -114,7 +114,6 @@ AndroidGraphicBuffer::AndroidGraphicBuffer(int width, int height,
 	m_Format(format),
 	m_Handle(nullptr), m_EGLImage(nullptr)
 {
-	LOG("Allocated graphic buffer (%dx%d)", m_Width, m_Height);
 }
 
 AndroidGraphicBuffer::~AndroidGraphicBuffer()
@@ -252,7 +251,7 @@ bool AndroidGraphicBuffer::ensureEGLImage()
 	return m_EGLImage != nullptr;
 }
 
-bool AndroidGraphicBuffer::bind()
+bool AndroidGraphicBuffer::allocate()
 {
 	if (!ensureInitialized())
 	{
@@ -261,6 +260,17 @@ bool AndroidGraphicBuffer::bind()
 	if (!ensureEGLImage())
 	{
 		LOG("No valid EGLImage!");
+		return false;
+	}
+	LOG("Allocated graphic buffer (%dx%d), format %s", m_Width, m_Height,
+		m_Format == HAL_PIXEL_FORMAT_RGB_565 ? "RGB565" : "RGBA");
+	return true;
+}
+
+bool AndroidGraphicBuffer::bind()
+{
+	if (!allocate())
+	{
 		return false;
 	}
 	clearGLError();
