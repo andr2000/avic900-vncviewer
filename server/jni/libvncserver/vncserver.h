@@ -39,6 +39,8 @@ public:
 	void postEventToUI(int what, std::string text);
 
 	int startServer(int width, int height, int pixelFormat);
+	void bindNextProducerBuffer();
+	void frameAvailable();
 
 	rfbNewClientAction clientHook(rfbClientPtr cl);
 	void clientGone(rfbClientPtr cl);
@@ -64,6 +66,7 @@ private:
 	void cleanup();
 
 	AndroidGraphicBuffer *m_VncBuffer { nullptr };
+	AndroidGraphicBuffer *m_GlBuffer { nullptr };
 	TripleBuffer<AndroidGraphicBuffer *> m_BufferQueue;
 	std::array<std::unique_ptr<AndroidGraphicBuffer>, 3> m_GraphicBuffer;
 	bool allocateBuffers(int width, int height, int pixelFormat);

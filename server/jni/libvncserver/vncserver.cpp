@@ -124,6 +124,22 @@ void VncServer::setVncFramebuffer()
 	}
 }
 
+void VncServer::bindNextProducerBuffer()
+{
+	m_GlBuffer = m_BufferQueue.getProducer();
+	if (m_GlBuffer)
+	{
+		if (!m_GlBuffer->bind())
+		{
+			LOGE("Failed to bind graphics buffer");
+		}
+	}
+}
+
+void VncServer::frameAvailable()
+{
+}
+
 rfbScreenInfoPtr VncServer::getRfbScreenInfoPtr()
 {
 	rfbScreenInfoPtr scr = nullptr;
