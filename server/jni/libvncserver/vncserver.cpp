@@ -110,7 +110,7 @@ void VncServer::setVncFramebuffer()
 	{
 		m_VncBuffer->unlock();
 	}
-	AndroidGraphicBuffer *m_VncBuffer = m_BufferQueue.getConsumer();
+	m_VncBuffer = m_BufferQueue.getConsumer();
 	if (m_VncBuffer)
 	{
 		unsigned char *vncbuf;
