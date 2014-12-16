@@ -59,6 +59,8 @@ private:
 
 	std::thread m_WorkerThread;
 	std::atomic<bool> m_Terminated { true };
+	std::mutex m_FrameAvailableLock;
+	bool m_FrameAvailable { false };
 	void worker();
 
 	VncServer();
