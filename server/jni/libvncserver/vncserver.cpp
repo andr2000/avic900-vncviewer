@@ -116,7 +116,6 @@ void VncServer::setVncFramebuffer()
 		unsigned char *vncbuf;
 		m_VncBuffer->lock(&vncbuf);
 		m_RfbScreenInfoPtr->frameBuffer = reinterpret_cast<char *>(vncbuf);
-		LOGD("Got new framebuffer");
 	}
 	else
 	{

@@ -197,7 +197,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	public void onFrameAvailable(SurfaceTexture surfaceTexture)
 	{
-		Log.d(TAG, "onFrameAvailable");
 		m_SurfaceTexture.updateTexImage();
 		m_TextureRender.drawFrame(m_SurfaceTexture);
 		m_TextureRender.swapBuffers();
