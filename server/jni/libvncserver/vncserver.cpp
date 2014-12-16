@@ -150,12 +150,12 @@ rfbScreenInfoPtr VncServer::getRfbScreenInfoPtr()
 		case GL_RGB565:
 		{
 			scr = rfbGetScreen(&argc, nullptr, m_Width , m_Height, 0 /* not used */ ,
-				3,  2);
-			scr->serverFormat.redShift = 0;
+				3, 2);
+			scr->serverFormat.redShift = 11;
 			scr->serverFormat.greenShift = 5;
-			scr->serverFormat.blueShift = 11;
+			scr->serverFormat.blueShift = 0;
 			scr->serverFormat.bitsPerPixel = 16;
-			scr->serverFormat.trueColour = false;
+			scr->serverFormat.trueColour = true;
 			scr->serverFormat.redMax = 31;
 			scr->serverFormat.greenMax = 63;
 			scr->serverFormat.blueMax = 31;
@@ -164,7 +164,7 @@ rfbScreenInfoPtr VncServer::getRfbScreenInfoPtr()
 		case GL_RGBA:
 		{
 			scr = rfbGetScreen(&argc, nullptr, m_Width , m_Height, 0 /* not used */ ,
-				3,  4);
+				3, 4);
 			scr->serverFormat.redShift = 0;
 			scr->serverFormat.greenShift = 8;
 			scr->serverFormat.blueShift = 16;
