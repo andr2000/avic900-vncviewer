@@ -136,10 +136,6 @@ void VncServer::bindNextProducerBuffer()
 	}
 }
 
-void VncServer::frameAvailable()
-{
-}
-
 rfbScreenInfoPtr VncServer::getRfbScreenInfoPtr()
 {
 	rfbScreenInfoPtr scr = nullptr;
@@ -250,6 +246,12 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	return 0;
 }
 
+void VncServer::frameAvailable()
+{
+	std::lock_guard<std::mutex> lock(m_FrameAvailableLock);
+	m_FrameAvailable = true;
+}
+
 void VncServer::dumpFrame(char *buffer)
 {
 	const char *fName = "/sdcard/framebuffer.data";
@@ -269,8 +271,24 @@ void VncServer::dumpFrame(char *buffer)
 
 void VncServer::worker()
 {
-	while (!m_Terminated)
+	while ((!m_Terminated) && rfbIsActive(m_RfbScreenInfoPtr))
 	{
-		rfbRunEventLoop(m_RfbScreenInfoPtr, 40000, false);
+		rfbProcessEvents(m_RfbScreenInfoPtr, 5000);
+		{
+			std::lock_guard<std::mutex> lock(m_FrameAvailableLock);
+			if (m_FrameAvailable)
+			{
+				m_FrameAvailable = false;
+				setVncFramebuffer();
+				rfbMarkRectAsModified(m_RfbScreenInfoPtr, 0, 0, m_RfbScreenInfoPtr->width, m_RfbScreenInfoPtr->height);
+
+				static int counter = 20;
+				if (--counter == 0)
+				{
+					counter = 20;
+					dumpFrame(m_RfbScreenInfoPtr->frameBuffer);
+				}
+			}
+		}
 	}
 }
