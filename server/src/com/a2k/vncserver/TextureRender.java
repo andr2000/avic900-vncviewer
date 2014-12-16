@@ -153,8 +153,8 @@ class TextureRender
 	{
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, m_FrameBuffer);
 		draw(st);
-		m_VncJni.frameAvailable();
 		m_VncJni.bindNextGraphicBuffer();
+		m_VncJni.frameAvailable();
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 	}
 
