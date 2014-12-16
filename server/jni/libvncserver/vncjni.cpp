@@ -51,75 +51,14 @@ extern "C"
 		return ((tv.tv_sec * 1000) + (tv.tv_usec / 1000));
 	}
 
-	JNIEXPORT jlong JNICALL Java_com_a2k_vncserver_VncJni_glGetGraphicsBuffer(JNIEnv *env, jobject obj,
-		jint width, jint height, int pixelFormat)
+	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_bindNextGraphicBuffer(JNIEnv *env, jobject obj)
 	{
-		int format = 0;
-		switch (pixelFormat)
-		{
-			case GL_RGBA:
-			{
-				format = AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGBA_8888;
-				gBytesPerPixel = 4;
-				break;
-			}
-			case GL_RGB565:
-			{
-				format = AndroidGraphicBuffer::HAL_PIXEL_FORMAT_RGB_565;
-				gBytesPerPixel = 2;
-				break;
-			}
-			default:
-			{
-				LOGE("Unsupported pixel format");
-				return 0;
-			}
-		}
-		AndroidGraphicBuffer *buf = new AndroidGraphicBuffer(width, height, format);
-		return reinterpret_cast<jlong>(buf);
+		VncServer::getInstance().bindNextProducerBuffer();
 	}
 
-	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glPutGraphicsBuffer(JNIEnv *env, jobject obj, jlong buffer)
+	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_frameAvailable(JNIEnv *env, jobject obj)
 	{
-		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
-		delete p;
-	}
-
-	JNIEXPORT jboolean JNICALL Java_com_a2k_vncserver_VncJni_glBindGraphicsBuffer(JNIEnv *env, jobject obj, jlong buffer)
-	{
-		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
-		return p->bind();
-	}
-
-	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glOnFrameAvailable(JNIEnv *env, jobject obj, jlong buffer)
-	{
-		long long start = currentTimeInMilliseconds();
-		AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
-		uint8_t *ptr;
-		p->lock(&ptr);
-		memcpy(gPixels, ptr, p->getWidth() * p->getHeight() * gBytesPerPixel);
-		p->unlock();
-		long long done = currentTimeInMilliseconds();
-		LOGD("glOnFrameAvailable (%dx%d), done in %dms",
-			p->getWidth(), p->getHeight(), static_cast<int>(done - start));
-	}
-
-	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_glDumpFrame(JNIEnv *env, jobject obj, jlong buffer, jstring path)
-	{
-		const char *nativePath = env->GetStringUTFChars(path, JNI_FALSE);
-		FILE *f = fopen(nativePath, "w+b");
-		if (f)
-		{
-			AndroidGraphicBuffer *p = reinterpret_cast<AndroidGraphicBuffer *>(buffer);
-			fwrite(gPixels, 1, p->getWidth() * p->getHeight() * gBytesPerPixel, f);
-			fclose(f);
-			LOGD("Frame saved at %s", nativePath);
-		}
-		else
-		{
-			LOGE("Failed to save frame at %s", nativePath);
-		}
-		env->ReleaseStringUTFChars(path, nativePath);
+		VncServer::getInstance().frameAvailable();
 	}
 
 	JNIEXPORT jint JNICALL Java_com_a2k_vncserver_VncJni_startServer(JNIEnv *env, jobject obj,
