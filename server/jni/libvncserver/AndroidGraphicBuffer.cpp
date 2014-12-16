@@ -248,6 +248,11 @@ bool AndroidGraphicBuffer::ensureEGLImage()
 
 	m_EGLImage = eglCreateImageKHR(eglGetDisplay(EGL_DEFAULT_DISPLAY),
 		EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, (EGLClientBuffer)nativeBuffer, eglImgAttrs);
+	if (m_EGLImage)
+	{
+		LOG("Allocated graphic buffer (%dx%d), format %s", m_Width, m_Height,
+			m_Format == HAL_PIXEL_FORMAT_RGB_565 ? "RGB565" : "RGBA");
+	}
 	return m_EGLImage != nullptr;
 }
 
@@ -262,8 +267,6 @@ bool AndroidGraphicBuffer::allocate()
 		LOG("No valid EGLImage!");
 		return false;
 	}
-	LOG("Allocated graphic buffer (%dx%d), format %s", m_Width, m_Height,
-		m_Format == HAL_PIXEL_FORMAT_RGB_565 ? "RGB565" : "RGBA");
 	return true;
 }
 
