@@ -286,12 +286,14 @@ void VncServer::worker()
 				m_FrameAvailable = false;
 				setVncFramebuffer();
 				rfbMarkRectAsModified(m_RfbScreenInfoPtr, 0, 0, m_RfbScreenInfoPtr->width, m_RfbScreenInfoPtr->height);
-
-				static int counter = 20;
-				if (--counter == 0)
+				if (DUMP_ENABLED)
 				{
-					counter = 20;
-					dumpFrame(m_RfbScreenInfoPtr->frameBuffer);
+					static int counter = 20;
+					if (--counter == 0)
+					{
+						counter = 20;
+						dumpFrame(m_RfbScreenInfoPtr->frameBuffer);
+					}
 				}
 			}
 		}
