@@ -155,6 +155,9 @@ rfbScreenInfoPtr VncServer::getRfbScreenInfoPtr()
 			scr->serverFormat.blueShift = 0;
 			scr->serverFormat.bitsPerPixel = 16;
 			scr->serverFormat.trueColour = false;
+			scr->serverFormat.redMax = 31;
+			scr->serverFormat.greenMax = 63;
+			scr->serverFormat.blueMax = 31;
 			break;
 		}
 		case GL_RGBA:
@@ -164,8 +167,11 @@ rfbScreenInfoPtr VncServer::getRfbScreenInfoPtr()
 			scr->serverFormat.redShift = 16;
 			scr->serverFormat.greenShift = 8;
 			scr->serverFormat.blueShift = 0;
-			scr->serverFormat.bitsPerPixel = 32;
+			scr->serverFormat.bitsPerPixel = 24;
 			scr->serverFormat.trueColour = true;
+			scr->serverFormat.redMax = 255;
+			scr->serverFormat.greenMax = 255;
+			scr->serverFormat.blueMax = 255;
 			break;
 		}
 	}
