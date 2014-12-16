@@ -46,6 +46,7 @@ public:
 	void clientGone(rfbClientPtr cl);
 
 private:
+	static const bool DUMP_ENABLED { false };
 	const char *DESKTOP_NAME = "Android";
 	const int VNC_PORT = 5901;
 	JavaVM *m_JavaVM;
