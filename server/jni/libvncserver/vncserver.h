@@ -74,6 +74,7 @@ private:
 	rfbScreenInfoPtr m_RfbScreenInfoPtr;
 	rfbScreenInfoPtr getRfbScreenInfoPtr();
 	void setVncFramebuffer();
+	void dumpFrame(char *buffer);
 };
 
 #endif /* LIBVNCSERVER_VNCSERVER_H_ */

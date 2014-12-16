@@ -250,6 +250,23 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	return 0;
 }
 
+void VncServer::dumpFrame(char *buffer)
+{
+	const char *fName = "/sdcard/framebuffer.data";
+	FILE *f = fopen(fName, "w+b");
+	if (f)
+	{
+		int bytesPerPixel = m_PixelFormat == GL_RGBA ? 4 : 2;
+		fwrite(buffer, 1, m_Width * m_Height * bytesPerPixel, f);
+		fclose(f);
+		LOGD("Frame saved at %s", fName);
+	}
+	else
+	{
+		LOGE("Failed to save frame at %s", fName);
+	}
+}
+
 void VncServer::worker()
 {
 	while (!m_Terminated)
