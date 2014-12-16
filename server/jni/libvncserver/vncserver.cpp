@@ -108,13 +108,19 @@ void VncServer::setVncFramebuffer()
 {
 	if (m_VncBuffer)
 	{
-		m_VncBuffer->unlock();
+		if (m_VncBuffer->unlock() != 0)
+		{
+			LOGE("Failed to unlock buffer");
+		}
 	}
 	m_VncBuffer = m_BufferQueue.getConsumer();
 	if (m_VncBuffer)
 	{
 		unsigned char *vncbuf;
-		m_VncBuffer->lock(&vncbuf);
+		if (m_VncBuffer->lock(&vncbuf) != 0)
+		{
+			LOGE("Failed to lock buffer");
+		}
 		m_RfbScreenInfoPtr->frameBuffer = reinterpret_cast<char *>(vncbuf);
 	}
 	else
