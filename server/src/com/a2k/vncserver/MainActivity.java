@@ -30,7 +30,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private int m_ScreenDensity;
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
-	private int m_PixelFormat = GLES20.GL_RGBA;
+	private int m_PixelFormat = GLES20.GL_RGB565;
 	private Surface m_Surface;
 	private TextureRender m_TextureRender;
 	private SurfaceTexture m_SurfaceTexture;
