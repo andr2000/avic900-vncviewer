@@ -5,7 +5,7 @@
 		android:title="Color settings" >
 		<CheckBoxPreference
 			android:title="Use 16-bit color depth"
-			android:key="use16bit" android:defaultValue="true"/>
+			android:key="use16bit" android:defaultValue="@bool/use16bit"/>
 	</PreferenceCategory>
 
 	<PreferenceCategory
@@ -17,6 +17,6 @@
 			android:entryValues="@array/displaySizeValues"
 			android:key="displaySize"
 			android:summary="Allows selecting display size reported to the remote end"
-			android:title="Display size" />
+			android:title="Display size" android:defaultValue="@string/displaySize"/>
 	</PreferenceCategory>
 </PreferenceScreen>
