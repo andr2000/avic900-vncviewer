@@ -201,6 +201,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	synchronized private void stopScreenSharing()
 	{
+		if (m_SurfaceTexture != null)
+		{
+			m_SurfaceTexture.setOnFrameAvailableListener(null);
+		}
 		if (m_VirtualDisplay != null)
 		{
 			m_VirtualDisplay.release();
@@ -264,6 +268,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 			case R.id.itemMenuExit:
 			{
+				m_VncJni.stopServer();
+				stopScreenSharing();
 				System.exit(1);
 				return true;
 			}
