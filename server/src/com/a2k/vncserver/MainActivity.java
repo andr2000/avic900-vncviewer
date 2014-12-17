@@ -3,6 +3,7 @@ package com.a2k.vncserver;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -12,8 +13,12 @@ import android.opengl.GLES20;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
@@ -75,6 +80,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				else
 				{
 					m_ButtonStartStop.setText("Stop");
+					readPreferences();
 					m_VncJni.startServer(m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
 				}
 				m_ProjectionStarted ^= true;
@@ -237,5 +243,61 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_SurfaceTexture.updateTexImage();
 		m_TextureRender.drawFrame(m_SurfaceTexture);
 		m_TextureRender.swapBuffers();
+	}
+
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.menu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		switch (item.getItemId())
+		{
+			case R.id.itemMenuSettings:
+			{
+				startActivity(new Intent(this, Preferences.class));
+				return true;
+			}
+			case R.id.itemMenuExit:
+			{
+				System.exit(1);
+				return true;
+			}
+			default:
+			{
+				return super.onOptionsItemSelected(item);
+			}
+		}
+	}
+
+	private void readPreferences()
+	{
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+		boolean use16bit = prefs.getBoolean("use16bit", true);
+		m_PixelFormat = use16bit ? GLES20.GL_RGB565 : GLES20.GL_RGBA;
+		int displaySize = Integer.parseInt(prefs.getString("displaySize", "0"));
+		switch (displaySize)
+		{
+			case 0:
+			{
+				/* native */
+				DisplayMetrics metrics = new DisplayMetrics();
+				getWindowManager().getDefaultDisplay().getMetrics(metrics);
+				m_DisplayWidth = metrics.widthPixels;
+				m_DisplayHeight = metrics.heightPixels;
+				break;
+			}
+			case 1:
+			{
+				/* 800 x 480 */
+				m_DisplayWidth = 800;
+				m_DisplayHeight = 480;
+				break;
+			}
+		}
 	}
 }

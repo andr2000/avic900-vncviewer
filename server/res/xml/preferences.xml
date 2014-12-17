@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+	<PreferenceCategory
+		android:summary="Username and password information"
+		android:title="Color settings" >
+		<CheckBoxPreference
+			android:title="Use 16-bit color depth"
+			android:key="use16bit" android:defaultValue="true"/>
+	</PreferenceCategory>
+
+	<PreferenceCategory
+		android:summary="Username and password information"
+		android:title="Settings" >
+
+		<ListPreference
+			android:entries="@array/displaySizeOptions"
+			android:entryValues="@array/displaySizeValues"
+			android:key="displaySize"
+			android:summary="Allows selecting display size reported to the remote end"
+			android:title="Display size" />
+	</PreferenceCategory>
+</PreferenceScreen>
