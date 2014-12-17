@@ -26,6 +26,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 {
 	public static final String TAG = "MainActivity";
 	private static final int PERMISSION_CODE = 1;
+	private static final String MESSAGE_KEY = "text";
 
 	private int m_ScreenDensity;
 	private int m_DisplayWidth = 800;
@@ -41,6 +42,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	private Button m_ButtonStartStop;
 	private boolean m_ProjectionStarted;
+	private int m_NumClientsConnected = 0;
 
 	private VncJni m_VncJni = new VncJni();
 	
@@ -68,6 +70,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				if (m_ProjectionStarted)
 				{
 					m_ButtonStartStop.setText("Start");
+					m_VncJni.stopServer();
 				}
 				else
 				{
@@ -82,12 +85,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	@Override
 	public void onDestroy()
 	{
+		stopScreenSharing();
 		super.onDestroy();
-		if (m_MediaProjection != null)
-		{
-			m_MediaProjection.stop();
-			m_MediaProjection = null;
-		}
 	}
 
 	public void onNotification(int what, String message)
@@ -95,7 +94,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		Message msg = new Message();
 		msg.what = what;
 		Bundle data = new Bundle();
-		data.putString("text", message);
+		data.putString(MESSAGE_KEY, message);
 		msg.setData(data);
 		m_Handler.sendMessage(msg);
 	}
@@ -110,29 +109,43 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			{
 				case VncJni.SERVER_STARTED:
 				{
-					Toast.makeText(MainActivity.this, bundle.getString("text"),
+					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
+						Toast.LENGTH_SHORT).show();
+					break;
+				}
+				case VncJni.SERVER_STOPPED:
+				{
+					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
 					break;
 				}
 				case VncJni.CLIENT_CONNECTED:
 				{
-					shareScreen();
-					Toast.makeText(MainActivity.this, bundle.getString("text"),
+					if (m_NumClientsConnected == 0)
+					{
+						startScreenSharing();
+					}
+					m_NumClientsConnected++;
+					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
 					break;
 				}
 				case VncJni.CLIENT_DISCONNECTED:
 				{
-					stopScreenSharing();
-					Toast.makeText(MainActivity.this, bundle.getString("text"),
+					m_NumClientsConnected--;
+					if (m_NumClientsConnected == 0)
+					{
+						stopScreenSharing();
+					}
+					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
 					break;
 				}
 				default:
 				{
-					Toast.makeText(MainActivity.this, bundle.getString("text"),
+					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
-					Log.d(TAG, "what = " + msg.what + " text = " + bundle.getString("text"));
+					Log.d(TAG, "what = " + msg.what + " text = " + bundle.getString(MESSAGE_KEY));
 					break;
 				}
 			}
@@ -156,12 +169,11 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_VirtualDisplay = createVirtualDisplay();
 	}
 
-	private void shareScreen()
+	synchronized private void startScreenSharing()
 	{
 		if (m_Surface == null)
 		{
 			m_TextureRender = new TextureRender(m_VncJni, m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
-			m_TextureRender.setDumpOutputDir("/sdcard/");
 			m_TextureRender.start();
 			m_SurfaceTexture = new SurfaceTexture(m_TextureRender.getTextureId());
 			m_SurfaceTexture.setDefaultBufferSize(m_DisplayWidth, m_DisplayHeight);
@@ -174,16 +186,41 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 		else
 		{
-			m_VirtualDisplay = createVirtualDisplay();
+			if (m_VirtualDisplay == null)
+			{
+				m_VirtualDisplay = createVirtualDisplay();
+			}
 		}
 	}
 
-	private void stopScreenSharing()
+	synchronized private void stopScreenSharing()
 	{
 		if (m_VirtualDisplay != null)
 		{
 			m_VirtualDisplay.release();
 			m_VirtualDisplay = null;
+		}
+		if (m_MediaProjection != null)
+		{
+			/* this causes issue filed here:
+			 * https://code.google.com/p/android/issues/detail?id=81152 */
+			m_MediaProjection.stop();
+			m_MediaProjection = null;
+		}
+		if (m_TextureRender != null)
+		{
+			m_TextureRender.stop();
+			m_TextureRender = null;
+		}
+		if (m_Surface != null)
+		{
+			m_Surface.release();
+			m_Surface = null;
+		}
+		if (m_SurfaceTexture != null)
+		{
+			m_SurfaceTexture.release();
+			m_SurfaceTexture = null;
 		}
 	}
 

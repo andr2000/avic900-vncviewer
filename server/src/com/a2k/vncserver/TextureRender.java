@@ -37,10 +37,8 @@ class TextureRender
 	private static final int TEX_NUMBER = 2;
 	private int[] m_EglTextures = new int[TEX_NUMBER];
 	private int m_FrameBuffer;
+	private int m_DepthBuffer;
 	private int m_PixelFormat;
-	private long m_GraphicBuffer;
-
-	private String m_DumpOutputDir;
 
 	private static final int FLOAT_SIZE_BYTES = 4;
 	private static final int TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * FLOAT_SIZE_BYTES;
@@ -136,11 +134,6 @@ class TextureRender
 		m_TriangleVertices.put(m_TriangleVerticesData).position(0);
 
 		Matrix.setIdentityM(m_STMatrix, 0);
-	}
-
-	public void setDumpOutputDir(String outputDir)
-	{
-		m_DumpOutputDir = outputDir;
 	}
 
 	public int getTextureId()
@@ -318,7 +311,7 @@ class TextureRender
 		return m_Egl.eglCreateContext(eglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attribList);
 	}
 
-	private int createFrameBuffer(int width, int height, int targetTextureId)
+	private int createFrameBuffer(int width, int height, int targetTextureId, int depthBuffer)
 	{
 		int framebuffer;
 		int[] framebuffers = new int[1];
@@ -348,6 +341,19 @@ class TextureRender
 		}
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 		return framebuffer;
+	}
+
+	private void deleteFrameBuffer()
+	{
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, m_FrameBuffer);
+		GLES20.glBindRenderbuffer(GLES20.GL_RENDERBUFFER, m_DepthBuffer);
+		int[] renderbuffers = new int[1];
+		renderbuffers[0] = m_DepthBuffer;
+		GLES20.glDeleteRenderbuffers(1, renderbuffers, 0);
+		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+		int[] framebuffers = new int[1];
+		framebuffers[0] = m_FrameBuffer;
+		GLES20.glDeleteFramebuffers(1, renderbuffers, 0);
 	}
 
 	private void initGL(int width, int height, int pixelFormat)
@@ -389,8 +395,19 @@ class TextureRender
 		checkGlError("glTexParameter");
 		m_VncJni.bindNextGraphicBuffer();
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
-		m_FrameBuffer = createFrameBuffer(width, height, m_EglTextures[TEX_RENDER_TEXTURE]);
+		m_FrameBuffer = createFrameBuffer(width, height, m_EglTextures[TEX_RENDER_TEXTURE], m_DepthBuffer);
 		Log.d(TAG, "OpenGL initialized");
+	}
+
+	private void deinitGL()
+	{
+		GLES20.glDeleteTextures(TEX_NUMBER, m_EglTextures, 0);
+		GLES20.glDeleteProgram(m_Program);
+		m_Egl.eglMakeCurrent(m_EglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
+		m_Egl.eglDestroySurface(m_EglDisplay, m_EglSurface);
+		m_Egl.eglDestroyContext(m_EglDisplay, m_EglContext);
+		m_Egl.eglTerminate(m_EglDisplay);
+		Log.d(TAG, "OpenGL deinitialized");
 	}
 
 	public void start()
@@ -427,6 +444,12 @@ class TextureRender
 		{
 			throw new RuntimeException("Could not get attrib location for uSTMatrix");
 		}
+	}
+
+	public void stop()
+	{
+		deleteFrameBuffer();
+		deinitGL();
 	}
 
 	public void changeFragmentShader(String fragmentShader)

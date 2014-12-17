@@ -19,6 +19,7 @@ public:
 	enum UI_EVENT
 	{
 		SERVER_STARTED,
+		SERVER_STOPPED,
 		CLIENT_CONNECTED,
 		CLIENT_DISCONNECTED,
 	};
@@ -39,6 +40,7 @@ public:
 	void postEventToUI(int what, std::string text);
 
 	int startServer(int width, int height, int pixelFormat);
+	int stopServer();
 	void bindNextProducerBuffer();
 	void frameAvailable();
 
@@ -73,6 +75,7 @@ private:
 	TripleBuffer<AndroidGraphicBuffer *> m_BufferQueue;
 	std::array<std::unique_ptr<AndroidGraphicBuffer>, 3> m_GraphicBuffer;
 	bool allocateBuffers(int width, int height, int pixelFormat);
+	void releaseBuffers();
 
 	rfbScreenInfoPtr m_RfbScreenInfoPtr;
 	rfbScreenInfoPtr getRfbScreenInfoPtr();

@@ -14,6 +14,13 @@ public:
 		m_Buffer[pos] = value;
 	}
 
+	void release()
+	{
+		m_Buffer[0] = nullptr;
+		m_Buffer[1] = nullptr;
+		m_Buffer[2] = nullptr;
+	}
+
 	T getConsumer()
 	{
 		std::lock_guard<std::mutex> lock(m_Lock);

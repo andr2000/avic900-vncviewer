@@ -26,6 +26,17 @@ void VncServer::cleanup()
 	{
 		m_WorkerThread.join();
 	}
+	if (m_RfbScreenInfoPtr)
+	{
+		rfbScreenCleanup(m_RfbScreenInfoPtr);
+		rfbShutdownServer(m_RfbScreenInfoPtr, true);
+		m_RfbScreenInfoPtr = nullptr;
+	}
+	releaseBuffers();
+	m_Width = 0;
+	m_Height = 0;
+	m_PixelFormat = 0;
+	m_FrameAvailable = false;
 }
 
 void VncServer::setJavaVM(JavaVM *javaVM)
@@ -102,6 +113,17 @@ bool VncServer::allocateBuffers(int width, int height, int pixelFormat)
 		m_BufferQueue.add(i, m_GraphicBuffer[i].get());
 	}
 	return true;
+}
+
+void VncServer::releaseBuffers()
+{
+	for (size_t i = 0; i < m_GraphicBuffer.size(); i++)
+	{
+		m_GraphicBuffer[i].reset();
+	}
+	m_BufferQueue.release();
+	m_VncBuffer = nullptr;
+	m_GlBuffer = nullptr;
 }
 
 void VncServer::setVncFramebuffer()
@@ -186,8 +208,8 @@ void clientGoneClb(rfbClientPtr cl)
 
 void VncServer::clientGone(rfbClientPtr cl)
 {
-	LOGD("Client disconnected");
-	postEventToUI(CLIENT_DISCONNECTED, "Client disconnected");
+	LOGD("Client disconnected: %s", cl->host);
+	postEventToUI(CLIENT_DISCONNECTED, "Client" + std::string(cl->host) + "disconnected");
 }
 
 rfbNewClientAction clientHookClb(rfbClientPtr cl)
@@ -198,8 +220,8 @@ rfbNewClientAction clientHookClb(rfbClientPtr cl)
 
 rfbNewClientAction VncServer::clientHook(rfbClientPtr cl)
 {
-	LOGD("Client connected");
-	postEventToUI(CLIENT_CONNECTED, "Client connected");
+	LOGD("Client connected: %s", cl->host);
+	postEventToUI(CLIENT_CONNECTED, "Client " + std::string(cl->host) + " connected");
 	return RFB_CLIENT_ACCEPT;
 }
 
@@ -237,6 +259,8 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	m_RfbScreenInfoPtr->handleEventsEagerly = true;
 	m_RfbScreenInfoPtr->deferUpdateTime = 0;
 	m_RfbScreenInfoPtr->port = VNC_PORT;
+	m_RfbScreenInfoPtr->alwaysShared = true;
+	m_RfbScreenInfoPtr->neverShared = false;
 
 	setVncFramebuffer();
 
@@ -248,6 +272,13 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	m_Terminated = false;
 	m_WorkerThread = std::thread(&VncServer::worker, this);
 	postEventToUI(SERVER_STARTED, "VNC server started");
+	return 0;
+}
+
+int VncServer::stopServer()
+{
+	cleanup();
+	postEventToUI(SERVER_STOPPED, "VNC server stopped");
 	return 0;
 }
 
@@ -297,5 +328,9 @@ void VncServer::worker()
 				}
 			}
 		}
+	}
+	if (m_JavaVM)
+	{
+		m_JavaVM->DetachCurrentThread();
 	}
 }
