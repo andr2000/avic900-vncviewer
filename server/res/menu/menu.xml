@@ -1,0 +1,4 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/itemMenuSettings" android:enabled="true" android:visible="true" android:title="Settings"></item>
+    <item android:id="@+id/itemMenuExit" android:enabled="true" android:visible="true" android:title="Exit"></item>
+</menu>

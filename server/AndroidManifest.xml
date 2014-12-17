@@ -29,6 +29,10 @@
             android:label="@string/title_activity_vnc_projection"
             android:theme="@android:style/Theme.NoDisplay" >
         </activity>
+        <activity
+            android:name=".Preferences"
+            android:theme="@android:style/Theme.Black.NoTitleBar" >
+        </activity>
     </application>
 
 </manifest>
