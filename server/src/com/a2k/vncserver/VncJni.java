@@ -12,8 +12,9 @@ import android.util.Log;
 public class VncJni
 {
 	public static final int SERVER_STARTED = 0;
-	public static final int CLIENT_CONNECTED = 1;
-	public static final int CLIENT_DISCONNECTED = 2;
+	public static final int SERVER_STOPPED = 1;
+	public static final int CLIENT_CONNECTED = 2;
+	public static final int CLIENT_DISCONNECTED = 3;
 
 	private NotificationListener m_Listener;
 
@@ -42,6 +43,7 @@ public class VncJni
 	public native void frameAvailable();
 
 	public native int startServer(int width, int height, int pixelFormat);
+	public native int stopServer();
 
 	static
 	{

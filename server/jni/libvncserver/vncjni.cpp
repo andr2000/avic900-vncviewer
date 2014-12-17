@@ -66,4 +66,9 @@ extern "C"
 	{
 		return VncServer::getInstance().startServer(width, height, pixelFormat);
 	}
+
+	JNIEXPORT jint JNICALL Java_com_a2k_vncserver_VncJni_stopServer(JNIEnv *env, jobject obj)
+	{
+		return VncServer::getInstance().stopServer();
+	}
 }

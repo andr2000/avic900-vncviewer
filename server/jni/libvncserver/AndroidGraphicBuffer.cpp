@@ -137,9 +137,9 @@ void AndroidGraphicBuffer::destroyBuffer()
 #if 0
 	if (m_EGLImage)
 	{
-		if (sGLFunctions.EnsureInitialized())
+		if (sGLFunctions.ensureInitialized())
 		{
-			sGLFunctions.fDestroyImageKHR(sGLFunctions.fGetDisplay(EGL_DEFAULT_DISPLAY), m_EGLImage);
+			eglDestroyImageKHR(eglGetDisplay(EGL_DEFAULT_DISPLAY), m_EGLImage);
 			m_EGLImage = nullptr;
 		}
 	}
@@ -154,6 +154,8 @@ void AndroidGraphicBuffer::destroyBuffer()
 		}
 		free(m_Handle);
 		m_Handle = nullptr;
+		LOG("Released graphic buffer (%dx%d), format %s", m_Width, m_Height,
+			m_Format == HAL_PIXEL_FORMAT_RGB_565 ? "RGB565" : "RGBA");
 	}
 }
 
