@@ -1,0 +1,4 @@
+<resources >
+	<bool name="use16bit">true</bool>
+	<string name="displaySize">"1"</string>
+</resources>
