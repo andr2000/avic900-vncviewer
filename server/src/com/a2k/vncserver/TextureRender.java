@@ -15,6 +15,7 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLU;
 import android.opengl.Matrix;
+import android.renderscript.Matrix4f;
 import android.util.Log;
 
 import com.a2k.vncserver.VncJni;
@@ -23,6 +24,8 @@ class TextureRender
 {
 	private static final String TAG = "TextureRender";
 
+	public static final int ROTATION_0 = 0;
+	public static final int ROTATION_90 = 1;
 	private VncJni m_VncJni;
 	private int m_Width;
 	private int m_Height;
@@ -141,10 +144,10 @@ class TextureRender
 		return m_EglTextures[TEX_SURFACE_TEXTURE];
 	}
 
-	public void drawFrame(SurfaceTexture st)
+	public void drawFrame(SurfaceTexture st, int rotation)
 	{
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, m_FrameBuffer);
-		draw(st);
+		draw(st, rotation);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, m_EglTextures[TEX_RENDER_TEXTURE]);
 		m_VncJni.bindNextGraphicBuffer();
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
@@ -152,10 +155,21 @@ class TextureRender
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 	}
 
-	public void draw(SurfaceTexture st)
+	public void draw(SurfaceTexture st, int rotation)
 	{
 		checkGlError("onDrawFrame start");
 		st.getTransformMatrix(m_STMatrix);
+		if (rotation == ROTATION_0)
+		{
+			Log.d(TAG, "0 deg ---------------------------------------");
+			Matrix4f m = new Matrix4f(m_STMatrix);
+			m.rotate(180.0f, 0, 0, 0);
+			m_STMatrix = m.getArray();
+		}
+		else
+		{
+			Log.d(TAG, "90 deg ++++++++++++++++++++++++++++++++++++");
+		}
 
 		GLES20.glViewport(0, 0, m_Width, m_Height);
 		GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);

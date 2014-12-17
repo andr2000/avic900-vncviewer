@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -33,9 +34,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private static final int PERMISSION_CODE = 1;
 	private static final String MESSAGE_KEY = "text";
 
-	private int m_ScreenDensity;
+	private boolean m_Initialized = false;
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
+	private int m_Rotation;
 	private int m_PixelFormat = GLES20.GL_RGB565;
 	private Surface m_Surface;
 	private TextureRender m_TextureRender;
@@ -57,15 +59,15 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		m_VncJni.setNotificationListener(this);
-		m_VncJni.init();
-		Log.d(TAG, m_VncJni.protoGetVersion());
-		
-		DisplayMetrics metrics = new DisplayMetrics();
-		getWindowManager().getDefaultDisplay().getMetrics(metrics);
-		m_ScreenDensity = metrics.densityDpi;
-
-		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+		if (!m_Initialized)
+		{
+			setRotation(this.getResources().getConfiguration().orientation);
+			m_Initialized = true;
+			m_VncJni.setNotificationListener(this);
+			m_VncJni.init();
+			Log.d(TAG, m_VncJni.protoGetVersion());
+			m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+		}
 
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
@@ -179,7 +181,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		if (m_Surface == null)
 		{
-			m_TextureRender = new TextureRender(m_VncJni, m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
+			m_TextureRender = new TextureRender(m_VncJni, m_DisplayWidth,
+				m_DisplayHeight, m_PixelFormat);
 			m_TextureRender.start();
 			m_SurfaceTexture = new SurfaceTexture(m_TextureRender.getTextureId());
 			m_SurfaceTexture.setDefaultBufferSize(m_DisplayWidth, m_DisplayHeight);
@@ -236,8 +239,11 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	private VirtualDisplay createVirtualDisplay()
 	{
+		DisplayMetrics metrics = new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(metrics);
+		int screenDensity = metrics.densityDpi;
 		return m_MediaProjection.createVirtualDisplay("vncserver",
-			m_DisplayWidth, m_DisplayHeight, m_ScreenDensity,
+			m_DisplayWidth, m_DisplayHeight, screenDensity,
 			DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
 	}
@@ -245,8 +251,27 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	public void onFrameAvailable(SurfaceTexture surfaceTexture)
 	{
 		m_SurfaceTexture.updateTexImage();
-		m_TextureRender.drawFrame(m_SurfaceTexture);
+		m_TextureRender.drawFrame(m_SurfaceTexture, m_Rotation);
 		m_TextureRender.swapBuffers();
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig)
+	{
+		super.onConfigurationChanged(newConfig);
+		setRotation(newConfig.orientation);
+	}
+
+	private void setRotation(int orientation)
+	{
+		if (orientation == Configuration.ORIENTATION_PORTRAIT)
+		{
+			m_Rotation = TextureRender.ROTATION_0;
+		}
+		else if (orientation == Configuration.ORIENTATION_LANDSCAPE)
+		{
+			m_Rotation = TextureRender.ROTATION_90;
+		}
 	}
 
 	public boolean onCreateOptionsMenu(Menu menu)
