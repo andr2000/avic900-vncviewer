@@ -4,6 +4,55 @@
 #include <EGL/eglext.h>
 #include <stdint.h>
 
+typedef struct android_native_base_t
+{
+	/* a magic value defined by the actual EGL native type */
+	int magic;
+
+	/* the sizeof() of the actual EGL native type */
+	int version;
+
+	void* reserved[4];
+
+	/* reference-counting interface */
+	void (*incRef)(struct android_native_base_t* base);
+	void (*decRef)(struct android_native_base_t* base);
+} android_native_base_t;
+
+typedef struct ANativeWindowBuffer
+{
+#ifdef __cplusplus
+	ANativeWindowBuffer() {
+		common.magic = 0/*ANDROID_NATIVE_BUFFER_MAGIC*/;
+		common.version = sizeof(ANativeWindowBuffer);
+		memset(common.reserved, 0, sizeof(common.reserved));
+	}
+
+	// Implement the methods that sp<ANativeWindowBuffer> expects so that it
+	// can be used to automatically refcount ANativeWindowBuffer's.
+	void incStrong(const void* id) const {
+		common.incRef(const_cast<android_native_base_t*>(&common));
+	}
+	void decStrong(const void* id) const {
+		common.decRef(const_cast<android_native_base_t*>(&common));
+	}
+#endif
+
+	struct android_native_base_t common;
+
+	int width;
+	int height;
+	int stride;
+	int format;
+	int usage;
+#if 0
+	void* reserved[2];
+
+	buffer_handle_t handle;
+	void* reserved_proc[8];
+#endif
+} ANativeWindowBuffer_t;
+
 /**
  * This class allows access to Android's direct texturing mechanism. Locking
  * the buffer gives you a pointer you can read/write to directly. It is fully
@@ -83,6 +132,10 @@ public:
 	{
 		return m_Height;
 	}
+	int getStride()
+	{
+		return m_Stride;
+	}
 
 	bool bind();
 
@@ -91,6 +144,7 @@ private:
 	uint32_t m_Height;
 	uint32_t m_Usage;
 	uint32_t m_Format;
+	uint32_t m_Stride;
 
 	bool ensureInitialized();
 	bool ensureEGLImage();
