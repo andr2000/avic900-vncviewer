@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -17,6 +18,7 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -298,10 +300,11 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			case 0:
 			{
 				/* native */
-				DisplayMetrics metrics = new DisplayMetrics();
-				getWindowManager().getDefaultDisplay().getMetrics(metrics);
-				m_DisplayWidth = metrics.widthPixels;
-				m_DisplayHeight = metrics.heightPixels;
+				Display display = getWindowManager().getDefaultDisplay();
+				Point size = new Point();
+				display.getRealSize(size);
+				m_DisplayWidth = size.x;
+				m_DisplayHeight = size.y;
 				break;
 			}
 			case 1:
