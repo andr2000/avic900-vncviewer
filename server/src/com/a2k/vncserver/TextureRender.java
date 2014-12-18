@@ -353,7 +353,7 @@ class TextureRender
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 		int[] framebuffers = new int[1];
 		framebuffers[0] = m_FrameBuffer;
-		GLES20.glDeleteFramebuffers(1, renderbuffers, 0);
+		GLES20.glDeleteFramebuffers(1, framebuffers, 0);
 	}
 
 	private void initGL(int width, int height, int pixelFormat)
