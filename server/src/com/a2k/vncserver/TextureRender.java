@@ -67,7 +67,6 @@ class TextureRender
 		"void main() {\n" +
 		"  gl_Position = uMVPMatrix * aPosition;\n" +
 		"  vTextureCoord = (uSTMatrix * aTextureCoord).xy;\n" +
-		"  vTextureCoord = vec2(vTextureCoord.s, 1.0 - vTextureCoord.t);\n" +
 		"}\n";
 
 	private static final String FRAGMENT_SHADER =
@@ -155,22 +154,129 @@ class TextureRender
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 	}
 
+	private void mtxMul(float[] out, float[] a, float[] b)
+	{
+	    out[0] = a[0]*b[0] + a[4]*b[1] + a[8]*b[2] + a[12]*b[3];
+	    out[1] = a[1]*b[0] + a[5]*b[1] + a[9]*b[2] + a[13]*b[3];
+	    out[2] = a[2]*b[0] + a[6]*b[1] + a[10]*b[2] + a[14]*b[3];
+	    out[3] = a[3]*b[0] + a[7]*b[1] + a[11]*b[2] + a[15]*b[3];
+	    out[4] = a[0]*b[4] + a[4]*b[5] + a[8]*b[6] + a[12]*b[7];
+	    out[5] = a[1]*b[4] + a[5]*b[5] + a[9]*b[6] + a[13]*b[7];
+	    out[6] = a[2]*b[4] + a[6]*b[5] + a[10]*b[6] + a[14]*b[7];
+	    out[7] = a[3]*b[4] + a[7]*b[5] + a[11]*b[6] + a[15]*b[7];
+	    out[8] = a[0]*b[8] + a[4]*b[9] + a[8]*b[10] + a[12]*b[11];
+	    out[9] = a[1]*b[8] + a[5]*b[9] + a[9]*b[10] + a[13]*b[11];
+	    out[10] = a[2]*b[8] + a[6]*b[9] + a[10]*b[10] + a[14]*b[11];
+	    out[11] = a[3]*b[8] + a[7]*b[9] + a[11]*b[10] + a[15]*b[11];
+	    out[12] = a[0]*b[12] + a[4]*b[13] + a[8]*b[14] + a[12]*b[15];
+	    out[13] = a[1]*b[12] + a[5]*b[13] + a[9]*b[14] + a[13]*b[15];
+	    out[14] = a[2]*b[12] + a[6]*b[13] + a[10]*b[14] + a[14]*b[15];
+	    out[15] = a[3]*b[12] + a[7]*b[13] + a[11]*b[14] + a[15]*b[15];
+	}
+	
 	public void draw(SurfaceTexture st, int rotation)
 	{
 		checkGlError("onDrawFrame start");
 		st.getTransformMatrix(m_STMatrix);
+	
+		float[] mtxIdentity =
+		{
+		    1, 0, 0, 0,
+		    0, 1, 0, 0,
+		    0, 0, 1, 0,
+		    0, 0, 0, 1,
+		};
+		    
+		float[] g_dAffinetransRotation90GL =
+		{
+			    0.0f, 1.0f, 0.0f, 0.0f,
+			    -1.0f, 0.0f, 0.0f, 0.0f,
+			    0.0f, 0.0f, 1.0f, 0.0f,
+			    0.0f, 0.0f, 0.0f, 1.0f
+		};
+		
+		float[] xform = new float[16];
+		
+		for (int i = 0; i < 16; i++)
+		{
+	        xform[i] = mtxIdentity[i];
+	    }
+		
+		float[] mtxFlipH =
+			{
+			    -1, 0, 0, 0,
+			    0, 1, 0, 0,
+			    0, 0, 1, 0,
+			    1, 0, 0, 1,
+			};
+		
+		float [] result = new float[16];
+        mtxMul(result, xform, mtxFlipH);
+        for (int i = 0; i < 16; i++)
+        {
+            xform[i] = result[i];
+        }
+		
+		
 		if (rotation == ROTATION_0)
 		{
-			Log.d(TAG, "0 deg ---------------------------------------");
-			Matrix4f m = new Matrix4f(m_STMatrix);
-			m.rotate(180.0f, 0, 0, 0);
-			m_STMatrix = m.getArray();
+			/*
+			float[] mtxRot270 = {
+				    0, -1, 0, 0,
+				    1, 0, 0, 0,
+				    0, 0, 1, 0,
+				    0, 1, 0, 1,
+				};
+				*/
+			float[] mtxRot90 = {
+				    0, 1, 0, 0,
+				    -1, 0, 0, 0,
+				    0, 0, 1, 0,
+				    1, 0, 0, 1,
+				};
+			mtxMul(result, xform, mtxRot90);
 		}
 		else
 		{
-			Log.d(TAG, "90 deg ++++++++++++++++++++++++++++++++++++");
+			float[] mtxRot180 = {
+				    -1, 0, 0, 0,
+				    0, -1, 0, 0,
+				    0, 0, 1, 0,
+				    1, 1, 0, 1,
+				};
+			mtxMul(result, xform, mtxRot180);
+        }
+        for (int i = 0; i < 16; i++)
+        {
+            xform[i] = result[i];
+        }
+		float tx = 0.0f, ty = 0.0f, sx = 1.0f, sy = 1.0f;
+		if (rotation == ROTATION_0)
+		{
+			/* normal size */
+			//sx = 0.5f; tx = 0.25f;
 		}
+		float[] crop = {
+		        sx, 0, 0, 0,
+		        0, sy, 0, 0,
+		        0, 0, 1, 0,
+		        tx, ty, 0, 1,
+		    };
+		float[] mtxBeforeFlipV = new float[16];
+		    mtxMul(mtxBeforeFlipV, crop, xform);
+		    
+		    float[] mtxFlipV = {
+		    	    1, 0, 0, 0,
+		    	    0, -1, 0, 0,
+		    	    0, 0, 1, 0,
+		    	    0, 1, 0, 1,
+		    	};
+		    
+		mtxMul(m_STMatrix, mtxFlipV, mtxBeforeFlipV);
 
+		float[] rr = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+		m_STMatrix = rr;
+		
 		GLES20.glViewport(0, 0, m_Width, m_Height);
 		GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
 		GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
