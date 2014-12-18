@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -33,7 +34,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private static final int PERMISSION_CODE = 1;
 	private static final String MESSAGE_KEY = "text";
 
-	private int m_ScreenDensity;
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
 	private int m_PixelFormat = GLES20.GL_RGB565;
@@ -60,10 +60,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_VncJni.setNotificationListener(this);
 		m_VncJni.init();
 		Log.d(TAG, m_VncJni.protoGetVersion());
-		
-		DisplayMetrics metrics = new DisplayMetrics();
-		getWindowManager().getDefaultDisplay().getMetrics(metrics);
-		m_ScreenDensity = metrics.densityDpi;
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
@@ -91,8 +87,16 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	@Override
 	public void onDestroy()
 	{
-		stopScreenSharing();
+		/* TODO: this is not always called!!! */
 		super.onDestroy();
+		m_VncJni.stopServer();
+		stopScreenSharing();
+	}
+
+	@Override
+	public void onConfigurationChanged(Configuration newConfig)
+	{
+		super.onConfigurationChanged(newConfig);
 	}
 
 	public void onNotification(int what, String message)
@@ -236,8 +240,11 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	private VirtualDisplay createVirtualDisplay()
 	{
+		DisplayMetrics metrics = new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(metrics);
+		int screenDensity = metrics.densityDpi;
 		return m_MediaProjection.createVirtualDisplay("vncserver",
-			m_DisplayWidth, m_DisplayHeight, m_ScreenDensity,
+			m_DisplayWidth, m_DisplayHeight, screenDensity,
 			DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
 	}
