@@ -141,7 +141,6 @@ class TextureRender
 		return m_EglTextures[TEX_SURFACE_TEXTURE];
 	}
 
-	private int m_SaveCounter = 20;
 	public void drawFrame(SurfaceTexture st)
 	{
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, m_FrameBuffer);
