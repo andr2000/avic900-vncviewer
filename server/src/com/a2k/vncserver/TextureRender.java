@@ -53,6 +53,14 @@ class TextureRender
 		 1.0f,  1.0f, 0, 1.f, 1.f,
 	};
 
+	private final float[] m_STMatrix =
+	{
+		1.0f, 0.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f, 0.0f,
+		0.0f, 0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	};
+
 	private FloatBuffer m_TriangleVertices;
 
 	private static final String VERTEX_SHADER =
@@ -64,7 +72,6 @@ class TextureRender
 		"void main() {\n" +
 		"  gl_Position = uMVPMatrix * aPosition;\n" +
 		"  vTextureCoord = (uSTMatrix * aTextureCoord).xy;\n" +
-		"  vTextureCoord = vec2(vTextureCoord.s, 1.0 - vTextureCoord.t);\n" +
 		"}\n";
 
 	private static final String FRAGMENT_SHADER =
@@ -114,7 +121,6 @@ class TextureRender
 	}
 
 	private float[] m_MVPMatrix = new float[16];
-	private float[] m_STMatrix = new float[16];
 
 	private int m_Program;
 	private int m_uMVPMatrixHandle;
@@ -155,7 +161,6 @@ class TextureRender
 	public void draw(SurfaceTexture st)
 	{
 		checkGlError("onDrawFrame start");
-		st.getTransformMatrix(m_STMatrix);
 
 		GLES20.glViewport(0, 0, m_Width, m_Height);
 		GLES20.glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
