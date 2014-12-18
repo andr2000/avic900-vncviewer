@@ -248,12 +248,14 @@ bool AndroidGraphicBuffer::ensureEGLImage()
 	EGLint eglImgAttrs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE, EGL_NONE };
 	void *nativeBuffer = sGLFunctions.fGraphicBufferGetNativeBuffer(m_Handle);
 
+	ANativeWindowBuffer *buf = reinterpret_cast<ANativeWindowBuffer *>(nativeBuffer);
+	m_Stride = buf->stride;
 	m_EGLImage = eglCreateImageKHR(eglGetDisplay(EGL_DEFAULT_DISPLAY),
 		EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, (EGLClientBuffer)nativeBuffer, eglImgAttrs);
 	if (m_EGLImage)
 	{
-		LOG("Allocated graphic buffer (%dx%d), format %s", m_Width, m_Height,
-			m_Format == HAL_PIXEL_FORMAT_RGB_565 ? "RGB565" : "RGBA");
+		LOG("Allocated graphic buffer (%dx%d), format %s, stride %d", m_Width, m_Height,
+			m_Format == HAL_PIXEL_FORMAT_RGB_565 ? "RGB565" : "RGBA", m_Stride);
 	}
 	return m_EGLImage != nullptr;
 }
