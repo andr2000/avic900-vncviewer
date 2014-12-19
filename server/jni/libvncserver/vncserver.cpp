@@ -236,12 +236,11 @@ void rfbDefaultLog(const char *format, ...)
 	va_end(args);
 }
 
-int VncServer::startServer(bool root, int width, int height, int pixelFormat)
+int VncServer::startServer(int width, int height, int pixelFormat)
 {
 	m_Width = width;
 	m_Height = height;
 	m_PixelFormat = pixelFormat;
-	m_Rooted = root;
 	LOGI("Starting VNC server (%dx%d), %s", m_Width, m_Height, m_PixelFormat == GL_RGB565 ? "RGB565" : "RGBA");
 
 	if (!allocateBuffers(m_Width, m_Height, m_PixelFormat))
@@ -277,7 +276,7 @@ int VncServer::startServer(bool root, int width, int height, int pixelFormat)
 	if (m_Rooted)
 	{
 		m_EventInjector.reset(new EventInjector());
-		m_EventInjector->scan();
+		m_EventInjector->initialize(m_Width, m_Height);
 	}
 	m_Terminated = false;
 	m_WorkerThread = std::thread(&VncServer::worker, this);

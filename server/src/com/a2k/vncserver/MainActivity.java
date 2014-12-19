@@ -96,7 +96,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				{
 					m_ButtonStartStop.setText("Stop");
 					readPreferences();
-					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
+					m_VncJni.startServer(m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
 				}
 				m_ProjectionStarted ^= true;
 			}
