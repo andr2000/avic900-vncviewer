@@ -147,10 +147,10 @@ class TextureRender
 		return m_EglTextures[TEX_SURFACE_TEXTURE];
 	}
 
-	public void drawFrame(SurfaceTexture st)
+	public void drawFrame()
 	{
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, m_FrameBuffer);
-		draw(st);
+		draw();
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, m_EglTextures[TEX_RENDER_TEXTURE]);
 		m_VncJni.bindNextGraphicBuffer();
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0);
@@ -158,7 +158,7 @@ class TextureRender
 		GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
 	}
 
-	public void draw(SurfaceTexture st)
+	private void draw()
 	{
 		checkGlError("onDrawFrame start");
 
