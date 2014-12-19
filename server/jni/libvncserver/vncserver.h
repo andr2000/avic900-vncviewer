@@ -10,6 +10,7 @@
 #include <string>
 
 #include "AndroidGraphicBuffer.h"
+#include "eventinjector.h"
 #include "rfb/rfb.h"
 #include "triplebuffer.h"
 
@@ -39,7 +40,7 @@ public:
 
 	void postEventToUI(int what, std::string text);
 
-	int startServer(int width, int height, int pixelFormat);
+	int startServer(bool root, int width, int height, int pixelFormat);
 	int stopServer();
 	void bindNextProducerBuffer();
 	void frameAvailable();
@@ -55,6 +56,9 @@ private:
 	jobject m_Object;
 	jclass m_Class;
 	jmethodID m_NotificationClb;
+
+	bool m_Rooted { false };
+	std::unique_ptr<EventInjector> m_EventInjector;
 
 	int m_Width;
 	int m_Height;
