@@ -1,4 +1,5 @@
 #include <android/log.h>
+#include <errno.h>
 #include <memory>
 #include <linux/input.h>
 #include <sys/types.h>
@@ -18,65 +19,87 @@ extern "C"
 	#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, MODULE_NAME, __VA_ARGS__))
 }
 
+int EventInjector::initialize(int width, int height)
+{
+	m_Width = width;
+	m_Height = height;
+	scan();
+	if (m_TouchFd != INVALID_HANDLE)
+	{
+	}
+}
+
 void EventInjector::scan()
 {
 	/* scan all input devices */
 	static const std::string DEV_INPUT = {"/dev/input/"};
 	std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(DEV_INPUT.c_str()), closedir);
 
-	m_KeypadName.clear();
 	m_TouchName.clear();
 	if (!dir)
 	{
-		LOGE("Failed to open %s", DEV_INPUT.c_str());
+		LOGE("Failed to open %s, %s", DEV_INPUT.c_str(), strerror(errno));
 		return;
 	}
 	while (true)
 	{
+		LOGE("next");
 		struct dirent* dirent = readdir(dir.get());
 		if (dirent == nullptr)
 		{
+			LOGE("dirent");
 			break;
 		}
 
-		std::string currentPath = DEV_INPUT + dirent->d_name;
+		std::string dev = DEV_INPUT + dirent->d_name;
 
-		struct stat entryInfo;
-		if (stat(currentPath.c_str(), &entryInfo) < 0)
-		{
-			break;
-		}
+		LOGE("device: %s", dev.c_str());
 
 		/* Skip '.', '..' and hidden files */
 		if (dirent->d_name[0] == '.')
 		{
+			LOGE(".");
 			continue;
 		}
+
+		struct stat entryInfo;
+		if (stat(dev.c_str(), &entryInfo) < 0)
+		{
+			LOGE("stat");
+			break;
+		}
+
 
 		if (S_ISDIR(entryInfo.st_mode))
 		{
+			LOGE("st_mode");
 			continue;
 		}
 
+		LOGD("char %d", S_ISCHR(entryInfo.st_mode));
 		if (S_ISCHR(entryInfo.st_mode))
 		{
-			probe(currentPath);
+			LOGD("Probing %s", dev.c_str());
+			int fd = ::open(dev.c_str(), O_RDONLY);
+			if (fd == INVALID_HANDLE)
+			{
+				LOGE("Failed to open %s", dev.c_str(), strerror(errno));
+				continue;
+			}
+			int result = isPointerDev(fd);
+			::close(fd);
+			if (result == 0)
+			{
+				m_TouchFd = fd;
+				m_TouchName = dev;
+				LOGD("Found touch device at %s", m_TouchName.c_str());
+				break;
+			}
 		}
 	}
 }
 
-int EventInjector::open(const std::string &dev)
-{
-	/* open input device */
-	return ::open(dev.c_str(), O_WRONLY);
-}
-
-void EventInjector::close(const int fd)
-{
-	::close(fd);
-}
-
-EventInjector::DEV_CHECK_RET_CODE EventInjector::isPointerDev(int fd)
+int EventInjector::isPointerDev(int fd)
 {
 	unsigned long evbits[NBits(EV_MAX)];
 	unsigned long keybits[NBits(KEY_MAX)];
@@ -86,21 +109,19 @@ EventInjector::DEV_CHECK_RET_CODE EventInjector::isPointerDev(int fd)
 	retCode = ioctl(fd, EVIOCGBIT(0, sizeof(evbits)), evbits);
 	if (retCode == -1)
 	{
-		LOGE("Failed to get EVIOCGBIT\n");
-		return FAILED;
+		return -1;
 	}
 
 	if (!TestBit(EV_KEY, evbits))
 	{
 		/* No device yet */
-		return NO_DEVICE;
+		return -1;
 	}
 
 	retCode = ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits);
 	if (retCode == -1)
 	{
-		LOGE("Failed to get EVIOCGBIT\n");
-		return FAILED;
+		return -1;
 	}
 
 	if ((TestBit(EV_ABS, evbits) || TestBit(EV_REL, evbits))
@@ -110,8 +131,7 @@ EventInjector::DEV_CHECK_RET_CODE EventInjector::isPointerDev(int fd)
 		retCode = ioctl(fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits);
 		if (retCode == -1)
 		{
-			LOGE("Failed to get EVIOCGBIT\n");
-			return FAILED;
+			return -1;
 		}
 
 		if (TestBit(ABS_X, absbits) && TestBit(ABS_Y, absbits))
@@ -121,43 +141,18 @@ EventInjector::DEV_CHECK_RET_CODE EventInjector::isPointerDev(int fd)
 			retCode = ioctl(fd, EVIOCGABS(ABS_X), &abs_data);
 			if (retCode == -1)
 			{
-				LOGE("Failed to get EVIOCGABS\n");
-				return FAILED;
+				return -1;
 			}
-			m_TouchValueX = abs_data.value;
-			m_TouchMinX = abs_data.minimum;
-			m_TouchMaxX = abs_data.maximum;
+			m_TouchWidth = abs_data.maximum - abs_data.minimum;
 
 			retCode = ioctl(fd, EVIOCGABS(ABS_Y), &abs_data);
 			if (retCode == -1)
 			{
-				LOGE("Failed to get EVIOCGABS\n");
-				return FAILED;
+				return -1;
 			}
-			m_TouchValueY = abs_data.value;
-			m_TouchMinY = abs_data.minimum;
-			m_TouchMaxY = abs_data.maximum;
-			return FOUND;
+			m_TouchHeight = abs_data.maximum - abs_data.minimum;
+			return 0;
 		}
 	}
-	return NO_DEVICE;
-}
-
-void EventInjector::probe(const std::string &dev)
-{
-	LOGD("Probing %s", dev.c_str());
-	int fd = open(dev);
-	if (fd == INVALID_HANDLE)
-	{
-		LOGE("Failed to open %s", dev.c_str());
-		return;
-	}
-	DEV_CHECK_RET_CODE result = isPointerDev(fd);
-	if (result == FOUND)
-	{
-		m_TouchFd = fd;
-		m_TouchName = dev;
-		LOGD("Found touch device at %s", m_TouchName.c_str());
-	}
-	close(fd);
+	return -1;
 }

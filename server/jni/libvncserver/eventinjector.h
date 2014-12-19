@@ -6,7 +6,7 @@ public:
 	EventInjector() = default;
 	virtual ~EventInjector() = default;
 
-	void scan();
+	int initialize(int width, int height);
 
 private:
 	static constexpr int BITS_PER_LONG { sizeof(unsigned long) * 8 };
@@ -22,27 +22,15 @@ private:
 	}
 
 	static const int INVALID_HANDLE { -1 };
-	std::string m_KeypadName;
-	int m_KeypadFd { INVALID_HANDLE };
 	std::string m_TouchName;
 	int m_TouchFd { INVALID_HANDLE };
+	int m_TouchWidth = 0;
+	int m_TouchHeight = 0;
 
-	int m_TouchValueX = -1;
-	int m_TouchMinX;
-	int m_TouchMaxX;
-	int m_TouchValueY = -1;
-	int m_TouchMinY;
-	int m_TouchMaxY;
+	/* these are w and h of the uinput device we create */
+	int m_Width;
+	int m_Height;
 
-	void probe(const std::string &dev);
-	int open(const std::string &dev);
-	void close(const int fd);
-
-	enum DEV_CHECK_RET_CODE
-	{
-		FAILED,
-		NO_DEVICE,
-		FOUND
-	};
-	DEV_CHECK_RET_CODE isPointerDev(int fd);
+	void scan();
+	int isPointerDev(int fd);
 };

@@ -277,7 +277,7 @@ int VncServer::startServer(bool root, int width, int height, int pixelFormat)
 	if (m_Rooted)
 	{
 		m_EventInjector.reset(new EventInjector());
-		m_EventInjector->scan();
+		m_EventInjector->initialize(m_Width, m_Height);
 	}
 	m_Terminated = false;
 	m_WorkerThread = std::thread(&VncServer::worker, this);

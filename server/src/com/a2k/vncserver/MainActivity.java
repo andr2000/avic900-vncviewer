@@ -66,7 +66,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	
 	private boolean m_Rooted = false;
 
-	private VncJni m_VncJni = new VncJni();
+	private VncJni m_VncJni;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -74,16 +74,21 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		m_VncJni.setNotificationListener(this);
-		m_VncJni.init();
-		Log.d(TAG, m_VncJni.protoGetVersion());
-
-		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+		m_Rooted = Shell.isSuAvailable();
+		Shell.runCommand("chmod 777 /dev/input");
+		Shell.runCommand("chmod 777 /dev/input/event0");
+		Shell.runCommand("chmod 777 /dev/input/event1");
+		Shell.runCommand("chmod 777 /dev/input/event2");
+		Shell.runCommand("supolicy --live \"allow untrusted_app input_device dir search\"");
+		Shell.runCommand("supolicy --live \"allow untrusted_app input_device dir read\"");
+		Shell.runCommand("supolicy --live \"allow untrusted_app input_device dir open\"");
+		Shell.runCommand("supolicy --live \"allow untrusted_app input_device chr_file read\"");
+		Shell.runCommand("supolicy --live \"allow untrusted_app input_device chr_file getattr\"");
+		Shell.runCommand("supolicy --live \"allow untrusted_app input_device chr_file ioctl\"");
 
 		m_LogView = (TextView)findViewById(R.id.textViewIP);
 		m_LogView.setMovementMethod(new ScrollingMovementMethod());
 
-		m_Rooted = Shell.isSuAvailable();
 		if (m_Rooted)
 		{
 			m_LogView.append("Rooted device\n");
@@ -92,6 +97,13 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		{
 			m_LogView.append("This device is NOT rooted\n");
 		}
+
+		m_VncJni = new VncJni();
+		m_VncJni.setNotificationListener(this);
+		m_VncJni.init();
+		Log.d(TAG, m_VncJni.protoGetVersion());
+
+		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
 		printIPs();
 
