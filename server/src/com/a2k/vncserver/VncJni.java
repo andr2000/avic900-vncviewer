@@ -1,14 +1,5 @@
 package com.a2k.vncserver;
 
-import android.graphics.Bitmap;
-import android.graphics.SurfaceTexture;
-import android.graphics.SurfaceTexture.OnFrameAvailableListener;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.util.Log;
-
 public class VncJni
 {
 	public static final int SERVER_STARTED = 0;
