@@ -40,7 +40,7 @@ public:
 
 	void postEventToUI(int what, std::string text);
 
-	int startServer(bool root, int width, int height, int pixelFormat);
+	int startServer(int width, int height, int pixelFormat);
 	int stopServer();
 	void bindNextProducerBuffer();
 	void frameAvailable();

@@ -33,7 +33,7 @@ public class VncJni
 	public native void bindNextGraphicBuffer();
 	public native void frameAvailable();
 
-	public native int startServer(boolean root, int width, int height, int pixelFormat);
+	public native int startServer(int width, int height, int pixelFormat);
 	public native int stopServer();
 
 	static
