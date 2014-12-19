@@ -23,6 +23,7 @@
         android:maxLines="1000"
         android:scrollbars="vertical"
         android:gravity="bottom"
+        android:typeface="monospace"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </RelativeLayout>
