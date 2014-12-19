@@ -1,5 +1,14 @@
 package com.a2k.vncserver;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+
+import org.apache.http.conn.util.InetAddressUtils;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +25,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
+import android.text.method.ScrollingMovementMethod;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
@@ -25,6 +35,7 @@ import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.a2k.vncserver.VncJni;
@@ -51,8 +62,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private boolean m_ProjectionStarted;
 	private int m_NumClientsConnected = 0;
 
+	private TextView m_LogView;
+
 	private VncJni m_VncJni = new VncJni();
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -64,6 +77,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		Log.d(TAG, m_VncJni.protoGetVersion());
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
+
+		m_LogView = (TextView)findViewById(R.id.textViewIP);
+		m_LogView.setMovementMethod(new ScrollingMovementMethod());
+		printIPs();
 
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
@@ -117,6 +134,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		public void handleMessage(Message msg)
 		{
 			Bundle bundle = msg.getData();
+			m_LogView.append(bundle.getString(MESSAGE_KEY) + "\n");
 			switch (msg.what)
 			{
 				case VncJni.SERVER_STARTED:
@@ -315,5 +333,45 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				break;
 			}
 		}
+	}
+
+	private List<String> getIpAddresses()
+	{
+		List<String> list = new ArrayList<String>();
+		try
+		{
+			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();)
+			{
+				NetworkInterface intf = en.nextElement();
+				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();)
+				{
+					InetAddress inetAddress = enumIpAddr.nextElement();
+					if (!inetAddress.isLoopbackAddress())
+					{
+						String ipv4 = inetAddress.getHostAddress();
+						if (!inetAddress.isLoopbackAddress() && InetAddressUtils.isIPv4Address(ipv4))
+						{
+							list.add(ipv4);
+						}
+					}
+				}
+			}
+		} catch (SocketException e)
+		{
+			Log.e(TAG, e.toString());
+		}
+		return list;
+	}
+
+	private void printIPs()
+	{
+		List<String> ipList = getIpAddresses();
+		StringBuilder stringList = new StringBuilder();
+		stringList.append("Listening on (port 5901):");
+		for (String s : ipList)
+		{
+			stringList.append(s + "\n");
+		}
+		m_LogView.setText(stringList.toString());
 	}
 }

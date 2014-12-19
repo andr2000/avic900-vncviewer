@@ -13,4 +13,16 @@
         android:layout_marginTop="52dp"
         android:text="Start" />
 
+    <TextView
+        android:id="@+id/textViewIP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonStartStop"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="88dp"
+        android:maxLines="1000"
+        android:scrollbars="vertical"
+        android:gravity="bottom"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
 </RelativeLayout>
