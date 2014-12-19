@@ -367,10 +367,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		List<String> ipList = getIpAddresses();
 		StringBuilder stringList = new StringBuilder();
-		stringList.append("Listening on (port 5901):");
+		stringList.append("Listening on port 5901:\n");
 		for (String s : ipList)
 		{
-			stringList.append(s + "\n");
+			stringList.append("    connect to " + s + "\n");
 		}
 		m_LogView.setText(stringList.toString());
 	}
