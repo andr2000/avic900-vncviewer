@@ -265,7 +265,7 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	setVncFramebuffer();
 
 	m_RfbScreenInfoPtr->paddedWidthInBytes = m_VncBuffer->getStride() *
-		m_RfbScreenInfoPtr->serverFormat.bitsPerPixel / 8;
+		m_RfbScreenInfoPtr->serverFormat.bitsPerPixel / CHAR_BIT;
 
 	rfbLogEnable(true);
 	rfbLog = rfbDefaultLog;
