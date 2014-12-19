@@ -37,6 +37,7 @@ void VncServer::cleanup()
 	m_Height = 0;
 	m_PixelFormat = 0;
 	m_FrameAvailable = false;
+	m_EventInjector.reset();
 }
 
 void VncServer::setJavaVM(JavaVM *javaVM)
@@ -235,11 +236,12 @@ void rfbDefaultLog(const char *format, ...)
 	va_end(args);
 }
 
-int VncServer::startServer(int width, int height, int pixelFormat)
+int VncServer::startServer(bool root, int width, int height, int pixelFormat)
 {
 	m_Width = width;
 	m_Height = height;
 	m_PixelFormat = pixelFormat;
+	m_Rooted = root;
 	LOGI("Starting VNC server (%dx%d), %s", m_Width, m_Height, m_PixelFormat == GL_RGB565 ? "RGB565" : "RGBA");
 
 	if (!allocateBuffers(m_Width, m_Height, m_PixelFormat))
@@ -272,6 +274,11 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	rfbErr = rfbDefaultLog;
 	rfbInitServer(m_RfbScreenInfoPtr);
 
+	if (m_Rooted)
+	{
+		m_EventInjector.reset(new EventInjector());
+		m_EventInjector->scan();
+	}
 	m_Terminated = false;
 	m_WorkerThread = std::thread(&VncServer::worker, this);
 	postEventToUI(SERVER_STARTED, "VNC server started");
