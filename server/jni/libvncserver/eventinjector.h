@@ -33,4 +33,5 @@ private:
 
 	void scan();
 	int isPointerDev(int fd);
+	bool createDevice();
 };

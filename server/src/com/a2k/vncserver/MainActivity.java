@@ -75,6 +75,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		setContentView(R.layout.activity_main);
 
 		m_Rooted = Shell.isSuAvailable();
+		Shell.runCommand("chmod 666 /dev/uinput");
+		Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file write\"");
+		Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file ioctl\"");
+		/*
 		Shell.runCommand("chmod 777 /dev/input");
 		Shell.runCommand("chmod 777 /dev/input/event0");
 		Shell.runCommand("chmod 777 /dev/input/event1");
@@ -85,6 +89,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		Shell.runCommand("supolicy --live \"allow untrusted_app input_device chr_file read\"");
 		Shell.runCommand("supolicy --live \"allow untrusted_app input_device chr_file getattr\"");
 		Shell.runCommand("supolicy --live \"allow untrusted_app input_device chr_file ioctl\"");
+		Shell.runCommand("supolicy --live \"allow untrusted_app input_device chr_file write\"");
+		*/
 
 		m_LogView = (TextView)findViewById(R.id.textViewIP);
 		m_LogView.setMovementMethod(new ScrollingMovementMethod());

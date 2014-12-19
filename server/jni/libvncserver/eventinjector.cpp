@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <unistd.h>
+#include "uinput.h"
 
 #include "eventinjector.h"
 
@@ -27,10 +28,136 @@ int EventInjector::initialize(int width, int height)
 	if (m_TouchFd != INVALID_HANDLE)
 	{
 	}
+	return 0;
+}
+
+bool EventInjector::createDevice()
+{
+	const char* USER_INPUT_DEV = "/dev/uinput";
+	int retCode = 0;
+
+	//Open uinput device if it is not open for now
+	if (m_TouchFd < 0)
+	{
+		m_TouchFd = ::open(USER_INPUT_DEV, O_WRONLY | O_NONBLOCK);
+		if (m_TouchFd < 0)
+		{
+			LOGD("Fail to open %s\n", USER_INPUT_DEV);
+			return false;
+		}
+	}
+
+	/*
+	if (m_Configured == true)
+	{
+		//Destroy uinput device
+		m_Configured = false;
+		retCode = ioctl(m_TouchFd, UI_DEV_DESTROY);
+		if (retCode == -1)
+		{
+			LOG_DEBUG("Fail to execute UI_DEV_DESTROY %s\n", strerror(retCode));
+			::close(m_TouchFd);
+			m_TouchFd = -1;
+			return false;
+		}
+	}
+
+	//Test configuration consistency
+	if ((xMinValue < 0) || (xMaxValue < 0) || (yMinValue < 0) || (yMaxValue < 0))
+	{
+		LOGD("X or Y dimension under zero.\n");
+		::close(m_TouchFd);
+		m_TouchFd = -1;
+		return false;
+	}
+	*/
+
+	retCode = ioctl(m_TouchFd, UI_SET_EVBIT, EV_KEY);
+	if (retCode == -1)
+	{
+		LOGD("Fail to set EV_KEY bit %s\n", strerror(retCode));
+		::close(m_TouchFd);
+		m_TouchFd = -1;
+		return false;
+	}
+
+	retCode = ioctl(m_TouchFd, UI_SET_EVBIT, EV_SYN);
+	if (retCode == -1)
+	{
+		LOGD("Fail to set EV_SYN bit %s\n", strerror(retCode));
+		::close(m_TouchFd);
+		m_TouchFd = -1;
+		return false;
+	}
+
+	retCode = ioctl(m_TouchFd, UI_SET_EVBIT, EV_ABS);
+	if (retCode == -1)
+	{
+		LOGD("Fail to set EV_ABS bit %s\n", strerror(retCode));
+		::close(m_TouchFd);
+		m_TouchFd = -1;
+		return false;
+	}
+
+	retCode = ioctl(m_TouchFd, UI_SET_KEYBIT, BTN_TOUCH);
+	if (retCode == -1)
+	{
+		LOGD("Fail to set BTN_TOUCH bit %s\n", strerror(retCode));
+		::close(m_TouchFd);
+		m_TouchFd = -1;
+		return false;
+	}
+
+	retCode = ioctl(m_TouchFd, UI_SET_ABSBIT, ABS_X);
+	if (retCode == -1)
+	{
+		LOGD("Fail to set ABS_X bit %s\n", strerror(retCode));
+		::close(m_TouchFd);
+		m_TouchFd = -1;
+		return false;
+	}
+
+	retCode = ioctl(m_TouchFd, UI_SET_ABSBIT, ABS_Y);
+	if (retCode == -1)
+	{
+		LOGD("Fail to set ABS_Y bit %s\n", strerror(retCode));
+		::close(m_TouchFd);
+		m_TouchFd = -1;
+		return false;
+	}
+
+	struct uinput_user_dev uidev;
+	memset(&uidev, 0, sizeof(uidev));
+	snprintf(uidev.name, UINPUT_MAX_NAME_SIZE, "uinput-touch");
+	uidev.absmin[ABS_X] = 0;
+	uidev.absmax[ABS_X] = 800;
+	uidev.absmin[ABS_Y] = 0;
+	uidev.absmax[ABS_Y] = 480;
+	retCode = ::write(m_TouchFd, &uidev, sizeof(uidev));
+
+	if (retCode == -1)
+	{
+		LOGD("Fail to write user device config %s \n", strerror(retCode));
+		::close(m_TouchFd);
+		m_TouchFd = -1;
+		return false;
+	}
+
+	retCode = ioctl(m_TouchFd, UI_DEV_CREATE);
+	if (retCode == -1)
+	{
+		LOGD("Fail to execute UI_DEV_CREATE %s\n", strerror(retCode));
+		::close(m_TouchFd);
+		m_TouchFd = -1;
+		return false;
+	}
+	return true;
 }
 
 void EventInjector::scan()
 {
+	createDevice();
+	return;
 	/* scan all input devices */
 	static const std::string DEV_INPUT = {"/dev/input/"};
 	std::unique_ptr<DIR, decltype(&closedir)> dir(opendir(DEV_INPUT.c_str()), closedir);
