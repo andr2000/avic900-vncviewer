@@ -17,6 +17,9 @@ private:
 	int m_Height = 0;
 	static const int INVALID_HANDLE = -1;
 	int m_Fd = INVALID_HANDLE;
+	bool m_LeftClicked = false;
+	bool m_RightClicked = false;
+	bool m_MiddleClicked = false;
 
 	void cleanup();
 };

@@ -89,4 +89,6 @@ int suinput_release(int uinput_fd, uint16_t code);
 */
 int suinput_click(int uinput_fd, uint16_t code);
 
+int suinput_write(int uinput_fd, uint16_t type, uint16_t code, int32_t value);
+
 #endif /* SUINPUT_H */
