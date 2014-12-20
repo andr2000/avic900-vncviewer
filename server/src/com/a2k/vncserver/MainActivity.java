@@ -24,6 +24,7 @@ import android.opengl.GLES20;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.text.method.ScrollingMovementMethod;
 import android.util.DisplayMetrics;
@@ -61,6 +62,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private Button m_ButtonStartStop;
 	private boolean m_ProjectionStarted;
 	private int m_NumClientsConnected = 0;
+	private boolean m_KeepScreenOn = false;
+	private static PowerManager.WakeLock m_WakeLock = null;
 
 	private TextView m_LogView;
 	
@@ -105,12 +108,14 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					m_ButtonStartStop.setText("Start");
 					m_VncJni.stopServer();
 					restoreRootPermissions();
+					setScreenOff();
 				}
 				else
 				{
 					m_ButtonStartStop.setText("Stop");
 					readPreferences();
 					setupRootPermissions();
+					setScreenOn();
 					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
 				}
 				m_ProjectionStarted ^= true;
@@ -311,6 +316,24 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 	}
 
+	private void setScreenOn()
+	{
+		if (m_KeepScreenOn)
+		{
+			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+			m_WakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "vncserver");
+			m_WakeLock.acquire();
+		}
+	}
+
+	private void setScreenOff()
+	{
+		if ((m_WakeLock != null) && m_WakeLock.isHeld())
+		{
+			m_WakeLock.release();
+		}
+	}
+
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		MenuInflater inflater = getMenuInflater();
@@ -368,6 +391,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				break;
 			}
 		}
+		m_KeepScreenOn = prefs.getBoolean("keepScreenOn", false);
 	}
 
 	private List<String> getIpAddresses()
