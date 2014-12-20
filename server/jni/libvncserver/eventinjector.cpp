@@ -50,6 +50,60 @@ void EventInjector::cleanup()
 
 void EventInjector::handlePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl)
 {
+	//transformTouchCoordinates(&x,&y,cl->screen->width,cl->screen->height);
+
+	if ((buttonMask & 1) && m_LeftClicked)
+	{
+		/* left btn clicked and moving */
+		suinput_write(m_Fd, EV_ABS, ABS_X, x);
+		suinput_write(m_Fd, EV_ABS, ABS_Y, y);
+		suinput_write(m_Fd, EV_SYN, SYN_REPORT, 0);
+	}
+	else if (buttonMask & 1)
+	{
+		/* left btn clicked */
+		m_LeftClicked = true;
+
+		suinput_write(m_Fd, EV_ABS, ABS_X, x);
+		suinput_write(m_Fd, EV_ABS, ABS_Y, y);
+		suinput_write(m_Fd, EV_KEY,BTN_TOUCH,1);
+		suinput_write(m_Fd, EV_SYN, SYN_REPORT, 0);
+	}
+	else if (m_LeftClicked)
+	{
+		/* left btn released */
+		m_LeftClicked = false;
+		suinput_write(m_Fd, EV_ABS, ABS_X, x);
+		suinput_write(m_Fd, EV_ABS, ABS_Y, y);
+		suinput_write(m_Fd, EV_KEY,BTN_TOUCH,0);
+		suinput_write(m_Fd, EV_SYN, SYN_REPORT, 0);
+	}
+
+	if (buttonMask & 4)
+	{
+		/* right btn clicked */
+		m_RightClicked = true;
+		suinput_press(m_Fd, KEY_BACK);
+	}
+	else if (m_RightClicked)
+	{
+		/* right button released */
+		m_RightClicked = false;
+		suinput_release(m_Fd, KEY_BACK);
+	}
+
+	if (buttonMask & 2)
+	{
+		/* mid btn clicked */
+		m_MiddleClicked = true;
+		suinput_press(m_Fd, KEY_END);
+	}
+	else if (m_MiddleClicked)
+	{
+		/* mid btn released */
+		m_MiddleClicked = false;
+		suinput_release(m_Fd, KEY_END);
+	}
 }
 
 void EventInjector::handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl)

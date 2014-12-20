@@ -33,7 +33,7 @@ char* UINPUT_FILEPATHS[] = {
 };
 #define UINPUT_FILEPATHS_COUNT (sizeof(UINPUT_FILEPATHS) / sizeof(char*))
 
-static int suinput_write(int uinput_fd,
+int suinput_write(int uinput_fd,
                          uint16_t type, uint16_t code, int32_t value)
 {
   struct input_event event;
