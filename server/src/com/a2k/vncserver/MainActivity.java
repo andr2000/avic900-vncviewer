@@ -301,6 +301,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		if (m_Rooted)
 		{
 			Shell.runCommand("chmod 666 /dev/uinput");
+			Shell.runCommand("supolicy --live \"allow untrusted_app input_device dir search\"");
+			Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file open\"");
 			Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file write\"");
 			Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file ioctl\"");
 		}
@@ -311,6 +313,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		if (m_Rooted)
 		{
 			Shell.runCommand("chmod 660 /dev/uinput");
+			Shell.runCommand("supolicy --live \"deny untrusted_app input_device dir search\"");
+			Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file open\"");
 			Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file write\"");
 			Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file ioctl\"");
 		}
