@@ -233,7 +233,7 @@ void handlePointerEventClb(int buttonMask, int x, int y, rfbClientPtr cl)
 
 void VncServer::handlePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl)
 {
-	if (m_EventInjector.get())
+	if (m_EventInjector)
 	{
 		m_EventInjector->handlePointerEvent(buttonMask, x, y, cl);
 	}
@@ -246,7 +246,7 @@ void handleKeyEventClb(rfbBool down, rfbKeySym key, rfbClientPtr cl)
 
 void VncServer::handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl)
 {
-	if (m_EventInjector.get())
+	if (m_EventInjector)
 	{
 		m_EventInjector->handleKeyEvent(down, key, cl);
 	}
@@ -307,6 +307,10 @@ int VncServer::startServer(bool root, int width, int height, int pixelFormat)
 		{
 			m_RfbScreenInfoPtr->kbdAddEvent = handleKeyEventClb;
 			m_RfbScreenInfoPtr->ptrAddEvent = handlePointerEventClb;
+		}
+		else
+		{
+			LOGE("Failed to initialize event injector");
 		}
 	}
 	m_Terminated = false;
