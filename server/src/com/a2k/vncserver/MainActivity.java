@@ -104,12 +104,14 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				{
 					m_ButtonStartStop.setText("Start");
 					m_VncJni.stopServer();
+					restoreRootPermissions();
 				}
 				else
 				{
 					m_ButtonStartStop.setText("Stop");
 					readPreferences();
-					m_VncJni.startServer(m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
+					setupRootPermissions();
+					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
 				}
 				m_ProjectionStarted ^= true;
 			}
@@ -287,6 +289,20 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_SurfaceTexture.updateTexImage();
 		m_TextureRender.drawFrame();
 		m_TextureRender.swapBuffers();
+	}
+
+	private void setupRootPermissions()
+	{
+		Shell.runCommand("chmod 666 /dev/uinput");
+		Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file write\"");
+		Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file ioctl\"");
+	}
+
+	private void restoreRootPermissions()
+	{
+		Shell.runCommand("chmod 660 /dev/uinput");
+		Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file write\"");
+		Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file ioctl\"");
 	}
 
 	public boolean onCreateOptionsMenu(Menu menu)

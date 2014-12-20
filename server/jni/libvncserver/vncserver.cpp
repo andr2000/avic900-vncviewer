@@ -226,6 +226,32 @@ rfbNewClientAction VncServer::clientHook(rfbClientPtr cl)
 	return RFB_CLIENT_ACCEPT;
 }
 
+void handlePointerEventClb(int buttonMask, int x, int y, rfbClientPtr cl)
+{
+	VncServer::getInstance().handlePointerEvent(buttonMask, x, y, cl);
+}
+
+void VncServer::handlePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl)
+{
+	if (m_EventInjector.get())
+	{
+		m_EventInjector->handlePointerEvent(buttonMask, x, y, cl);
+	}
+}
+
+void handleKeyEventClb(rfbBool down, rfbKeySym key, rfbClientPtr cl)
+{
+	VncServer::getInstance().handleKeyEvent(down, key, cl);
+}
+
+void VncServer::handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl)
+{
+	if (m_EventInjector.get())
+	{
+		m_EventInjector->handleKeyEvent(down, key, cl);
+	}
+}
+
 void rfbDefaultLog(const char *format, ...)
 {
 	va_list args;
@@ -236,11 +262,12 @@ void rfbDefaultLog(const char *format, ...)
 	va_end(args);
 }
 
-int VncServer::startServer(int width, int height, int pixelFormat)
+int VncServer::startServer(bool root, int width, int height, int pixelFormat)
 {
 	m_Width = width;
 	m_Height = height;
 	m_PixelFormat = pixelFormat;
+	m_Rooted = root;
 	LOGI("Starting VNC server (%dx%d), %s", m_Width, m_Height, m_PixelFormat == GL_RGB565 ? "RGB565" : "RGBA");
 
 	if (!allocateBuffers(m_Width, m_Height, m_PixelFormat))
@@ -276,7 +303,11 @@ int VncServer::startServer(int width, int height, int pixelFormat)
 	if (m_Rooted)
 	{
 		m_EventInjector.reset(new EventInjector());
-		m_EventInjector->initialize(m_Width, m_Height);
+		if (m_EventInjector->initialize(m_Width, m_Height))
+		{
+			m_RfbScreenInfoPtr->kbdAddEvent = handleKeyEventClb;
+			m_RfbScreenInfoPtr->ptrAddEvent = handlePointerEventClb;
+		}
 	}
 	m_Terminated = false;
 	m_WorkerThread = std::thread(&VncServer::worker, this);

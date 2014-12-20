@@ -40,13 +40,15 @@ public:
 
 	void postEventToUI(int what, std::string text);
 
-	int startServer(int width, int height, int pixelFormat);
+	int startServer(bool root, int width, int height, int pixelFormat);
 	int stopServer();
 	void bindNextProducerBuffer();
 	void frameAvailable();
 
 	rfbNewClientAction clientHook(rfbClientPtr cl);
 	void clientGone(rfbClientPtr cl);
+	void handlePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl);
+	void handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl);
 
 private:
 	static const bool DUMP_ENABLED { false };
