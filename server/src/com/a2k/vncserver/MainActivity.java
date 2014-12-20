@@ -63,6 +63,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private int m_NumClientsConnected = 0;
 
 	private TextView m_LogView;
+	
+	private boolean m_Rooted = false;
 
 	private VncJni m_VncJni = new VncJni();
 
@@ -80,6 +82,17 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 		m_LogView = (TextView)findViewById(R.id.textViewIP);
 		m_LogView.setMovementMethod(new ScrollingMovementMethod());
+
+		m_Rooted = Shell.isSuAvailable();
+		if (m_Rooted)
+		{
+			m_LogView.append("Rooted device\n");
+		}
+		else
+		{
+			m_LogView.append("This device is NOT rooted\n");
+		}
+
 		printIPs();
 
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
@@ -372,6 +385,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		{
 			stringList.append("    connect to " + s + "\n");
 		}
-		m_LogView.setText(stringList.toString());
+		m_LogView.append(stringList.toString());
 	}
 }
