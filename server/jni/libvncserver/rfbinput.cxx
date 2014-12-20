@@ -48,33 +48,33 @@ int keycode(int c, bool &sh, bool &alt, bool real)
 	}
 	switch(c)
 	{
-		case 263: return 14;// backspace
-		case 9: return 15;// tab
-		case 1: alt=1; return 34;// ctrl+a
-		case 3: alt=1; return 46;// ctrl+c
-		case 4: alt=1; return 32;// ctrl+d
-		case 18: alt=1; return 31;// ctrl+r
-		case 10: return 28;// enter
-		case 27: return 158;// esc -> back
-		case 260: return 105;// left -> DPAD_LEFT
-		case 261: return 106;// right -> DPAD_RIGHT
-		case 258: return 108;// down -> DPAD_DOWN
-		case 259: return 103;// up -> DPAD_UP
-		case 360: return 232;// end -> DPAD_CENTER (ball click)
-		case 262: return 102;// home
-		case 330: return 158;// del -> back
-		case 265: return 229;// F1 -> menu
-		case 266: return 127;// F2 -> search
-		case 267: return 61;// F3 -> call
-		case 268: return 107;// F4 -> endcall
-		case 338: return 114;// PgDn -> VolDn
-		case 339: return 115;// PgUp -> VolUp
-		case 275: return 232;// F11 -> DPAD_CENTER (ball click)
-		case 269: return 211;// F5 -> focus
-		case 270: return 212;// F6 -> camera
-		case 271: return 150;// F7 -> explorer
-		case 272: return 155;// F8 -> envelope
-		
+		case 0xff08: return KEY_BACKSPACE;
+		case 0xff09: return KEY_TAB;
+		case 1: (alt) = true; return 34;// ctrl+a
+		case 3: alt = true; return 46;// ctrl+c
+		case 4: alt = true; return 32;// ctrl+d
+		case 18: alt = true; return 31;// ctrl+r
+		case 0xff0D: return KEY_ENTER;
+		case 0xff1B: return KEY_BACK;
+		case 0xFF51: return KEY_LEFT;
+		case 0xFF53: return KEY_RIGHT;
+		case 0xFF54: return KEY_DOWN;
+		case 0xFF52: return KEY_UP;
+		case 0xff50: return KEY_HOME;
+		case 0xFFC8: return KEY_F11;
+		case 0xFFC9: return KEY_F10;
+		case 0xffc1: return KEY_F4;
+		case 0xffff: return KEY_DELETE;
+		case 0xff55: return 229;// PgUp -> menu
+		case 0xffcf: return 127;// F2 -> search
+		case 0xffe3: return 127;// left ctrl -> search
+		case 0xff56: return 61;// PgUp -> call
+		case 0xff57: return 107;// End -> endcall
+		case 0xffc2: return 211;// F5 -> focus
+		case 0xffc3: return 212;// F6 -> camera
+		case 0xffc4: return 150;// F7 -> explorer
+		case 0xffc5: return 155;// F8 -> envelope
+
 		case 50081:
 		case 225: alt = 1;
 			if (real) return 48; //a with acute
