@@ -8,7 +8,6 @@ LOCAL_SRC_FILES += \
 	vncserver.cpp \
 	AndroidGraphicBuffer.cpp \
 	eventinjector.cpp \
-	suinput.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/main.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/rfbserver.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/rfbregion.c \

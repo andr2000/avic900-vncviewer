@@ -1,5 +1,6 @@
 #include <android/log.h>
 #include <linux/input.h>
+#include <fcntl.h>
 
 #include "eventinjector.h"
 #include "uinput.h"
@@ -8,8 +9,6 @@
 
 extern "C"
 {
-	#include "suinput.h"
-
 	#define MODULE_NAME "eventinjector"
 
 	#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,  MODULE_NAME, __VA_ARGS__))
@@ -24,19 +23,50 @@ EventInjector::~EventInjector()
 
 bool EventInjector::initialize(int width, int height)
 {
-	static const int BUS_VIRTUAL = 0x06;
-	struct input_id id =
+	static const char *DEV_UINPUT = "/dev/uinput";
+	static const char *DEV_NAME = "VncServer";
+	struct uinput_user_dev uinp;
+
+	m_Fd = open(DEV_UINPUT, O_WRONLY | O_NDELAY);
+	if (m_Fd < 0)
 	{
-		/* Bus type */
-		BUS_VIRTUAL,
-		/* Vendor id */
-		1,
-		/* Product id */
-		1,
-		/* Version id */
-		1
-	};
-	m_Fd = suinput_open("VncServer", &id);
+		LOGE("Failed to open %s", DEV_UINPUT);
+		return -1;
+	}
+
+	m_Width = width;
+	m_Height = height;
+	memset(&uinp, 0, sizeof(uinp));
+	uinp.id.version = 4;
+	uinp.id.bustype = BUS_USB;
+	uinp.absmin[ABS_X] = 0;
+	uinp.absmax[ABS_X] = m_Width - 1;
+	uinp.absmin[ABS_Y] = 0;
+	uinp.absmax[ABS_Y] = m_Height - 1;
+	uinp.absmin[ABS_PRESSURE] = 0;
+	uinp.absmax[ABS_PRESSURE] = 0xfff;
+
+	strncpy(uinp.name, DEV_NAME, UINPUT_MAX_NAME_SIZE);
+
+	int ret = ioctl(m_Fd, UI_SET_EVBIT, EV_ABS);
+	ret = ioctl(m_Fd, UI_SET_ABSBIT, ABS_X);
+	ret = ioctl(m_Fd, UI_SET_ABSBIT, ABS_Y);
+	ret = ioctl(m_Fd, UI_SET_ABSBIT, ABS_PRESSURE);
+
+	ret = ioctl(m_Fd, UI_SET_EVBIT, EV_KEY);
+	for (int i=0; i < 256; i++)
+	{
+		ret = ioctl(m_Fd, UI_SET_KEYBIT, i);
+	}
+	ret = ioctl(m_Fd, UI_SET_KEYBIT, BTN_TOUCH);
+
+	ret = write(m_Fd, &uinp, sizeof(uinp));
+	if (ioctl(m_Fd, UI_DEV_CREATE))
+	{
+		LOGE("Failed to create new uinput device");
+		close(m_Fd);
+		return -1;
+	}
 	return m_Fd != INVALID_HANDLE;
 }
 
@@ -44,65 +74,70 @@ void EventInjector::cleanup()
 {
 	if (m_Fd != INVALID_HANDLE)
 	{
-		suinput_close(m_Fd);
+		close(m_Fd);
 	}
+}
+
+void EventInjector::reportSync()
+{
+	struct input_event event = {0};
+	gettimeofday(&event.time, NULL);
+
+	event.type  = EV_SYN;
+	event.code  = SYN_REPORT;
+	event.value = 0;
+	write(m_Fd, &event, sizeof(event));
+}
+
+void EventInjector::reportKey(int key, bool press)
+{
+	struct input_event event = {0};
+	gettimeofday(&event.time, NULL);
+
+	event.type  = EV_KEY;
+	event.code  = key;
+	event.value = press ? 1 : 0;
+	write(m_Fd, &event, sizeof(event));
+}
+
+void EventInjector::reportAbs(int code, int value)
+{
+	struct input_event event = {0};
+	gettimeofday(&event.time, NULL);
+
+	event.type  = EV_ABS;
+	event.code  = code ;
+	event.value = value;
+	write(m_Fd, &event, sizeof(event));
 }
 
 void EventInjector::handlePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl)
 {
-	//transformTouchCoordinates(&x,&y,cl->screen->width,cl->screen->height);
-
+	LOGD("handlePointerEvent buttonMask %d x %d y %d", buttonMask, x, y);
 	if ((buttonMask & 1) && m_LeftClicked)
 	{
-		/* left btn clicked and moving */
-		suinput_write(m_Fd, EV_ABS, ABS_X, x);
-		suinput_write(m_Fd, EV_ABS, ABS_Y, y);
-		suinput_write(m_Fd, EV_SYN, SYN_REPORT, 0);
+		/* left button clicked and moving */
+		reportAbs(ABS_X, x);
+		reportAbs(ABS_Y, y);
+		reportSync();
 	}
 	else if (buttonMask & 1)
 	{
-		/* left btn clicked */
+		/* left button clicked */
 		m_LeftClicked = true;
-
-		suinput_write(m_Fd, EV_ABS, ABS_X, x);
-		suinput_write(m_Fd, EV_ABS, ABS_Y, y);
-		suinput_write(m_Fd, EV_KEY,BTN_TOUCH,1);
-		suinput_write(m_Fd, EV_SYN, SYN_REPORT, 0);
+		reportKey(BTN_TOUCH, true);
+		reportAbs(ABS_X, x);
+		reportAbs(ABS_Y, y);
+		reportAbs(ABS_PRESSURE, 0xff);
+		reportSync();
 	}
 	else if (m_LeftClicked)
 	{
-		/* left btn released */
+		/* left button released */
 		m_LeftClicked = false;
-		suinput_write(m_Fd, EV_ABS, ABS_X, x);
-		suinput_write(m_Fd, EV_ABS, ABS_Y, y);
-		suinput_write(m_Fd, EV_KEY,BTN_TOUCH,0);
-		suinput_write(m_Fd, EV_SYN, SYN_REPORT, 0);
-	}
-
-	if (buttonMask & 4)
-	{
-		/* right btn clicked */
-		m_RightClicked = true;
-		suinput_press(m_Fd, KEY_BACK);
-	}
-	else if (m_RightClicked)
-	{
-		/* right button released */
-		m_RightClicked = false;
-		suinput_release(m_Fd, KEY_BACK);
-	}
-
-	if (buttonMask & 2)
-	{
-		/* mid btn clicked */
-		m_MiddleClicked = true;
-		suinput_press(m_Fd, KEY_END);
-	}
-	else if (m_MiddleClicked)
-	{
-		/* mid btn released */
-		m_MiddleClicked = false;
-		suinput_release(m_Fd, KEY_END);
+		reportAbs(ABS_PRESSURE, 0);
+		reportKey(BTN_TOUCH, false);
+		reportSync();
 	}
 }
 
@@ -112,29 +147,30 @@ void EventInjector::handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl)
 	bool sh;
 	bool alt;
 
+	LOGD("handleKeyEvent down %d key %d (0x%x)", down, key, key);
 	if ((code = keycode(key, sh, alt, true)))
 	{
 		if (key && down)
 		{
 			if (sh)
 			{
-				suinput_press(m_Fd, KEY_LEFTSHIFT);
+				reportKey(KEY_LEFTSHIFT, true);
 			}
 			if (alt)
 			{
-				suinput_press(m_Fd, KEY_LEFTALT);
+				reportKey(KEY_LEFTALT, true);
 			}
 
-			suinput_press(m_Fd, code);
-			suinput_release(m_Fd, code);
+			reportKey(code, true);
+			reportKey(code, false);
 
 			if (alt)
 			{
-				suinput_release(m_Fd, KEY_LEFTALT);
+				reportKey(KEY_LEFTALT, false);
 			}
 			if (sh)
 			{
-				suinput_release(m_Fd, KEY_LEFTSHIFT);
+				reportKey(KEY_LEFTSHIFT, false);
 			}
 		}
 		else
