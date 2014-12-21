@@ -77,7 +77,7 @@ int Client::Initialize(void *_private) {
 	 * with reverse shift order to BGR565) it doesn't work.
 	 * So, it seems to be 15-bit, but how does it
 	 * work on win bgr565 then? */
-	m_Client->format.redShift = 10;
+	m_Client->format.redShift = 11;
 	m_Client->format.greenShift = 5;
 	m_Client->format.blueShift = 0;
 	return 0;

@@ -18,7 +18,7 @@ public:
 		return m_Instance;
 	};
 	void *GetDrawingContext() {
-		return static_cast<void *>(m_hBmp);
+		return static_cast<void *>(m_FrameBuffer);
 	};
 protected:
 	void SetLogging();

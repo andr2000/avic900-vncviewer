@@ -4,6 +4,8 @@
 #include <deque>
 #endif
 
+#include <gx.h>
+
 #include "client_factory.h"
 
 class ConfigStorage;
@@ -71,12 +73,15 @@ private:
 	bool m_SetupScaling;
 	ConfigStorage *m_ConfigStorage;
 
+	GXDisplayProperties m_DisplayProperties; // structure contains information about the video frame buffer 
+
 	static LRESULT CALLBACK SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	void SetHotkeyHandler(bool set);
 	void HandleMapKey(bool long_press);
 	void SendEvent(Client::event_t &evt);
 	void Cleanup();
 	void ShowFullScreen();
+	bool SetupGx();
 #ifdef SHOW_POINTER_TRACE
 	enum trace_point_type_e {
 		TRACE_POINT_DOWN,

@@ -109,9 +109,12 @@ BOOL CvncviewerDlg::OnInitDialog()
 	}
 
 	/* go full screen */
-	SetRect(&m_ClientRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-	ShowFullScreen();
+	//SetRect(&m_ClientRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+	//ShowFullScreen();
 
+	SetupGx();
+
+#if 1
 	server = m_ConfigStorage->GetServer();
 	widestr = std::wstring(server.begin(), server.end());
 	/* let's rock */
@@ -136,6 +139,7 @@ BOOL CvncviewerDlg::OnInitDialog()
 	}
 	/* install handlers to intercept WM_HOTKEY */
 	SetHotkeyHandler(true);
+#endif
 	return true;
 }
 
@@ -238,57 +242,18 @@ BOOL CvncviewerDlg::OnEraseBkgnd(CDC* pDC)
 
 void CvncviewerDlg::OnPaint()
 {
-	PAINTSTRUCT ps;
-	CDC *pDC = BeginPaint(&ps);
-
-	if (m_Client) {
-		CBitmap *bitmap = CBitmap::FromHandle(
-			static_cast<HBITMAP>(m_Client->GetDrawingContext()));
-		if (bitmap) {
-			CDC dcMem;
-			LONG x, y, w, h;
-
-			if (m_SetupScaling) {
-				int width, height;
-
-				m_SetupScaling = false;
-				m_Client->GetScreenSize(width, height);
-				m_ServerRect.left = 0;
-				m_ServerRect.top = 0;
-				m_ServerRect.right = width;
-				m_ServerRect.bottom = height;
-				DEBUGMSG(true, (_T("Server screen is %dx%d\r\n"), m_ServerRect.right, m_ServerRect.bottom));
-				/* decide if we need to fit */
-				if ((m_ServerRect.right > m_ClientRect.right) || (m_ServerRect.bottom > m_ClientRect.bottom)) {
-					m_Client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
-					DEBUGMSG(true, (_T("Will fit the screen\r\n")));
-					m_NeedScaling = true;
-				}
-				if ((m_ServerRect.right < m_ClientRect.right) && (m_ServerRect.bottom < m_ClientRect.bottom)) {
-					m_Client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
-					DEBUGMSG(true, (_T("Will expand\r\n")));
-					m_NeedScaling = true;
-				}
+			unsigned char *videoMemory = (unsigned char *)GXBeginDraw(); 
+			if (videoMemory == NULL)
+			{
+				DEBUGMSG(true, (_T("videoMemory is null\r\n")));
 			}
-			x = ps.rcPaint.left;
-			y = ps.rcPaint.top;
-			w = ps.rcPaint.right - ps.rcPaint.left;
-			h = ps.rcPaint.bottom - ps.rcPaint.top;
-
-			DEBUGMSG(true, (_T("OnPaint x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
-
-			dcMem.CreateCompatibleDC(pDC);
-			CBitmap *old_bitmap = dcMem.SelectObject(bitmap);
-			if (m_NeedScaling) {
-				pDC->StretchBlt(m_ClientRect.left, m_ClientRect.top, m_ClientRect.right, m_ClientRect.bottom, &dcMem,
-					m_ServerRect.left, m_ServerRect.top, m_ServerRect.right, m_ServerRect.bottom, SRCCOPY);
-			} else {
-				pDC->BitBlt(x, y, w, h, &dcMem, x, y, SRCCOPY);
+			else
+			{
+				DEBUGMSG(true, (_T("onPaint\r\n")));
+				unsigned char *bmp = (unsigned char *)m_Client->GetDrawingContext();
+				memcpy(videoMemory, bmp, 800 * 480 * 2);
+				GXEndDraw();
 			}
-			dcMem.SelectObject(old_bitmap);
-			dcMem.DeleteDC();
-		}
-	}
 #ifdef SHOW_POINTER_TRACE
 	{
 		CBrush *brush, *old_brush;
@@ -348,7 +313,6 @@ void CvncviewerDlg::OnPaint()
 		pDC->SelectObject(old_pen);
 	}
 #endif
-	EndPaint(&ps);
 }
 
 void CvncviewerDlg::SetHotkeyHandler(bool set) {
@@ -538,4 +502,40 @@ void CvncviewerDlg::OnDestroy()
 {
 	Cleanup();
 	CDialog::OnDestroy();
+}
+
+bool CvncviewerDlg::SetupGx()
+{
+	/* get current window's handle */
+	CWnd *cWnd = GetDesktopWindow();
+	HWND hWnd = cWnd->GetSafeHwnd();
+	/* Initialize GAPI */
+	if(GXOpenDisplay(hWnd, 0) == 0 )
+	{
+		DEBUGMSG(true, (_T("Cannot initialize GAME API with fullscreen\r\n")));
+	}
+			unsigned char *videoMemory = (unsigned char *)GXBeginDraw(); 
+			if (videoMemory == NULL)
+			{
+				DEBUGMSG(true, (_T("videoMemory is null\r\n")));
+			}
+			else
+			{
+				DEBUGMSG(true, (_T("onPaint\r\n")));
+				//memset(videoMemory, 0x55, 40000);
+				GXEndDraw();
+			}
+	/* Captures the buttons */
+	//GXOpenInput();
+	/* Obtain information about the video frame buffer */
+	m_DisplayProperties = GXGetDisplayProperties();
+	if( !(m_DisplayProperties.cBPP == 16) || !(m_DisplayProperties.ffFormat | kfDirect565))
+	{
+		DEBUGMSG(true, (_T("Full 16-bit color display is required!\r\n")));
+		GXCloseDisplay();
+		return false;
+	}
+	/* Obtain information about the e hardware button assignment */
+	//gxKeys = GXGetDefaultKeys(GX_NORMALKEYS);
+	return true;
 }

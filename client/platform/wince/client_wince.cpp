@@ -4,6 +4,7 @@
 
 #include "client_wince.h"
 
+
 Client_WinCE::Client_WinCE() : Client() {
 	m_FrameBuffer = NULL;
 	m_hBmp = NULL;
@@ -69,6 +70,7 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
 		&bm_info, DIB_RGB_COLORS, reinterpret_cast<void**>(&m_FrameBuffer),
 		NULL, NULL);
 	client->frameBuffer = m_FrameBuffer;
+	client->frameBuffer = new uint8_t[800 * 480 *2];
 
 	return TRUE;
 }
@@ -90,8 +92,27 @@ void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, i
 		ps.right = x + w;
 		ps.bottom = y + h;
 	}
-	dlg->InvalidateRect(&ps, FALSE);
+	//dlg->InvalidateRect(&ps, FALSE);
 	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
+
+				unsigned char *videoMemory = (unsigned char *)GXBeginDraw(); 
+			if (videoMemory == NULL)
+			{
+				DEBUGMSG(true, (_T("videoMemory is null\r\n")));
+			}
+			else
+			{
+				DEBUGMSG(true, (_T("onPaint\r\n")));
+				CopyMemory(videoMemory, client->frameBuffer, 800*480*2 );
+				int col = ps.top * client->width * 2;
+				for (int row = ps.top; row < ps.bottom; row++)
+				{
+					CopyMemory(videoMemory, &client->frameBuffer[col], (ps.right - ps.left) * 2);
+					col += client->width * 2;
+				}
+				GXEndDraw();
+			}
+
 }
 
 void Client_WinCE::OnShutdown() {
