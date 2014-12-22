@@ -332,6 +332,14 @@ void VncServer::frameAvailable()
 	m_FrameAvailable = true;
 }
 
+void VncServer::onRotation(int rotation)
+{
+	if (m_EventInjector)
+	{
+		m_EventInjector->onRotation(rotation);
+	}
+}
+
 void VncServer::dumpFrame(char *buffer)
 {
 	const char *fName = "/sdcard/framebuffer.data";

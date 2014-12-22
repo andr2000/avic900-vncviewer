@@ -98,6 +98,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 		printIPs();
 
+		setRotation();
+
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
 		{
@@ -136,6 +138,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	public void onConfigurationChanged(Configuration newConfig)
 	{
 		super.onConfigurationChanged(newConfig);
+		setRotation();
 	}
 
 	public void onNotification(int what, String message)
@@ -335,6 +338,27 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		if ((m_WakeLock != null) && m_WakeLock.isHeld())
 		{
 			m_WakeLock.release();
+		}
+	}
+
+	private void setRotation()
+	{
+		int rotation = getWindowManager().getDefaultDisplay().getRotation();
+		if (rotation == Surface.ROTATION_0)
+		{
+			m_VncJni.setRotation(VncJni.ROTATION_0);
+		}
+		else if (rotation == Surface.ROTATION_90)
+		{
+			m_VncJni.setRotation(VncJni.ROTATION_90);
+		}
+		else if (rotation == Surface.ROTATION_180)
+		{
+			m_VncJni.setRotation(VncJni.ROTATION_180);
+		}
+		else if (rotation == Surface.ROTATION_270)
+		{
+			m_VncJni.setRotation(VncJni.ROTATION_270);
 		}
 	}
 

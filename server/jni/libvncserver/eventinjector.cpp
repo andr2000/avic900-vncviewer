@@ -46,6 +46,17 @@ bool EventInjector::initialize(int width, int height)
 
 	m_Width = width;
 	m_Height = height;
+	/* we only support 0 and 90 for the touch screen, coordinates updated
+	 * according to display's rotation */
+	if (m_Width > m_Height)
+	{
+		m_TouchscreenRotation = ROTATION_90;
+	}
+	else
+	{
+		/* for square resolutions as well */
+		m_TouchscreenRotation = ROTATION_0;
+	}
 	memset(&uinp, 0, sizeof(uinp));
 	uinp.id.bustype = BUS_VIRTUAL;
 	uinp.absmin[ABS_X] = 0;
@@ -119,8 +130,12 @@ void EventInjector::reportAbs(int code, int value)
 	write(m_Fd, &event, sizeof(event));
 }
 
-void EventInjector::handlePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl)
+void EventInjector::handlePointerEvent(int buttonMask, int inX, int inY, rfbClientPtr cl)
 {
+	int x, y;
+
+	transformCoordinates(inX, inY, x, y);
+
 	if ((buttonMask & 1) && m_LeftClicked)
 	{
 		/* left button clicked and moving */
@@ -181,6 +196,56 @@ void EventInjector::handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl)
 		else
 		{
 			/* key release */
+		}
+	}
+}
+
+void EventInjector::onRotation(int rotation)
+{
+	m_DisplayRotation = rotation;
+}
+
+void EventInjector::transformCoordinates(int inX, int inY, int &outX, int &outY)
+{
+	if (m_DisplayRotation == ROTATION_0)
+	{
+		if (m_TouchscreenRotation == ROTATION_0)
+		{
+		}
+		else
+		{
+		}
+	}
+	else if (m_DisplayRotation == ROTATION_90)
+	{
+		if (m_TouchscreenRotation == ROTATION_0)
+		{
+		}
+		else if (m_TouchscreenRotation == ROTATION_90)
+		{
+			outY = inX * m_Height / m_Width;
+			outX = m_Width - inY * m_Width / m_Height;
+		}
+	}
+	else if (m_DisplayRotation == ROTATION_180)
+	{
+		if (m_TouchscreenRotation == ROTATION_0)
+		{
+		}
+		else
+		{
+		}
+	}
+	else if (m_DisplayRotation == ROTATION_270)
+	{
+		if (m_TouchscreenRotation == ROTATION_0)
+		{
+		}
+		else if (m_TouchscreenRotation == ROTATION_90)
+		{
+			outY = m_Height - inX * m_Height / m_Width;
+			outX = inY * m_Width / m_Height;
+			LOGD("m_DisplayRotation == ROTATION_270 m_TouchscreenRotation == ROTATION_90");
 		}
 	}
 }

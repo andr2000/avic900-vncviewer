@@ -44,6 +44,7 @@ public:
 	int stopServer();
 	void bindNextProducerBuffer();
 	void frameAvailable();
+	void onRotation(int rotation);
 
 	rfbNewClientAction clientHook(rfbClientPtr cl);
 	void clientGone(rfbClientPtr cl);
