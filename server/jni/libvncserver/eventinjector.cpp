@@ -21,6 +21,16 @@ EventInjector::~EventInjector()
 	cleanup();
 }
 
+#ifndef UI_SET_PROPBIT
+#define UI_SET_PROPBIT _IOW(UINPUT_IOCTL_BASE, 110, int)
+#endif
+#ifndef INPUT_PROP_DIRECT
+#define INPUT_PROP_DIRECT 0x01
+#endif
+#ifndef BUS_VIRTUAL
+#define BUS_VIRTUAL 0x06
+#endif
+
 bool EventInjector::initialize(int width, int height)
 {
 	static const char *DEV_UINPUT = "/dev/uinput";
@@ -37,28 +47,29 @@ bool EventInjector::initialize(int width, int height)
 	m_Width = width;
 	m_Height = height;
 	memset(&uinp, 0, sizeof(uinp));
-	uinp.id.version = 4;
-	uinp.id.bustype = BUS_USB;
+	uinp.id.bustype = BUS_VIRTUAL;
 	uinp.absmin[ABS_X] = 0;
 	uinp.absmax[ABS_X] = m_Width - 1;
 	uinp.absmin[ABS_Y] = 0;
 	uinp.absmax[ABS_Y] = m_Height - 1;
-	uinp.absmin[ABS_PRESSURE] = 0;
-	uinp.absmax[ABS_PRESSURE] = 0xfff;
 
 	strncpy(uinp.name, DEV_NAME, UINPUT_MAX_NAME_SIZE);
 
-	int ret = ioctl(m_Fd, UI_SET_EVBIT, EV_ABS);
+	int ret;
+	ret = ioctl(m_Fd, UI_SET_EVBIT, EV_ABS);
+	ret = ioctl(m_Fd, UI_SET_EVBIT, EV_SYN);
+	ret = ioctl(m_Fd, UI_SET_EVBIT, EV_KEY);
+
 	ret = ioctl(m_Fd, UI_SET_ABSBIT, ABS_X);
 	ret = ioctl(m_Fd, UI_SET_ABSBIT, ABS_Y);
-	ret = ioctl(m_Fd, UI_SET_ABSBIT, ABS_PRESSURE);
-
-	ret = ioctl(m_Fd, UI_SET_EVBIT, EV_KEY);
-	for (int i=0; i < 256; i++)
+	ret = ioctl(m_Fd, UI_SET_KEYBIT, BTN_TOUCH);
+	/* this is to make us touchscreen */
+	ret = ioctl(m_Fd, UI_SET_PROPBIT, INPUT_PROP_DIRECT);
+	/* FIXME: the supported range should be KEY_MAX */
+	for (int i = 0; i < 0xff; i++)
 	{
 		ret = ioctl(m_Fd, UI_SET_KEYBIT, i);
 	}
-	ret = ioctl(m_Fd, UI_SET_KEYBIT, BTN_TOUCH);
 
 	ret = write(m_Fd, &uinp, sizeof(uinp));
 	if (ioctl(m_Fd, UI_DEV_CREATE))
@@ -81,7 +92,6 @@ void EventInjector::cleanup()
 void EventInjector::reportSync()
 {
 	struct input_event event = {0};
-	gettimeofday(&event.time, NULL);
 
 	event.type  = EV_SYN;
 	event.code  = SYN_REPORT;
@@ -92,7 +102,6 @@ void EventInjector::reportSync()
 void EventInjector::reportKey(int key, bool press)
 {
 	struct input_event event = {0};
-	gettimeofday(&event.time, NULL);
 
 	event.type  = EV_KEY;
 	event.code  = key;
@@ -103,7 +112,6 @@ void EventInjector::reportKey(int key, bool press)
 void EventInjector::reportAbs(int code, int value)
 {
 	struct input_event event = {0};
-	gettimeofday(&event.time, NULL);
 
 	event.type  = EV_ABS;
 	event.code  = code ;
@@ -113,7 +121,6 @@ void EventInjector::reportAbs(int code, int value)
 
 void EventInjector::handlePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl)
 {
-	LOGD("handlePointerEvent buttonMask %d x %d y %d", buttonMask, x, y);
 	if ((buttonMask & 1) && m_LeftClicked)
 	{
 		/* left button clicked and moving */
@@ -125,17 +132,15 @@ void EventInjector::handlePointerEvent(int buttonMask, int x, int y, rfbClientPt
 	{
 		/* left button clicked */
 		m_LeftClicked = true;
-		reportKey(BTN_TOUCH, true);
 		reportAbs(ABS_X, x);
 		reportAbs(ABS_Y, y);
-		reportAbs(ABS_PRESSURE, 0xff);
+		reportKey(BTN_TOUCH, true);
 		reportSync();
 	}
 	else if (m_LeftClicked)
 	{
 		/* left button released */
 		m_LeftClicked = false;
-		reportAbs(ABS_PRESSURE, 0);
 		reportKey(BTN_TOUCH, false);
 		reportSync();
 	}
@@ -147,7 +152,6 @@ void EventInjector::handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl)
 	bool sh;
 	bool alt;
 
-	LOGD("handleKeyEvent down %d key %d (0x%x)", down, key, key);
 	if ((code = keycode(key, sh, alt, true)))
 	{
 		if (key && down)
@@ -172,6 +176,7 @@ void EventInjector::handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl)
 			{
 				reportKey(KEY_LEFTSHIFT, false);
 			}
+			reportSync();
 		}
 		else
 		{
