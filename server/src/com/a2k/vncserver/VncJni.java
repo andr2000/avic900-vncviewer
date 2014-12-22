@@ -7,6 +7,11 @@ public class VncJni
 	public static final int CLIENT_CONNECTED = 2;
 	public static final int CLIENT_DISCONNECTED = 3;
 
+	public static final int ROTATION_0 = 0;
+	public static final int ROTATION_90 = 1;
+	public static final int ROTATION_180 = 2;
+	public static final int ROTATION_270 = 3;
+
 	private NotificationListener m_Listener;
 
 	public static interface NotificationListener
@@ -27,6 +32,11 @@ public class VncJni
 		}
 	}
 
+	public void setRotation(int rotation)
+	{
+		onRotation(rotation);
+	}
+
 	public native void init();
 	public native String protoGetVersion();
 
@@ -35,6 +45,8 @@ public class VncJni
 
 	public native int startServer(boolean root, int width, int height, int pixelFormat);
 	public native int stopServer();
+
+	public native void onRotation(int rotation);
 
 	static
 	{
