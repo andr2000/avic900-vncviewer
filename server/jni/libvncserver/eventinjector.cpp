@@ -149,7 +149,6 @@ void EventInjector::handlePointerEvent(int buttonMask, int inX, int inY, rfbClie
 		/* ignore this event */
 		return;
 	}
-	LOGD("inX = %d inY = %d outX = %d outY = %d", inX, inY, x, y);
 
 	if ((buttonMask & 1) && m_LeftClicked)
 	{
