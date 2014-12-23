@@ -25,14 +25,6 @@ private:
 		ROTATION_270
 	};
 
-	struct ACTIVE_AREA
-	{
-		int x1;
-		int y1;
-		int x2;
-		int y2;
-	} m_ActiveArea;
-
 	int m_Width = 0;
 	int m_Height = 0;
 	int m_TouchSideLength = 0;
