@@ -31,7 +31,7 @@ EventInjector::~EventInjector()
 #define BUS_VIRTUAL 0x06
 #endif
 
-bool EventInjector::initialize(int width, int height)
+bool EventInjector::initialize(int width, int height, int rotation)
 {
 	static const char *DEV_UINPUT = "/dev/uinput";
 	static const char *DEV_NAME = "VncServer";
@@ -65,7 +65,7 @@ bool EventInjector::initialize(int width, int height)
 	 * according to display's rotation */
 	m_TouchscreenRotation = m_Width > m_Height ? ROTATION_90 : ROTATION_0;
 	/* update active area */
-	onRotation(m_DisplayRotation);
+	onRotation(rotation);
 	memset(&uinp, 0, sizeof(uinp));
 	/* make touch screen area a square and put its center at (0; 0)
 	 * this simplifies transformations:
