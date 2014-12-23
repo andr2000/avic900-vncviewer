@@ -8,7 +8,7 @@ public:
 	EventInjector() = default;
 	~EventInjector();
 
-	bool initialize(int width, int height);
+	bool initialize(int width, int height, int rotation);
 	void handlePointerEvent(int buttonMask, int x, int y, rfbClientPtr cl);
 	void handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl);
 	void onRotation(int rotation);

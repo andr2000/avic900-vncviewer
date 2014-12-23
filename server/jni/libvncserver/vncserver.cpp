@@ -303,12 +303,10 @@ int VncServer::startServer(bool root, int width, int height, int pixelFormat)
 	if (m_Rooted)
 	{
 		m_EventInjector.reset(new EventInjector());
-		if (m_EventInjector->initialize(m_Width, m_Height))
+		if (m_EventInjector->initialize(m_Width, m_Height, m_Rotation))
 		{
 			m_RfbScreenInfoPtr->kbdAddEvent = handleKeyEventClb;
 			m_RfbScreenInfoPtr->ptrAddEvent = handlePointerEventClb;
-			/* send current rotation to the injector */
-			onRotation(m_Rotation);
 		}
 		else
 		{
