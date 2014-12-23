@@ -10,8 +10,10 @@ import java.util.List;
 import org.apache.http.conn.util.InetAddressUtils;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Point;
@@ -58,6 +60,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private MediaProjectionManager m_ProjectionManager;
 	private MediaProjection m_MediaProjection;
 	private VirtualDisplay m_VirtualDisplay;
+	private ConfigurationChangedReceiver m_ConfigReceiver;
 
 	private Button m_ButtonStartStop;
 	private boolean m_ProjectionStarted;
@@ -97,6 +100,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 
 		printIPs();
+
+		IntentFilter intentFilter = new IntentFilter("android.intent.action.CONFIGURATION_CHANGED");
+		m_ConfigReceiver = new ConfigurationChangedReceiver();
+		registerReceiver(m_ConfigReceiver, intentFilter);
 
 		setRotation();
 
@@ -139,7 +146,15 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	public void onConfigurationChanged(Configuration newConfig)
 	{
 		super.onConfigurationChanged(newConfig);
-		setRotation();
+	}
+
+	class ConfigurationChangedReceiver extends BroadcastReceiver
+	{
+		@Override
+		public void onReceive(Context context, Intent arg1)
+		{
+			setRotation();
+		}
 	}
 
 	public void onNotification(int what, String message)
