@@ -67,6 +67,8 @@ private:
 	int m_Height;
 	int m_PixelFormat;
 
+	int m_Rotation;
+
 	std::thread m_WorkerThread;
 	std::atomic<bool> m_Terminated { true };
 	std::mutex m_FrameAvailableLock;

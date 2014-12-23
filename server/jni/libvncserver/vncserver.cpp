@@ -307,6 +307,8 @@ int VncServer::startServer(bool root, int width, int height, int pixelFormat)
 		{
 			m_RfbScreenInfoPtr->kbdAddEvent = handleKeyEventClb;
 			m_RfbScreenInfoPtr->ptrAddEvent = handlePointerEventClb;
+			/* send current rotation to the injector */
+			onRotation(m_Rotation);
 		}
 		else
 		{
@@ -338,6 +340,7 @@ void VncServer::onRotation(int rotation)
 	{
 		m_EventInjector->onRotation(rotation);
 	}
+	m_Rotation = rotation;
 }
 
 void VncServer::dumpFrame(char *buffer)
