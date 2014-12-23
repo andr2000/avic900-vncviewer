@@ -420,6 +420,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 		}
 		m_KeepScreenOn = prefs.getBoolean("keepScreenOn", false);
+		m_LogView.append("Using framebuffer: " + m_DisplayWidth + "x" + m_DisplayHeight +"\n");
 	}
 
 	private List<String> getIpAddresses()
