@@ -46,24 +46,34 @@ bool EventInjector::initialize(int width, int height)
 
 	m_Width = width;
 	m_Height = height;
+	m_TouchSideLength = m_Width > m_Height ? m_Width : m_Height;
+	m_TdivW = (float)m_TouchSideLength / m_Width;
+	m_TdivH = (float)m_TouchSideLength / m_Height;
+	m_Tdiv2 = m_TouchSideLength >> 1;
+	/* touch scaling */
+	m_IgnoreRight = (float)m_Height * m_Height / m_Width / 2;
+	m_IgnoreLeft = - m_IgnoreRight;
+	/* scale to the visible area - what touch thinks should be scaled to what device expects */
+	m_ScaleX = (float)m_Width / 2 / m_IgnoreRight;
+
+	m_IgnoreBottom = (float)m_Width * m_Width / m_Height / 2;
+	m_IgnoreTop = - m_IgnoreBottom;
+	/* scale to the visible area - what touch thinks should be scaled to what device expects */
+	m_ScaleY = (float)m_Height / 2 / m_IgnoreBottom;
+
 	/* we only support 0 and 90 for the touch screen, coordinates updated
 	 * according to display's rotation */
-	if (m_Width > m_Height)
-	{
-		m_TouchscreenRotation = ROTATION_90;
-	}
-	else
-	{
-		/* for square resolutions as well */
-		m_TouchscreenRotation = ROTATION_0;
-	}
+	m_TouchscreenRotation = m_Width > m_Height ? ROTATION_90 : ROTATION_0;
+	/* update active area */
+	onRotation(m_DisplayRotation);
 	memset(&uinp, 0, sizeof(uinp));
+	/* make touch screen area a square and put its center at (0; 0)
+	 * this simplifies transformations:
+	 * 1. no scaling needed while rotating
+	 * 2. rotation around 0,0 is trivial */
 	uinp.id.bustype = BUS_VIRTUAL;
-	uinp.absmin[ABS_X] = 0;
-	uinp.absmax[ABS_X] = m_Width - 1;
-	uinp.absmin[ABS_Y] = 0;
-	uinp.absmax[ABS_Y] = m_Height - 1;
-
+	uinp.absmin[ABS_X] = uinp.absmin[ABS_Y] = - (m_Tdiv2 -1);
+	uinp.absmax[ABS_X] = uinp.absmax[ABS_Y] = m_Tdiv2;
 	strncpy(uinp.name, DEV_NAME, UINPUT_MAX_NAME_SIZE);
 
 	int ret;
@@ -134,7 +144,12 @@ void EventInjector::handlePointerEvent(int buttonMask, int inX, int inY, rfbClie
 {
 	int x, y;
 
-	transformCoordinates(inX, inY, x, y);
+	if (!transformCoordinates(inX, inY, x, y))
+	{
+		/* ignore this event */
+		return;
+	}
+	LOGD("inX = %d inY = %d outX = %d outY = %d", inX, inY, x, y);
 
 	if ((buttonMask & 1) && m_LeftClicked)
 	{
@@ -203,49 +218,76 @@ void EventInjector::handleKeyEvent(rfbBool down, rfbKeySym key, rfbClientPtr cl)
 void EventInjector::onRotation(int rotation)
 {
 	m_DisplayRotation = rotation;
+	LOGD("display rotation is %d", m_DisplayRotation);
 }
 
-void EventInjector::transformCoordinates(int inX, int inY, int &outX, int &outY)
+bool EventInjector::transformCoordinates(int inX, int inY, int &outX, int &outY)
 {
-	if (m_DisplayRotation == ROTATION_0)
+	/* rotate around 0,0 */
+	switch (m_DisplayRotation)
 	{
-		if (m_TouchscreenRotation == ROTATION_0)
+		case ROTATION_0:
 		{
+			outX = inX * m_TdivW - m_Tdiv2;
+			outY = inY * m_TdivH - m_Tdiv2;
+			break;
 		}
-		else
+		case ROTATION_90:
 		{
+			outY = inX * m_TdivW - m_Tdiv2;
+			outX = (m_Height - inY) * m_TdivH - m_Tdiv2;
+			break;
+		}
+		case ROTATION_180:
+		{
+			outX = (m_Width - inX) * m_TdivW - m_Tdiv2;
+			outY = (m_Height - inY) * m_TdivH - m_Tdiv2;
+			break;
+		}
+		case ROTATION_270:
+		{
+			outX =inY * m_TdivH - m_Tdiv2;
+			outY = (m_Width - inX) * m_TdivW - m_Tdiv2;
+			break;
+		}
+		default:
+		{
+			LOGE("Unknown display rotation angle");
 		}
 	}
-	else if (m_DisplayRotation == ROTATION_90)
+	/* FIXME: assuming that device's normal orientation is portrait
+	 * when width < height
+	 * if orientation of the framebuffer and device differ, then
+	 * some of the configurations may look as picture in picture,
+	 * e.g. scaled device's image fits into framebufer, thus making
+	 * black dead zones either on the sides or at top and bottom */
+	if (m_TouchscreenRotation == ROTATION_0)
 	{
-		if (m_TouchscreenRotation == ROTATION_0)
+		if ((m_DisplayRotation == ROTATION_90) || (m_DisplayRotation == ROTATION_270))
 		{
-		}
-		else if (m_TouchscreenRotation == ROTATION_90)
-		{
-			outY = inX * m_Height / m_Width;
-			outX = m_Width - inY * m_Width / m_Height;
+			/* dead zone is at top and bottom */
+			if ((outY < m_IgnoreTop) || (outY > m_IgnoreBottom))
+			{
+				/* ignore */
+				return false;
+			}
+			/* scale to the visible area - what touch thinks should be scaled to what device expects */
+			outY *= m_ScaleY;
 		}
 	}
-	else if (m_DisplayRotation == ROTATION_180)
+	else if (m_TouchscreenRotation == ROTATION_90)
 	{
-		if (m_TouchscreenRotation == ROTATION_0)
+		if ((m_DisplayRotation == ROTATION_0) || (m_DisplayRotation == ROTATION_180))
 		{
-		}
-		else
-		{
+			/* dead zone is on the left and right */
+			if ((outX < m_IgnoreLeft) || (outX > m_IgnoreRight))
+			{
+				/* ignore */
+				return false;
+			}
+			/* scale to the visible area - what touch thinks should be scaled to what device expects */
+			outX *= m_ScaleX;
 		}
 	}
-	else if (m_DisplayRotation == ROTATION_270)
-	{
-		if (m_TouchscreenRotation == ROTATION_0)
-		{
-		}
-		else if (m_TouchscreenRotation == ROTATION_90)
-		{
-			outY = m_Height - inX * m_Height / m_Width;
-			outX = inY * m_Width / m_Height;
-			LOGD("m_DisplayRotation == ROTATION_270 m_TouchscreenRotation == ROTATION_90");
-		}
-	}
+	return true;
 }
