@@ -108,6 +108,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				if (m_ProjectionStarted)
 				{
 					m_ButtonStartStop.setText("Start");
+					stopScreenSharing();
 					m_VncJni.stopServer();
 					restoreRootPermissions();
 					setScreenOff();
@@ -384,8 +385,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 			case R.id.itemMenuExit:
 			{
-				m_VncJni.stopServer();
 				stopScreenSharing();
+				m_VncJni.stopServer();
 				System.exit(1);
 				return true;
 			}
