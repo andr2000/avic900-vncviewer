@@ -136,6 +136,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		/* TODO: this is not always called!!! */
 		super.onDestroy();
 		cleanup();
+		unregisterReceiver(m_ConfigReceiver);
 	}
 
 	private void cleanup()
@@ -144,7 +145,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_VncJni.stopServer();
 		restoreRootPermissions();
 		setScreenOff();
-		unregisterReceiver(m_ConfigReceiver);
 	}
 
 	class ConfigurationChangedReceiver extends BroadcastReceiver
