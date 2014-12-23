@@ -115,10 +115,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				if (m_ProjectionStarted)
 				{
 					m_ButtonStartStop.setText("Start");
-					stopScreenSharing();
-					m_VncJni.stopServer();
-					restoreRootPermissions();
-					setScreenOff();
+					cleanup();
 				}
 				else
 				{
@@ -138,8 +135,16 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		/* TODO: this is not always called!!! */
 		super.onDestroy();
-		m_VncJni.stopServer();
+		cleanup();
+	}
+
+	private void cleanup()
+	{
 		stopScreenSharing();
+		m_VncJni.stopServer();
+		restoreRootPermissions();
+		setScreenOff();
+		unregisterReceiver(m_ConfigReceiver);
 	}
 
 	class ConfigurationChangedReceiver extends BroadcastReceiver
@@ -394,8 +399,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 			case R.id.itemMenuExit:
 			{
-				stopScreenSharing();
-				m_VncJni.stopServer();
+				cleanup();
 				System.exit(1);
 				return true;
 			}
