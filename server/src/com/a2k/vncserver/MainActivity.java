@@ -142,12 +142,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		stopScreenSharing();
 	}
 
-	@Override
-	public void onConfigurationChanged(Configuration newConfig)
-	{
-		super.onConfigurationChanged(newConfig);
-	}
-
 	class ConfigurationChangedReceiver extends BroadcastReceiver
 	{
 		@Override
