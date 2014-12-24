@@ -84,7 +84,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		setContentView(R.layout.activity_main);
 
 		m_VncJni.setNotificationListener(this);
-		m_VncJni.init();
+		m_VncJni.init(getFilesDir().getParent());
 		Log.d(TAG, m_VncJni.protoGetVersion());
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);

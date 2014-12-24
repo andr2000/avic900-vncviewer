@@ -37,7 +37,7 @@ public class VncJni
 		onRotation(rotation);
 	}
 
-	public native void init();
+	public native void init(String packagePath);
 	public native String protoGetVersion();
 
 	public native void bindNextGraphicBuffer();
