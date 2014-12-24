@@ -313,12 +313,8 @@ int VncServer::startServer(bool root, int width, int height, int pixelFormat)
 		{
 			LOGE("Failed to initialize event injector");
 		}
-		m_Brightness.reset(new Brightness());
-		if (m_Brightness->initialize())
-		{
-			LOGD("Successfully opened brightness module");
-		}
-		else
+		m_Brightness.reset(new BrightnessHelper());
+		if (!m_Brightness->initialize(m_PackagePath))
 		{
 			LOGE("Failed to initialize brightness module");
 		}
@@ -374,6 +370,11 @@ void VncServer::dumpFrame(char *buffer)
 	{
 		LOGE("Failed to save frame at %s", fName);
 	}
+}
+
+void VncServer::setPackagePath(const char *packagePath)
+{
+	m_PackagePath = packagePath;
 }
 
 void VncServer::worker()
