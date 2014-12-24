@@ -48,6 +48,8 @@ public class VncJni
 
 	public native void onRotation(int rotation);
 
+	public native void setBrightness(int level);
+
 	static
 	{
 		System.loadLibrary("vncserver");
