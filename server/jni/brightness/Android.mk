@@ -16,10 +16,7 @@ LOCAL_MODULE := brightness
 
 include $(BUILD_EXECUTABLE)
 
-$(LOCAL_BUILT_MODULE), $(LOCAL_SHARED_LIBRARIES): post_build
-define gen_post_build
-post_build:
-	mv $(2) $(1)/lib$(LOCAL_MODULE).so
-endef
+all: libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so
 
-$(eval $(call gen_post_build, $(dir $(LOCAL_SHARED_LIBRARIES)), $(LOCAL_BUILT_MODULE)))
+libs/$(TARGET_ARCH_ABI)/lib$(LOCAL_MODULE).so: $(LOCAL_INSTALLED)
+	$(call host-mv, $<, $@)
