@@ -77,4 +77,10 @@ extern "C"
 	{
 		VncServer::getInstance().onRotation(rotation);
 	}
+
+	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_setBrightness(JNIEnv *env, jobject obj,
+		int level)
+	{
+		VncServer::getInstance().setBrightness(level);
+	}
 }

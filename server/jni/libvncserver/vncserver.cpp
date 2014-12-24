@@ -38,6 +38,7 @@ void VncServer::cleanup()
 	m_PixelFormat = 0;
 	m_FrameAvailable = false;
 	m_EventInjector.reset();
+	m_Brightness.reset();
 }
 
 void VncServer::setJavaVM(JavaVM *javaVM)
@@ -312,6 +313,15 @@ int VncServer::startServer(bool root, int width, int height, int pixelFormat)
 		{
 			LOGE("Failed to initialize event injector");
 		}
+		m_Brightness.reset(new Brightness());
+		if (m_Brightness->initialize())
+		{
+			LOGD("Successfully opened brightness module");
+		}
+		else
+		{
+			LOGE("Failed to initialize brightness module");
+		}
 	}
 	m_Terminated = false;
 	m_WorkerThread = std::thread(&VncServer::worker, this);
@@ -339,6 +349,14 @@ void VncServer::onRotation(int rotation)
 		m_EventInjector->onRotation(rotation);
 	}
 	m_Rotation = rotation;
+}
+
+void VncServer::setBrightness(int level)
+{
+	if (m_Brightness)
+	{
+		m_Brightness->setBrightness(level);
+	}
 }
 
 void VncServer::dumpFrame(char *buffer)

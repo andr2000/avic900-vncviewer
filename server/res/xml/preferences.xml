@@ -8,6 +8,11 @@
 		<CheckBoxPreference
 			android:title="Keep screen on"
 			android:key="keepScreenOn" android:defaultValue="@bool/keepScreenOn"/>
+			android:summary="If enabled this will prevent device from sleeping, so projection does not stop"
+		<CheckBoxPreference
+			android:title="Switch display off"
+			android:summary="Root: if enabled this will switch the display off completely when a client connected"
+			android:key="displayOff" android:defaultValue="@bool/displayOff"/>
 		<ListPreference
 			android:entries="@array/displaySizeOptions"
 			android:entryValues="@array/displaySizeValues"

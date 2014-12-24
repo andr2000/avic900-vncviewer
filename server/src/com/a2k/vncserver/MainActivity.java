@@ -28,6 +28,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.provider.Settings.SettingNotFoundException;
 import android.text.method.ScrollingMovementMethod;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -66,6 +67,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private boolean m_ProjectionStarted;
 	private int m_NumClientsConnected = 0;
 	private boolean m_KeepScreenOn = false;
+	private boolean m_DisplayOff = false;
+	private int m_CurBrightnessValue = 100;
 	private static PowerManager.WakeLock m_WakeLock = null;
 
 	private TextView m_LogView;
@@ -327,6 +330,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file open\"");
 			Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file write\"");
 			Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file ioctl\"");
+
+			/* TODO: this is a hack!!! Either start backlight in a separate process or find a way to remove this */
+			Shell.runCommand("chmod 666 /sys/class/backlight/pwm-backlight/brightness");
+			Shell.runCommand("supolicy --live \"allow untrusted_app sysfs file write\"");
 		}
 	}
 
@@ -339,6 +346,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file open\"");
 			Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file write\"");
 			Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file ioctl\"");
+
+			/* TODO: this is a hack!!! Either start backlight in a separate process or find a way to remove this */
+			Shell.runCommand("chmod 644 /sys/class/backlight/pwm-backlight/brightness");
+			Shell.runCommand("supolicy --live \"deny untrusted_app sysfs file write\"");
 		}
 	}
 
@@ -350,6 +361,19 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			m_WakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "vncserver");
 			m_WakeLock.acquire();
 		}
+		if (m_DisplayOff)
+		{
+			try
+			{
+				m_CurBrightnessValue = android.provider.Settings.System.getInt(
+					getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
+			}
+			catch (SettingNotFoundException e)
+			{
+				Log.e(TAG, "Failed to get brightness level");
+			}
+			m_VncJni.setBrightness(0);
+		}
 	}
 
 	private void releaseScreenOn()
@@ -357,6 +381,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		if ((m_WakeLock != null) && m_WakeLock.isHeld())
 		{
 			m_WakeLock.release();
+		}
+		if (m_DisplayOff)
+		{
+			m_VncJni.setBrightness(m_CurBrightnessValue);
 		}
 	}
 
@@ -438,6 +466,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 		}
 		m_KeepScreenOn = prefs.getBoolean("keepScreenOn", false);
+		m_DisplayOff = prefs.getBoolean("displayOff", false) && m_Rooted;
 		m_LogView.append("Using framebuffer: " + m_DisplayWidth + "x" + m_DisplayHeight +"\n");
 	}
 
