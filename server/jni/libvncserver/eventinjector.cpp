@@ -75,23 +75,23 @@ bool EventInjector::initialize(int width, int height, int rotation)
 	uinp.absmax[ABS_X] = uinp.absmax[ABS_Y] = m_Tdiv2;
 	strncpy(uinp.name, DEV_NAME, UINPUT_MAX_NAME_SIZE);
 
-	int ret;
-	ret = ioctl(m_Fd, UI_SET_EVBIT, EV_ABS);
-	ret = ioctl(m_Fd, UI_SET_EVBIT, EV_SYN);
-	ret = ioctl(m_Fd, UI_SET_EVBIT, EV_KEY);
+	/* TODO: check for errors */
+	ioctl(m_Fd, UI_SET_EVBIT, EV_ABS);
+	ioctl(m_Fd, UI_SET_EVBIT, EV_SYN);
+	ioctl(m_Fd, UI_SET_EVBIT, EV_KEY);
 
-	ret = ioctl(m_Fd, UI_SET_ABSBIT, ABS_X);
-	ret = ioctl(m_Fd, UI_SET_ABSBIT, ABS_Y);
-	ret = ioctl(m_Fd, UI_SET_KEYBIT, BTN_TOUCH);
+	ioctl(m_Fd, UI_SET_ABSBIT, ABS_X);
+	ioctl(m_Fd, UI_SET_ABSBIT, ABS_Y);
+	ioctl(m_Fd, UI_SET_KEYBIT, BTN_TOUCH);
 	/* this is to make us touchscreen */
-	ret = ioctl(m_Fd, UI_SET_PROPBIT, INPUT_PROP_DIRECT);
+	ioctl(m_Fd, UI_SET_PROPBIT, INPUT_PROP_DIRECT);
 	/* FIXME: the supported range should be KEY_MAX */
 	for (int i = 0; i < 0xff; i++)
 	{
-		ret = ioctl(m_Fd, UI_SET_KEYBIT, i);
+		ioctl(m_Fd, UI_SET_KEYBIT, i);
 	}
 
-	ret = write(m_Fd, &uinp, sizeof(uinp));
+	write(m_Fd, &uinp, sizeof(uinp));
 	if (ioctl(m_Fd, UI_DEV_CREATE))
 	{
 		LOGE("Failed to create new uinput device");
