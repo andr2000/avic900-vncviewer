@@ -31,12 +31,16 @@ extern "C"
 		return JNI_VERSION_1_4;
 	}
 
-	void Java_com_a2k_vncserver_VncJni_init(JNIEnv *env, jobject thiz)
+	void Java_com_a2k_vncserver_VncJni_init(JNIEnv *env, jobject thiz,
+		jstring packagePath)
 	{
+		const char *nativePath = env->GetStringUTFChars(packagePath, JNI_FALSE);
 		jclass clazz = env->GetObjectClass(thiz);
 		VncServer::getInstance().setupNotificationClb(env,
 			(jobject)(env->NewGlobalRef(thiz)),
 			(jclass)(env->NewGlobalRef(clazz)));
+		VncServer::getInstance().setPackagePath(nativePath);
+		env->ReleaseStringUTFChars(packagePath, nativePath);
 	}
 
 	JNIEXPORT jstring JNICALL Java_com_a2k_vncserver_VncJni_protoGetVersion(JNIEnv *env, jobject obj)

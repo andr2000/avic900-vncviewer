@@ -10,7 +10,7 @@
 #include <string>
 
 #include "AndroidGraphicBuffer.h"
-#include "brightness.h"
+#include "brightnesshelper.h"
 #include "eventinjector.h"
 #include "rfb/rfb.h"
 #include "triplebuffer.h"
@@ -47,6 +47,7 @@ public:
 	void frameAvailable();
 	void onRotation(int rotation);
 	void setBrightness(int level);
+	void setPackagePath(const char *packagePath);
 
 	rfbNewClientAction clientHook(rfbClientPtr cl);
 	void clientGone(rfbClientPtr cl);
@@ -62,9 +63,11 @@ private:
 	jclass m_Class;
 	jmethodID m_NotificationClb;
 
+	std::string m_PackagePath;
+
 	bool m_Rooted { false };
 	std::unique_ptr<EventInjector> m_EventInjector;
-	std::unique_ptr<Brightness> m_Brightness;
+	std::unique_ptr<BrightnessHelper> m_Brightness;
 
 	int m_Width;
 	int m_Height;

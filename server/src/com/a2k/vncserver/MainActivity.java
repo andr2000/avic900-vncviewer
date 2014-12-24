@@ -84,7 +84,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		setContentView(R.layout.activity_main);
 
 		m_VncJni.setNotificationListener(this);
-		m_VncJni.init();
+		m_VncJni.init(getFilesDir().getParent());
 		Log.d(TAG, m_VncJni.protoGetVersion());
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
@@ -144,9 +144,9 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private void cleanup()
 	{
 		stopScreenSharing();
+		releaseScreenOn();
 		m_VncJni.stopServer();
 		restoreRootPermissions();
-		releaseScreenOn();
 	}
 
 	class ConfigurationChangedReceiver extends BroadcastReceiver
@@ -330,10 +330,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file open\"");
 			Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file write\"");
 			Shell.runCommand("supolicy --live \"allow untrusted_app uhid_device chr_file ioctl\"");
-
-			/* TODO: this is a hack!!! Either start backlight in a separate process or find a way to remove this */
-			Shell.runCommand("chmod 666 /sys/class/backlight/pwm-backlight/brightness");
-			Shell.runCommand("supolicy --live \"allow untrusted_app sysfs file write\"");
 		}
 	}
 
@@ -346,10 +342,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file open\"");
 			Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file write\"");
 			Shell.runCommand("supolicy --live \"deny untrusted_app uhid_device chr_file ioctl\"");
-
-			/* TODO: this is a hack!!! Either start backlight in a separate process or find a way to remove this */
-			Shell.runCommand("chmod 644 /sys/class/backlight/pwm-backlight/brightness");
-			Shell.runCommand("supolicy --live \"deny untrusted_app sysfs file write\"");
 		}
 	}
 
