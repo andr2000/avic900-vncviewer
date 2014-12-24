@@ -1,18 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 	<PreferenceCategory
-		android:title="Display settings" >
+		android:title="Projection settings" >
 		<CheckBoxPreference
 			android:title="Use 16-bit color depth"
 			android:key="use16bit" android:defaultValue="@bool/use16bit"/>
 		<CheckBoxPreference
 			android:title="Keep screen on"
 			android:key="keepScreenOn" android:defaultValue="@bool/keepScreenOn"/>
-	</PreferenceCategory>
-
-	<PreferenceCategory
-		android:title="Settings" >
-
 		<ListPreference
 			android:entries="@array/displaySizeOptions"
 			android:entryValues="@array/displaySizeValues"
