@@ -49,4 +49,6 @@ private:
 	void reportKey(int key, bool press);
 	void reportAbs(int code, int value);
 	bool transformCoordinates(int inX, int inY, int &outX, int &outY);
+	int transformKey(int keysym);
+	int transformSpecialKey(int code);
 };
