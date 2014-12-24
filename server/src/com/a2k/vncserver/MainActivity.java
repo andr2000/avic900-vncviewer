@@ -122,7 +122,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					m_ButtonStartStop.setText("Stop");
 					readPreferences();
 					setupRootPermissions();
-					setScreenOn();
 					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
 				}
 				m_ProjectionStarted ^= true;
@@ -144,7 +143,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		stopScreenSharing();
 		m_VncJni.stopServer();
 		restoreRootPermissions();
-		setScreenOff();
+		releaseScreenOn();
 	}
 
 	class ConfigurationChangedReceiver extends BroadcastReceiver
@@ -191,6 +190,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				{
 					if (m_NumClientsConnected == 0)
 					{
+						keepScreenOn();
 						startScreenSharing();
 					}
 					m_NumClientsConnected++;
@@ -204,6 +204,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					if (m_NumClientsConnected == 0)
 					{
 						stopScreenSharing();
+						releaseScreenOn();
 					}
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
@@ -341,7 +342,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 	}
 
-	private void setScreenOn()
+	private void keepScreenOn()
 	{
 		if (m_KeepScreenOn)
 		{
@@ -351,7 +352,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 	}
 
-	private void setScreenOff()
+	private void releaseScreenOn()
 	{
 		if ((m_WakeLock != null) && m_WakeLock.isHeld())
 		{
