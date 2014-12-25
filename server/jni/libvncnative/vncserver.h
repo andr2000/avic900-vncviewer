@@ -86,9 +86,10 @@ private:
 	void cleanup();
 
 	AndroidGraphicBuffer *m_VncBuffer { nullptr };
+	AndroidGraphicBuffer *m_CmpBuffer { nullptr };
 	AndroidGraphicBuffer *m_GlBuffer { nullptr };
 	TripleBuffer<AndroidGraphicBuffer *> m_BufferQueue;
-	std::array<std::unique_ptr<AndroidGraphicBuffer>, 3> m_GraphicBuffer;
+	std::array<std::unique_ptr<AndroidGraphicBuffer>, 4> m_GraphicBuffer;
 	bool allocateBuffers(int width, int height, int pixelFormat);
 	void releaseBuffers();
 
@@ -96,6 +97,8 @@ private:
 	rfbScreenInfoPtr getRfbScreenInfoPtr();
 	void setVncFramebuffer();
 	void dumpFrame(char *buffer);
+	void compare16(uint16_t *buffer0, uint16_t *buffer1);
+	void compare32(uint32_t *buffer0, uint32_t *buffer1);
 };
 
 #endif /* LIBVNCSERVER_VNCSERVER_H_ */

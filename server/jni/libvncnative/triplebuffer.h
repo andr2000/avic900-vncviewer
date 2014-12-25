@@ -16,19 +16,22 @@ public:
 
 	void release()
 	{
-		m_Buffer[0] = nullptr;
-		m_Buffer[1] = nullptr;
-		m_Buffer[2] = nullptr;
+		for (int i = 0; i < NUM_BUFFERS; i++)
+		{
+			m_Buffer[i] = nullptr;
+		}
 	}
 
-	T getConsumer()
+	void getConsumer(T &consumer, T &compare)
 	{
 		std::lock_guard<std::mutex> lock(m_Lock);
+		m_Compare = m_Consumer;
 		int tmp;
 		tmp = m_Clean;
 		m_Clean = m_Consumer;
 		m_Consumer = tmp;
-		return m_Buffer[m_Consumer];
+		consumer = m_Buffer[m_Consumer];
+		compare = m_Buffer[m_Compare];
 	}
 
 	T getProducer()
@@ -42,11 +45,14 @@ public:
 	}
 
 private:
+	static const int NUM_BUFFERS = 4;
+
 	std::mutex m_Lock;
-	T m_Buffer[3];
+	T m_Buffer[NUM_BUFFERS];
 	int m_Consumer = 0;
 	int m_Producer = 1;
 	int m_Clean = 2;
+	int m_Compare = 3;
 };
 
 #endif /* LIBVNCSERVER_TRUPLEBUFFER_H_ */
