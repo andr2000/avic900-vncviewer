@@ -211,7 +211,7 @@ void clientGoneClb(rfbClientPtr cl)
 void VncServer::clientGone(rfbClientPtr cl)
 {
 	LOGD("Client disconnected: %s", cl->host);
-	postEventToUI(CLIENT_DISCONNECTED, "Client" + std::string(cl->host) + " disconnected");
+	postEventToUI(CLIENT_DISCONNECTED, "Client " + std::string(cl->host) + " disconnected");
 }
 
 rfbNewClientAction clientHookClb(rfbClientPtr cl)

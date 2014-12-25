@@ -6,7 +6,7 @@
 			android:title="Use 16-bit color depth"
 			android:key="use16bit" android:defaultValue="@bool/use16bit"/>
 		<CheckBoxPreference
-			android:title="Keep screen on"
+			android:title="Keep awake"
 			android:key="keepScreenOn" android:defaultValue="@bool/keepScreenOn"/>
 			android:summary="If enabled this will prevent device from sleeping, so projection does not stop"
 		<CheckBoxPreference
