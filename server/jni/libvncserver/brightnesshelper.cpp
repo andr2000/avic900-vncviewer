@@ -1,5 +1,6 @@
 #include <android/log.h>
 #include <stdlib.h>
+#include <sstream>
 
 #include "brightnesshelper.h"
 
@@ -15,12 +16,16 @@ extern "C"
 bool BrightnessHelper::initialize(const std::string &path)
 {
 	m_Path = path + BINARY_NAME;
-	std::string cmd = "sh -c \"chmod 777 " + m_Path + "\"";
+	std::stringstream ss;
+	ss << "su -c \"chmod 777 " << m_Path << "\"";
+	std::string cmd = ss.str();
 	return system(cmd.c_str()) >= 0;
 }
 
 bool BrightnessHelper::setBrightness(int value)
 {
-	std::string cmd = "sh -c \"" + m_Path + "\"";
+	std::stringstream ss;
+	ss << "su -c \"" << m_Path << " " << value << + "\"";
+	std::string cmd = ss.str();
 	return system(cmd.c_str()) >= 0;
 }

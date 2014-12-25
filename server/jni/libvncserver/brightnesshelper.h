@@ -13,7 +13,7 @@ public:
 	bool setBrightness(int value);
 
 private:
-	const char *BINARY_NAME = "/lib//brightness";
+	const char *BINARY_NAME = "/lib/libbrightness.so";
 	std::string m_Path;
 };
 
