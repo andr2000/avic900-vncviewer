@@ -2,6 +2,7 @@
 #include <GLES2/gl2.h>
 
 #include "vncserver.h"
+#include "prof.h"
 
 extern "C"
 {
@@ -379,6 +380,7 @@ void VncServer::setPackagePath(const char *packagePath)
 
 void VncServer::worker()
 {
+	monstartup("libvncnative.so");
 	while ((!m_Terminated) && rfbIsActive(m_RfbScreenInfoPtr))
 	{
 		rfbProcessEvents(m_RfbScreenInfoPtr, 5000);
@@ -401,6 +403,7 @@ void VncServer::worker()
 			}
 		}
 	}
+	moncleanup();
 	if (m_JavaVM)
 	{
 		m_JavaVM->DetachCurrentThread();

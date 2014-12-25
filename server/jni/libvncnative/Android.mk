@@ -66,4 +66,7 @@ LOCAL_STATIC_LIBRARIES := libjpeg libpng libssl_static libcrypto_static
 
 LOCAL_MODULE := vncnative
 
+LOCAL_CFLAGS += -pg
+LOCAL_STATIC_LIBRARIES += android-ndk-profiler
 include $(BUILD_SHARED_LIBRARY)
+
