@@ -64,6 +64,6 @@ LOCAL_C_INCLUDES += \
 
 LOCAL_STATIC_LIBRARIES := libjpeg libpng libssl_static libcrypto_static
 
-LOCAL_MODULE := libvncserver
+LOCAL_MODULE := vncnative
 
 include $(BUILD_SHARED_LIBRARY)

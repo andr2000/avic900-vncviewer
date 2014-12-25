@@ -52,6 +52,6 @@ public class VncJni
 
 	static
 	{
-		System.loadLibrary("vncserver");
+		System.loadLibrary("vncnative");
 	}
 }
