@@ -39,6 +39,7 @@ void VncServer::cleanup()
 	m_FrameAvailable = false;
 	m_EventInjector.reset();
 	m_Brightness.reset();
+	m_CmpBuffer = m_VncBuffer = m_GlBuffer = nullptr;
 }
 
 void VncServer::setJavaVM(JavaVM *javaVM)
@@ -137,7 +138,7 @@ void VncServer::setVncFramebuffer()
 			LOGE("Failed to unlock buffer");
 		}
 	}
-	m_VncBuffer = m_BufferQueue.getConsumer();
+	m_BufferQueue.getConsumer(m_VncBuffer, m_CmpBuffer);
 	if (m_VncBuffer)
 	{
 		unsigned char *vncbuf;
@@ -377,6 +378,86 @@ void VncServer::setPackagePath(const char *packagePath)
 	m_PackagePath = packagePath;
 }
 
+void VncServer::compare16(uint16_t *buffer0, uint16_t *buffer1)
+{
+	int maxX = -1, maxY = -1, minX = 99999, minY = 99999;
+	bool modified = false;
+	for (int j = 0; j < m_Height; j++)
+	{
+		for (int i = 0; i < m_Width; i++)
+		{
+			if (*buffer0++ != *buffer1++)
+			{
+				if (i > maxX)
+				{
+					maxX = i;
+				}
+				if (i < minX)
+				{
+					minX = i;
+				}
+				if (j > maxY)
+				{
+					maxY = j;
+				}
+				if (j < minY)
+				{
+					minY = j;
+				}
+				modified = true;
+			}
+		}
+	}
+	if (modified)
+	{
+		minX--;
+		minX--;
+		maxX++;
+		maxY++;
+		rfbMarkRectAsModified(m_RfbScreenInfoPtr, minX, minY, maxX, maxY);
+	}
+};
+
+void VncServer::compare32(uint32_t *buffer0, uint32_t *buffer1)
+{
+	int maxX = -1, maxY = -1, minX = 99999, minY = 99999;
+	bool modified = false;
+	for (int j = 0; j < m_Height; j++)
+	{
+		for (int i = 0; i < m_Width; i++)
+		{
+			if (*buffer0++ != *buffer1++)
+			{
+				if (i > maxX)
+				{
+					maxX = i;
+				}
+				if (i < minX)
+				{
+					minX = i;
+				}
+				if (j > maxY)
+				{
+					maxY = j;
+				}
+				if (j < minY)
+				{
+					minY = j;
+				}
+				modified = true;
+			}
+		}
+	}
+	if (modified)
+	{
+		minX--;
+		minX--;
+		maxX++;
+		maxY++;
+		rfbMarkRectAsModified(m_RfbScreenInfoPtr, minX, minY, maxX, maxY);
+	}
+};
+
 void VncServer::worker()
 {
 	while ((!m_Terminated) && rfbIsActive(m_RfbScreenInfoPtr))
@@ -388,7 +469,29 @@ void VncServer::worker()
 			{
 				m_FrameAvailable = false;
 				setVncFramebuffer();
-				rfbMarkRectAsModified(m_RfbScreenInfoPtr, 0, 0, m_RfbScreenInfoPtr->width, m_RfbScreenInfoPtr->height);
+				if (m_CmpBuffer)
+				{
+					unsigned char *vncbuf;
+					if (m_CmpBuffer->lock(&vncbuf) != 0)
+					{
+							LOGE("Failed to lock buffer");
+					}
+					if (m_PixelFormat == GL_RGB565)
+					{
+						compare16(reinterpret_cast<uint16_t *>(vncbuf),
+							reinterpret_cast<uint16_t *>(m_RfbScreenInfoPtr->frameBuffer));
+					}
+					else if (m_PixelFormat == GL_RGBA)
+					{
+						compare32(reinterpret_cast<uint32_t *>(vncbuf),
+							reinterpret_cast<uint32_t *>(m_RfbScreenInfoPtr->frameBuffer));
+					}
+					m_CmpBuffer->unlock();
+				}
+				else
+				{
+					rfbMarkRectAsModified(m_RfbScreenInfoPtr, 0, 0, m_Width, m_Height);
+				}
 				if (DUMP_ENABLED)
 				{
 					static int counter = 20;
