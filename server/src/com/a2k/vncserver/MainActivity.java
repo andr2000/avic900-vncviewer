@@ -192,7 +192,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				{
 					if (m_NumClientsConnected == 0)
 					{
-						keepScreenOn();
 						startScreenSharing();
 					}
 					m_NumClientsConnected++;
@@ -205,8 +204,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					m_NumClientsConnected--;
 					if (m_NumClientsConnected == 0)
 					{
-						stopScreenSharing();
 						releaseScreenOn();
+						stopScreenSharing();
 					}
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
@@ -232,8 +231,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			return;
 		}
 		if (resultCode != RESULT_OK) {
-			Toast.makeText(this, "User denied screen sharing permission",
-				Toast.LENGTH_SHORT).show();
+			m_LogView.append("User denied screen sharing permission\n");
 			return;
 		}
 		m_MediaProjection = m_ProjectionManager.getMediaProjection(resultCode, data);
@@ -304,10 +302,15 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		DisplayMetrics metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(metrics);
 		int screenDensity = metrics.densityDpi;
-		return m_MediaProjection.createVirtualDisplay("vncserver",
+		VirtualDisplay vd = m_MediaProjection.createVirtualDisplay("vncserver",
 			m_DisplayWidth, m_DisplayHeight, screenDensity,
 			DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
+		if (vd != null)
+		{
+			keepScreenOn();
+		}
+		return vd;
 	}
 
 	public void onFrameAvailable(SurfaceTexture surfaceTexture)
