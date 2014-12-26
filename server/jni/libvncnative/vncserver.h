@@ -97,8 +97,7 @@ private:
 	rfbScreenInfoPtr getRfbScreenInfoPtr();
 	void setVncFramebuffer();
 	void dumpFrame(char *buffer);
-	void compare16(uint16_t *buffer0, uint16_t *buffer1);
-	void compare32(uint32_t *buffer0, uint32_t *buffer1);
+	void compare(int width, int shift, uint32_t *buffer0, uint32_t *buffer1);
 };
 
 #endif /* LIBVNCSERVER_VNCSERVER_H_ */

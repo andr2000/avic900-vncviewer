@@ -377,85 +377,108 @@ void VncServer::setPackagePath(const char *packagePath)
 	m_PackagePath = packagePath;
 }
 
-void VncServer::compare16(uint16_t *buffer0, uint16_t *buffer1)
+void VncServer::compare(int width, int shift, uint32_t *buffer0, uint32_t *buffer1)
 {
-	int maxX = -1, maxY = -1, minX = 99999, minY = 99999;
-	bool modified = false;
-	for (int j = 0; j < m_Height; j++)
-	{
-		for (int i = 0; i < m_Width; i++)
-		{
-			if (*buffer0++ != *buffer1++)
-			{
-				if (i > maxX)
-				{
-					maxX = i;
-				}
-				if (i < minX)
-				{
-					minX = i;
-				}
-				if (j > maxY)
-				{
-					maxY = j;
-				}
-				if (j < minY)
-				{
-					minY = j;
-				}
-				modified = true;
-			}
-		}
-	}
-	if (modified)
-	{
-		minX--;
-		minX--;
-		maxX++;
-		maxY++;
-		rfbMarkRectAsModified(m_RfbScreenInfoPtr, minX, minY, maxX, maxY);
-	}
-};
+	const int DEFAULT_MIN = 10000;
+	const int DEFAULT_MAX = -1;
+	int maxX = DEFAULT_MAX, maxY = DEFAULT_MAX, minX = DEFAULT_MIN, minY = DEFAULT_MIN;
 
-void VncServer::compare32(uint32_t *buffer0, uint32_t *buffer1)
-{
-	int maxX = -1, maxY = -1, minX = 99999, minY = 99999;
-	bool modified = false;
-	for (int j = 0; j < m_Height; j++)
+	int j = 0, i = 0;
+	uint32_t *bufEnd = buffer0 + m_Height * width;
+	/* find first pixel which differs */
+	while (buffer0 < bufEnd)
 	{
-		for (int i = 0; i < m_Width; i++)
+		if (*buffer0++ != *buffer1++)
 		{
-			if (*buffer0++ != *buffer1++)
+			minX = maxX = i;
+			minY = maxY = j;
+			break;
+		}
+		if (++i >= width)
+		{
+			i = 0;
+			j++;
+		}
+	};
+	/* minY found */
+	while (buffer0 < bufEnd)
+	{
+		if (*buffer0++ != *buffer1++)
+		{
+			if (i <= minX)
 			{
-				if (i > maxX)
+				/* can skip delta, because it is already known to be in dirty region */
+				minX = i;
+				int delta = maxX - minX;
+				buffer0 += delta;
+				buffer1 += delta;
+				i += delta;
+				if (delta == width - 1)
 				{
-					maxX = i;
+					/* minX == 0, maxX == width - now find maxY */
+					i = 0;
+					j++;
+					while (buffer0 < bufEnd)
+					{
+						if (*buffer0++ != *buffer1++)
+						{
+							maxY = j;
+							int delta = width - i - 1;
+							buffer0 += delta;
+							buffer1 += delta;
+							i += delta;
+						}
+						if (++i >= width)
+						{
+							i = 0;
+							j++;
+						}
+					};
+					break;
 				}
-				if (i < minX)
-				{
-					minX = i;
-				}
-				if (j > maxY)
-				{
-					maxY = j;
-				}
-				if (j < minY)
-				{
-					minY = j;
-				}
-				modified = true;
+			}
+			if (i > maxX)
+			{
+				maxX = i;
+			}
+			if (j > maxY)
+			{
+				maxY = j;
 			}
 		}
-	}
-	if (modified)
+		if (++i >= width)
+		{
+			i = 0;
+			j++;
+		}
+	};
+	/* first pixel which differ will set all min/max, so check any of those */
+	if (minX != DEFAULT_MIN)
 	{
-		minX--;
-		minX--;
-		maxX++;
-		maxY++;
-		rfbMarkRectAsModified(m_RfbScreenInfoPtr, minX, minY, maxX, maxY);
+		if (minX)
+		{
+			minX--;
+		}
+		if (minY)
+		{
+			minY--;
+		}
+		if (maxX < width)
+		{
+			maxX++;
+		}
+		if (maxY < m_Height)
+		{
+			maxY++;
+		}
+		if (shift)
+		{
+			minX <<= shift;
+			maxX <<= shift;
+		}
 	}
-};
+	rfbMarkRectAsModified(m_RfbScreenInfoPtr, minX, minY, maxX, maxY);
+}
 
 void VncServer::worker()
 {
@@ -477,12 +500,12 @@ void VncServer::worker()
 					}
 					if (m_PixelFormat == GL_RGB565)
 					{
-						compare16(reinterpret_cast<uint16_t *>(vncbuf),
-							reinterpret_cast<uint16_t *>(m_RfbScreenInfoPtr->frameBuffer));
+						compare(m_Width / 2, 1, reinterpret_cast<uint32_t *>(vncbuf),
+							reinterpret_cast<uint32_t *>(m_RfbScreenInfoPtr->frameBuffer));
 					}
 					else if (m_PixelFormat == GL_RGBA)
 					{
-						compare32(reinterpret_cast<uint32_t *>(vncbuf),
+						compare(m_Width, 0, reinterpret_cast<uint32_t *>(vncbuf),
 							reinterpret_cast<uint32_t *>(m_RfbScreenInfoPtr->frameBuffer));
 					}
 					m_CmpBuffer->unlock();
