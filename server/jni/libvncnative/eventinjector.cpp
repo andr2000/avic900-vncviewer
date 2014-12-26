@@ -1,19 +1,10 @@
-#include <android/log.h>
 #include <linux/input.h>
 #include <fcntl.h>
 
 #include "eventinjector.h"
+#include "log.h"
 #include "rfb/keysym.h"
 #include "uinput.h"
-
-extern "C"
-{
-	#define MODULE_NAME "eventinjector"
-
-	#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,  MODULE_NAME, __VA_ARGS__))
-	#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, MODULE_NAME, __VA_ARGS__))
-	#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, MODULE_NAME, __VA_ARGS__))
-}
 
 EventInjector::~EventInjector()
 {
