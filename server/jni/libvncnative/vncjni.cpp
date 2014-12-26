@@ -8,11 +8,6 @@
 #include "AndroidGraphicBuffer.h"
 #include "vncserver.h"
 
-#define MODULE_NAME "vncjni"
-
-int gBytesPerPixel;
-uint8_t gPixels[1024 * 1024 * 4];
-
 extern "C"
 {
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,  MODULE_NAME, __VA_ARGS__))
