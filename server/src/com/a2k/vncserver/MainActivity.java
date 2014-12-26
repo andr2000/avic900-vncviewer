@@ -479,6 +479,12 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				m_DisplayHeight = 480;
 				break;
 			}
+			case 2:
+			{
+				m_DisplayWidth = 1280;
+				m_DisplayHeight = 720;
+				break;
+			}
 		}
 		m_KeepScreenOn = prefs.getBoolean("keepScreenOn", false);
 		m_DisplayOff = prefs.getBoolean("displayOff", false) && m_Rooted;

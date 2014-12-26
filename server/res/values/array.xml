@@ -3,10 +3,12 @@
 	<string-array name="displaySizeOptions">
 		<item>Native resolution</item>
 		<item>800x480</item>
+		<item>1280x720</item>
 	</string-array>
 
 	<string-array name="displaySizeValues">
 		<item>0</item>
 		<item>1</item>
+		<item>2</item>
 			</string-array>
 </resources>
