@@ -46,7 +46,7 @@ import com.a2k.vncserver.VncJni;
 public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvailableListener,
 	VncJni.NotificationListener
 {
-	public static final String TAG = "MainActivity";
+	public static final String TAG = "vncserver";
 	private static final int PERMISSION_CODE = 1;
 	private static final String MESSAGE_KEY = "text";
 

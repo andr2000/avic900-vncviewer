@@ -20,7 +20,7 @@ import com.a2k.vncserver.VncJni;
 
 class TextureRender
 {
-	private static final String TAG = "TextureRender";
+	private static final String TAG = MainActivity.TAG;
 
 	private VncJni m_VncJni;
 	private int m_Width;

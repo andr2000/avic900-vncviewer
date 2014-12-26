@@ -1,4 +1,3 @@
-#include <android/log.h>
 #include <dlfcn.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
@@ -6,8 +5,7 @@
 #include <stdlib.h>
 
 #include "AndroidGraphicBuffer.h"
-
-#define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "AndroidGraphicBuffer" , ## args)
+#include "log.h"
 
 #define ANDROID_LIBUI_PATH "libui.so"
 
@@ -111,7 +109,7 @@ public:
 		void *handle = dlopen(ANDROID_LIBUI_PATH, RTLD_LAZY);
 		if (!handle)
 		{
-			LOG("Couldn't load libui.so");
+			LOGE("Couldn't load libui.so");
 			return false;
 		}
 
@@ -126,7 +124,7 @@ public:
 		if (!fGraphicBufferCtor || !fGraphicBufferDtor || !fGraphicBufferLock ||
 			!fGraphicBufferUnlock || !fGraphicBufferGetNativeBuffer)
 		{
-			LOG("Failed to lookup some GraphicBuffer functions");
+			LOGE("Failed to lookup some GraphicBuffer functions");
 			return false;
 		}
 
@@ -150,7 +148,7 @@ static bool ensureNoGLError(const char* name)
 
 	while ((error = glGetError()) != GL_NO_ERROR)
 	{
-		LOG("GL error [%s]: %40x\n", name, error);
+		LOGE("GL error [%s]: %40x\n", name, error);
 		result = false;
 	}
 	return result;
@@ -203,7 +201,7 @@ void AndroidGraphicBuffer::destroyBuffer()
 		}
 		free(m_Handle);
 		m_Handle = nullptr;
-		LOG("Released graphic buffer (%dx%d), format %s", m_Width, m_Height,
+		LOGD("Released graphic buffer (%dx%d), format %s", m_Width, m_Height,
 			m_Format == HAL_PIXEL_FORMAT_RGB_565 ? "RGB565" : "RGBA");
 	}
 }
@@ -303,7 +301,7 @@ bool AndroidGraphicBuffer::ensureEGLImage()
 		EGL_NO_CONTEXT, EGL_NATIVE_BUFFER_ANDROID, (EGLClientBuffer)nativeBuffer, eglImgAttrs);
 	if (m_EGLImage)
 	{
-		LOG("Allocated graphic buffer (%dx%d), format %s, stride %d", m_Width, m_Height,
+		LOGD("Allocated graphic buffer (%dx%d), format %s, stride %d", m_Width, m_Height,
 			m_Format == HAL_PIXEL_FORMAT_RGB_565 ? "RGB565" : "RGBA", m_Stride);
 	}
 	return m_EGLImage != nullptr;
@@ -317,7 +315,7 @@ bool AndroidGraphicBuffer::allocate()
 	}
 	if (!ensureEGLImage())
 	{
-		LOG("No valid EGLImage!");
+		LOGE("No valid EGLImage!");
 		return false;
 	}
 	return true;

@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public class Shell
 {
-	private static final String TAG = "Shell";
+	private static final String TAG = MainActivity.TAG;
 
 	private static String shell;
 
