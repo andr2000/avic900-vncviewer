@@ -194,6 +194,9 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				}
 				case VncJni.SERVER_STOPPED:
 				{
+					/* as we might stop vnc server before receiving disconnect
+					 * notifications, so clean up here, so projection can be started */
+					m_NumClientsConnected = 0;
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
 					break;
