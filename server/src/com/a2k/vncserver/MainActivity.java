@@ -435,9 +435,11 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	private void readPreferences()
 	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		boolean use16bit = prefs.getBoolean("use16bit", true);
 		m_PixelFormat = use16bit ? GLES20.GL_RGB565 : GLES20.GL_RGBA;
+		m_LogView.append("Using pixelformat: " + (m_PixelFormat == GLES20.GL_RGB565 ?
+			"RGB565" : "RGBA") + "\n");
 		int displaySize = Integer.parseInt(prefs.getString("displaySize", "0"));
 		switch (displaySize)
 		{
