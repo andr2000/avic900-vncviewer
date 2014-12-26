@@ -4,15 +4,6 @@
     android:layout_height="match_parent"
     tools:context="${relativePackage}.${activityClass}" >
 
-    <Button
-        android:id="@+id/buttonStartStop"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="52dp"
-        android:text="Start" />
-
     <TextView
         android:id="@+id/textViewIP"
         android:layout_width="wrap_content"
@@ -25,5 +16,24 @@
         android:gravity="bottom"
         android:typeface="monospace"
         android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <Button
+        android:id="@+id/buttonDisplayOff"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/buttonStartStop"
+        android:layout_alignBottom="@+id/buttonStartStop"
+        android:layout_toRightOf="@id/buttonStartStop"
+        android:text="Display off" />
+
+    <Button
+        android:id="@+id/buttonStartStop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginTop="28dp"
+        android:text="Start" />
 
 </RelativeLayout>

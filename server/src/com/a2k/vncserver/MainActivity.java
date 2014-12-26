@@ -63,6 +63,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private ConfigurationChangedReceiver m_ConfigReceiver;
 
 	private Button m_ButtonStartStop;
+	private Button m_ButtonDisplayOff;
 	private boolean m_ProjectionStarted;
 	private int m_NumClientsConnected = 0;
 	private boolean m_KeepScreenOn = false;
@@ -127,6 +128,15 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
 				}
 				m_ProjectionStarted ^= true;
+			}
+		});
+
+		m_ButtonDisplayOff = (Button)findViewById(R.id.buttonDisplayOff);
+		m_ButtonDisplayOff.setOnClickListener(new View.OnClickListener()
+		{
+			public void onClick(View v)
+			{
+				setDisplayOff();
 			}
 		});
 	}
@@ -357,17 +367,26 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 		if (m_DisplayOff)
 		{
-			try
-			{
-				m_CurBrightnessValue = android.provider.Settings.System.getInt(
-					getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
-			}
-			catch (SettingNotFoundException e)
-			{
-				Log.e(TAG, "Failed to get brightness level");
-			}
-			m_VncJni.setBrightness(0);
+			setDisplayOff();
 		}
+	}
+
+	private void setDisplayOff()
+	{
+		if (m_VncJni == null)
+		{
+			return;
+		}
+		try
+		{
+			m_CurBrightnessValue = android.provider.Settings.System.getInt(
+				getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
+		}
+		catch (SettingNotFoundException e)
+		{
+			Log.e(TAG, "Failed to get brightness level");
+		}
+		m_VncJni.setBrightness(0);
 	}
 
 	private void releaseScreenOn()
