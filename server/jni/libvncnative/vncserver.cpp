@@ -476,8 +476,8 @@ void VncServer::compare(int width, int shift, uint32_t *buffer0, uint32_t *buffe
 			minX <<= shift;
 			maxX <<= shift;
 		}
+		rfbMarkRectAsModified(m_RfbScreenInfoPtr, minX, minY, maxX, maxY);
 	}
-	rfbMarkRectAsModified(m_RfbScreenInfoPtr, minX, minY, maxX, maxY);
 }
 
 void VncServer::worker()
