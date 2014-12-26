@@ -28,7 +28,6 @@ void VncServer::cleanup()
 	}
 	if (m_RfbScreenInfoPtr)
 	{
-		rfbScreenCleanup(m_RfbScreenInfoPtr);
 		rfbShutdownServer(m_RfbScreenInfoPtr, true);
 		m_RfbScreenInfoPtr = nullptr;
 	}
@@ -39,7 +38,6 @@ void VncServer::cleanup()
 	m_FrameAvailable = false;
 	m_EventInjector.reset();
 	m_Brightness.reset();
-	m_CmpBuffer = m_VncBuffer = m_GlBuffer = nullptr;
 }
 
 void VncServer::setJavaVM(JavaVM *javaVM)
@@ -127,6 +125,7 @@ void VncServer::releaseBuffers()
 	m_BufferQueue.release();
 	m_VncBuffer = nullptr;
 	m_GlBuffer = nullptr;
+	m_CmpBuffer = nullptr;
 }
 
 void VncServer::setVncFramebuffer()
