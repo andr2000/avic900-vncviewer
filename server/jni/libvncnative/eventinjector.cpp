@@ -46,10 +46,10 @@ bool EventInjector::initialize(int width, int height, int rotation)
 	/* scale to the visible area - what touch thinks should be scaled to what device expects */
 	m_ScaleX = (float)m_Width / 2 / m_IgnoreRight;
 
-	m_IgnoreBottom = (float)m_Width * m_Width / m_Height / 2;
-	m_IgnoreTop = - m_IgnoreBottom;
+	m_IgnoreTop = (float)m_Width * m_Width / m_Height / 2;
+	m_IgnoreBottom = - m_IgnoreTop;
 	/* scale to the visible area - what touch thinks should be scaled to what device expects */
-	m_ScaleY = (float)m_Height / 2 / m_IgnoreBottom;
+	m_ScaleY = (float)m_Height / 2 / m_IgnoreTop;
 
 	/* we only support 0 and 90 for the touch screen, coordinates updated
 	 * according to display's rotation */
@@ -425,13 +425,13 @@ bool EventInjector::transformCoordinates(int inX, int inY, int &outX, int &outY)
 		if ((m_DisplayRotation == ROTATION_90) || (m_DisplayRotation == ROTATION_270))
 		{
 			/* dead zone is at top and bottom */
-			if ((outY < m_IgnoreTop) || (outY > m_IgnoreBottom))
+			if ((outX < m_IgnoreBottom) || (outX > m_IgnoreTop))
 			{
 				/* ignore */
 				return false;
 			}
 			/* scale to the visible area - what touch thinks should be scaled to what device expects */
-			outY *= m_ScaleY;
+			outX *= m_ScaleY;
 		}
 	}
 	else if (m_TouchscreenRotation == ROTATION_90)
