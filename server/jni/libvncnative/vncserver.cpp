@@ -465,44 +465,51 @@ void VncServer::worker()
 	while ((!m_Terminated) && rfbIsActive(m_RfbScreenInfoPtr))
 	{
 		rfbProcessEvents(m_RfbScreenInfoPtr, 5000);
+		bool update = false;
 		{
 			std::lock_guard<std::mutex> lock(m_FrameAvailableLock);
 			if (m_FrameAvailable)
 			{
 				m_FrameAvailable = false;
+				update = true;
 				setVncFramebuffer();
-				if (m_CmpBuffer)
-				{
-					unsigned char *vncbuf;
-					if (m_CmpBuffer->lock(&vncbuf) != 0)
-					{
-							LOGE("Failed to lock buffer");
-					}
-					if (m_PixelFormat == GL_RGB565)
-					{
-						compare(m_Width / 2, 1, reinterpret_cast<uint32_t *>(vncbuf),
-							reinterpret_cast<uint32_t *>(m_RfbScreenInfoPtr->frameBuffer));
-					}
-					else if (m_PixelFormat == GL_RGBA)
-					{
-						compare(m_Width, 0, reinterpret_cast<uint32_t *>(vncbuf),
-							reinterpret_cast<uint32_t *>(m_RfbScreenInfoPtr->frameBuffer));
-					}
-					m_CmpBuffer->unlock();
-				}
-				else
-				{
-					rfbMarkRectAsModified(m_RfbScreenInfoPtr, 0, 0, m_Width, m_Height);
-				}
-				if (DUMP_ENABLED)
-				{
-					static int counter = 20;
-					if (--counter == 0)
-					{
-						counter = 20;
-						dumpFrame(m_RfbScreenInfoPtr->frameBuffer);
-					}
-				}
+			}
+		}
+		if (!update)
+		{
+			continue;
+		}
+		update = false;
+		if (m_CmpBuffer)
+		{
+			unsigned char *vncbuf;
+			if (m_CmpBuffer->lock(&vncbuf) != 0)
+			{
+					LOGE("Failed to lock buffer");
+			}
+			if (m_PixelFormat == GL_RGB565)
+			{
+				compare(m_Width / 2, 1, reinterpret_cast<uint32_t *>(vncbuf),
+					reinterpret_cast<uint32_t *>(m_RfbScreenInfoPtr->frameBuffer));
+			}
+			else if (m_PixelFormat == GL_RGBA)
+			{
+				compare(m_Width, 0, reinterpret_cast<uint32_t *>(vncbuf),
+					reinterpret_cast<uint32_t *>(m_RfbScreenInfoPtr->frameBuffer));
+			}
+			m_CmpBuffer->unlock();
+		}
+		else
+		{
+			rfbMarkRectAsModified(m_RfbScreenInfoPtr, 0, 0, m_Width, m_Height);
+		}
+		if (DUMP_ENABLED)
+		{
+			static int counter = 20;
+			if (--counter == 0)
+			{
+				counter = 20;
+				dumpFrame(m_RfbScreenInfoPtr->frameBuffer);
 			}
 		}
 	}
