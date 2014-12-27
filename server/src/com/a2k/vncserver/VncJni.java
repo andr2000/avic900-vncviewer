@@ -43,7 +43,8 @@ public class VncJni
 	public native void bindNextGraphicBuffer();
 	public native void frameAvailable();
 
-	public native int startServer(boolean root, int width, int height, int pixelFormat);
+	public native int startServer(boolean root, int width, int height,
+		int pixelFormat, boolean fullFrameUpdate);
 	public native int stopServer();
 
 	public native void onRotation(int rotation);

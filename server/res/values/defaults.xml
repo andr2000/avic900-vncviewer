@@ -3,4 +3,5 @@
 	<string name="displaySize">"1"</string>
 	<bool name="keepScreenOn">false</bool>
 	<bool name="displayOff">false</bool>
+	<bool name="sendFullUpdates">false</bool>
 </resources>

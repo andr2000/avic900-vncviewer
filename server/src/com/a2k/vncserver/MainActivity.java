@@ -68,6 +68,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private int m_NumClientsConnected = 0;
 	private boolean m_KeepScreenOn = false;
 	private boolean m_DisplayOff = false;
+	private boolean m_SendFullUpdates = false;
 	private int m_CurBrightnessValue = 100;
 	private static PowerManager.WakeLock m_WakeLock = null;
 
@@ -125,7 +126,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					m_ButtonStartStop.setText("Stop");
 					readPreferences();
 					setupRootPermissions();
-					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat);
+					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat, m_SendFullUpdates);
 				}
 				m_ProjectionStarted ^= true;
 			}
@@ -491,6 +492,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 		m_KeepScreenOn = prefs.getBoolean("keepScreenOn", false);
 		m_DisplayOff = prefs.getBoolean("displayOff", false) && m_Rooted;
+		m_SendFullUpdates = prefs.getBoolean("sendFullUpdates", false);
 		m_LogView.append("Using framebuffer: " + m_DisplayWidth + "x" + m_DisplayHeight +"\n");
 	}
 

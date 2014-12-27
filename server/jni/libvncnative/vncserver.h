@@ -11,9 +11,9 @@
 
 #include "AndroidGraphicBuffer.h"
 #include "brightnesshelper.h"
+#include "buffermanager.h"
 #include "eventinjector.h"
 #include "rfb/rfb.h"
-#include "triplebuffer.h"
 
 class VncServer
 {
@@ -41,7 +41,7 @@ public:
 
 	void postEventToUI(int what, std::string text);
 
-	int startServer(bool root, int width, int height, int pixelFormat);
+	int startServer(bool root, int width, int height, int pixelFormat, bool fullFrameUpdate);
 	int stopServer();
 	void bindNextProducerBuffer();
 	void frameAvailable();
@@ -88,9 +88,8 @@ private:
 	AndroidGraphicBuffer *m_VncBuffer { nullptr };
 	AndroidGraphicBuffer *m_CmpBuffer { nullptr };
 	AndroidGraphicBuffer *m_GlBuffer { nullptr };
-	TripleBuffer<AndroidGraphicBuffer *> m_BufferQueue;
-	std::array<std::unique_ptr<AndroidGraphicBuffer>, 4> m_GraphicBuffer;
-	bool allocateBuffers(int width, int height, int pixelFormat);
+	std::unique_ptr<BufferManager> m_BufferManager;
+	bool allocateBuffers(int width, int height, int pixelFormat, int fullFrameUpdate);
 	void releaseBuffers();
 
 	rfbScreenInfoPtr m_RfbScreenInfoPtr;
