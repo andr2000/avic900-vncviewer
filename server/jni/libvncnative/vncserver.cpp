@@ -73,7 +73,7 @@ void VncServer::postEventToUI(int what, std::string text)
 	}
 }
 
-bool VncServer::allocateBuffers(int width, int height, int pixelFormat)
+bool VncServer::allocateBuffers(int width, int height, int pixelFormat, int fullFrameUpdate)
 {
 	int format = 0;
 	switch (pixelFormat)
@@ -94,27 +94,14 @@ bool VncServer::allocateBuffers(int width, int height, int pixelFormat)
 			return false;
 		}
 	}
-	for (size_t i = 0; i < m_GraphicBuffer.size(); i++)
-	{
-		/* allocate buffer */
-		m_GraphicBuffer[i].reset(new AndroidGraphicBuffer(width, height, format));
-		if (!m_GraphicBuffer[i]->allocate())
-		{
-			return false;
-		}
-		/* add to the buffer queue */
-		m_BufferQueue.add(i, m_GraphicBuffer[i].get());
-	}
-	return true;
+	m_BufferManager.reset(new BufferManager());
+	return m_BufferManager->allocate(fullFrameUpdate ? BufferManager::TRIPLE : BufferManager::WITH_COMPARE,
+		width, height, format);
 }
 
 void VncServer::releaseBuffers()
 {
-	for (size_t i = 0; i < m_GraphicBuffer.size(); i++)
-	{
-		m_GraphicBuffer[i].reset();
-	}
-	m_BufferQueue.release();
+	m_BufferManager.reset();
 	m_VncBuffer = nullptr;
 	m_GlBuffer = nullptr;
 	m_CmpBuffer = nullptr;
@@ -129,7 +116,7 @@ void VncServer::setVncFramebuffer()
 			LOGE("Failed to unlock buffer");
 		}
 	}
-	m_BufferQueue.getConsumer(m_VncBuffer, m_CmpBuffer);
+	m_BufferManager->getConsumer(m_VncBuffer, m_CmpBuffer);
 	if (m_VncBuffer)
 	{
 		unsigned char *vncbuf;
@@ -147,7 +134,7 @@ void VncServer::setVncFramebuffer()
 
 void VncServer::bindNextProducerBuffer()
 {
-	m_GlBuffer = m_BufferQueue.getProducer();
+	m_GlBuffer = m_BufferManager->getProducer();
 	if (m_GlBuffer)
 	{
 		if (!m_GlBuffer->bind())
@@ -255,15 +242,16 @@ void rfbDefaultLog(const char *format, ...)
 	va_end(args);
 }
 
-int VncServer::startServer(bool root, int width, int height, int pixelFormat)
+int VncServer::startServer(bool root, int width, int height, int pixelFormat, bool fullFrameUpdate)
 {
 	m_Width = width;
 	m_Height = height;
 	m_PixelFormat = pixelFormat;
 	m_Rooted = root;
-	LOGI("Starting VNC server (%dx%d), %s", m_Width, m_Height, m_PixelFormat == GL_RGB565 ? "RGB565" : "RGBA");
+	LOGI("Starting VNC server (%dx%d), %s, using %sfull screen updates", m_Width, m_Height, m_PixelFormat == GL_RGB565 ? "RGB565" : "RGBA",
+		fullFrameUpdate ? "" : "no ");
 
-	if (!allocateBuffers(m_Width, m_Height, m_PixelFormat))
+	if (!allocateBuffers(m_Width, m_Height, m_PixelFormat, fullFrameUpdate))
 	{
 		return -1;
 	}

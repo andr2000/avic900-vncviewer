@@ -9,6 +9,7 @@ LOCAL_SRC_FILES += \
 	AndroidGraphicBuffer.cpp \
 	eventinjector.cpp \
 	brightnesshelper.cpp \
+	buffermanager.cpp \
 	$(LIBVNCSERVER_ROOT)/libvncserver/main.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/rfbserver.c \
 	$(LIBVNCSERVER_ROOT)/libvncserver/rfbregion.c \
