@@ -370,8 +370,14 @@ void VncServer::compare(int width, int shift, uint32_t *buffer0, uint32_t *buffe
 	{
 		if (*buffer0++ != *buffer1++)
 		{
-			minX = maxX = i;
-			minY = maxY = j;
+			/* buffers have already advanced their positions, so update counters as well */
+			minX = maxX = i++;
+			minY = maxY = j++;
+			if (++i >= width)
+			{
+				i = 0;
+				j++;
+			}
 			break;
 		}
 		if (++i >= width)
