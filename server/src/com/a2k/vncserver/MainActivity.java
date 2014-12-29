@@ -22,6 +22,7 @@ import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.opengl.GLES20;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -46,9 +47,90 @@ import com.a2k.vncserver.VncJni;
 public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvailableListener,
 	VncJni.NotificationListener
 {
+	private class BackgroundTask extends AsyncTask<Integer, Void, Void>
+	{
+		@Override
+		protected Void doInBackground(Integer... cmd)
+		{
+			switch (cmd[0])
+			{
+				case BACKGROUND_TASK_INIT:
+				{
+					m_VncJni = new VncJni();
+					m_VncJni.setNotificationListener(MainActivity.this);
+					m_VncJni.init(getFilesDir().getParent());
+					Log.d(TAG, m_VncJni.protoGetVersion());
+					m_Rooted = Shell.isSuAvailable();
+					setRotation();
+					runOnUiThread(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							if (m_LogView != null)
+							{
+								if (m_Rooted)
+								{
+									m_LogView.append("Rooted device\n");
+								}
+								else
+								{
+									m_LogView.append("This device is NOT rooted\n");
+								}
+								printIPs();
+							}
+							m_ButtonStartStop.setEnabled(true);
+						}
+					});
+					break;
+				}
+				case BACKGROUND_TASK_START_SERVER:
+				{
+					runOnUiThread(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							if (m_LogView != null)
+							{
+								readPreferences();
+							}
+							m_ButtonDisplayOff.setEnabled(m_Rooted);
+						}
+					});
+					setupRootPermissions();
+					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat, m_SendFullUpdates);
+					break;
+				}
+				case BACKGROUND_TASK_STOP_SERVER:
+				{
+					runOnUiThread(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							m_ButtonDisplayOff.setEnabled(false);
+						}
+					});
+					cleanup();
+					break;
+				}
+				default:
+				{
+					break;
+				}
+			}
+			return null;
+		}
+	}
+
 	public static final String TAG = "vncserver";
 	private static final int PERMISSION_CODE = 1;
 	private static final String MESSAGE_KEY = "text";
+
+	private static final int BACKGROUND_TASK_INIT = 0;
+	private static final int BACKGROUND_TASK_START_SERVER = 1;
+	private static final int BACKGROUND_TASK_STOP_SERVER = 2;
 
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
@@ -76,7 +158,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	
 	private boolean m_Rooted = false;
 
-	private VncJni m_VncJni = new VncJni();
+	private VncJni m_VncJni = null;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -84,55 +166,38 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		m_VncJni.setNotificationListener(this);
-		m_VncJni.init(getFilesDir().getParent());
-		Log.d(TAG, m_VncJni.protoGetVersion());
-
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
 
 		m_LogView = (TextView)findViewById(R.id.textViewIP);
 		m_LogView.setMovementMethod(new ScrollingMovementMethod());
 
-		m_Rooted = Shell.isSuAvailable();
-		if (m_Rooted)
-		{
-			m_LogView.append("Rooted device\n");
-		}
-		else
-		{
-			m_LogView.append("This device is NOT rooted\n");
-		}
-
-		printIPs();
-
 		IntentFilter intentFilter = new IntentFilter("android.intent.action.CONFIGURATION_CHANGED");
 		m_ConfigReceiver = new ConfigurationChangedReceiver();
 		registerReceiver(m_ConfigReceiver, intentFilter);
 
-		setRotation();
-
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
+		m_ButtonStartStop.setEnabled(false);
 		m_ButtonStartStop.setOnClickListener(new View.OnClickListener()
 		{
 			public void onClick(View v)
 			{
+				m_ButtonDisplayOff.setEnabled(false);
 				if (m_ProjectionStarted)
 				{
+					(new BackgroundTask()).execute(BACKGROUND_TASK_STOP_SERVER);
 					m_ButtonStartStop.setText("Start");
-					cleanup();
 				}
 				else
 				{
+					(new BackgroundTask()).execute(BACKGROUND_TASK_START_SERVER);
 					m_ButtonStartStop.setText("Stop");
-					readPreferences();
-					setupRootPermissions();
-					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat, m_SendFullUpdates);
 				}
 				m_ProjectionStarted ^= true;
 			}
 		});
 
 		m_ButtonDisplayOff = (Button)findViewById(R.id.buttonDisplayOff);
+		m_ButtonDisplayOff.setEnabled(false);
 		m_ButtonDisplayOff.setOnClickListener(new View.OnClickListener()
 		{
 			public void onClick(View v)
@@ -140,6 +205,9 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				setDisplayOff();
 			}
 		});
+
+		/* do heavy tasks in background, so we don't freeze the UI thread */
+		(new BackgroundTask()).execute(BACKGROUND_TASK_INIT);
 	}
 
 	@Override
@@ -196,6 +264,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				{
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
+					m_ButtonDisplayOff.setEnabled(true);
 					break;
 				}
 				case VncJni.SERVER_STOPPED:
@@ -205,6 +274,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					m_NumClientsConnected = 0;
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
+					m_ButtonDisplayOff.setEnabled(true);
 					break;
 				}
 				case VncJni.CLIENT_CONNECTED:
