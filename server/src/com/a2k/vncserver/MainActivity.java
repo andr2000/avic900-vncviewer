@@ -147,8 +147,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		/* TODO: this is not always called!!! */
 		super.onDestroy();
-		cleanup();
-		unregisterReceiver(m_ConfigReceiver);
+		cleanupOnExit();
 	}
 
 	private void cleanup()
@@ -157,6 +156,12 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		releaseScreenOn();
 		m_VncJni.stopServer();
 		restoreRootPermissions();
+	}
+
+	private void cleanupOnExit()
+	{
+		cleanup();
+		unregisterReceiver(m_ConfigReceiver);
 	}
 
 	class ConfigurationChangedReceiver extends BroadcastReceiver
@@ -445,7 +450,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 			case R.id.itemMenuExit:
 			{
-				cleanup();
+				cleanupOnExit();
 				System.exit(1);
 				return true;
 			}
