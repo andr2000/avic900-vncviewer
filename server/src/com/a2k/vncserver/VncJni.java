@@ -37,7 +37,7 @@ public class VncJni
 		onRotation(rotation);
 	}
 
-	public native void init(String packagePath);
+	public native void init();
 	public native String protoGetVersion();
 
 	public native void bindNextGraphicBuffer();
@@ -48,8 +48,6 @@ public class VncJni
 	public native int stopServer();
 
 	public native void onRotation(int rotation);
-
-	public native void setBrightness(int level);
 
 	static
 	{

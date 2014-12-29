@@ -23,16 +23,12 @@ extern "C"
 		return JNI_VERSION_1_4;
 	}
 
-	void Java_com_a2k_vncserver_VncJni_init(JNIEnv *env, jobject thiz,
-		jstring packagePath)
+	void Java_com_a2k_vncserver_VncJni_init(JNIEnv *env, jobject thiz)
 	{
-		const char *nativePath = env->GetStringUTFChars(packagePath, JNI_FALSE);
 		jclass clazz = env->GetObjectClass(thiz);
 		VncServer::getInstance().setupNotificationClb(env,
 			(jobject)(env->NewGlobalRef(thiz)),
 			(jclass)(env->NewGlobalRef(clazz)));
-		VncServer::getInstance().setPackagePath(nativePath);
-		env->ReleaseStringUTFChars(packagePath, nativePath);
 	}
 
 	JNIEXPORT jstring JNICALL Java_com_a2k_vncserver_VncJni_protoGetVersion(JNIEnv *env, jobject obj)
@@ -72,11 +68,5 @@ extern "C"
 		jint rotation)
 	{
 		VncServer::getInstance().onRotation(rotation);
-	}
-
-	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_setBrightness(JNIEnv *env, jobject obj,
-		int level)
-	{
-		VncServer::getInstance().setBrightness(level);
 	}
 }

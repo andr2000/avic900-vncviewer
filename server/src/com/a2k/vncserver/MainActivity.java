@@ -77,6 +77,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private boolean m_Rooted = false;
 
 	private VncJni m_VncJni = new VncJni();
+	private VncHelper m_VncHelper = new VncHelper();
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -85,7 +86,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		setContentView(R.layout.activity_main);
 
 		m_VncJni.setNotificationListener(this);
-		m_VncJni.init(getFilesDir().getParent());
+		m_VncJni.init();
 		Log.d(TAG, m_VncJni.protoGetVersion());
 
 		m_ProjectionManager = (MediaProjectionManager)getSystemService(Context.MEDIA_PROJECTION_SERVICE);
@@ -147,8 +148,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		/* TODO: this is not always called!!! */
 		super.onDestroy();
-		cleanup();
-		unregisterReceiver(m_ConfigReceiver);
+		onExit();
 	}
 
 	private void cleanup()
@@ -156,9 +156,17 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		stopScreenSharing();
 		releaseScreenOn();
 		m_VncJni.stopServer();
+		m_VncHelper.stop();
 		restoreRootPermissions();
 	}
 
+	private void onExit()
+	{
+		m_VncHelper.stop();
+		cleanup();
+		unregisterReceiver(m_ConfigReceiver);
+	}
+	
 	class ConfigurationChangedReceiver extends BroadcastReceiver
 	{
 		@Override
@@ -323,6 +331,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		if (vd != null)
 		{
 			keepScreenOn();
+			m_VncHelper.init(this);
 		}
 		return vd;
 	}
@@ -390,7 +399,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		{
 			Log.e(TAG, "Failed to get brightness level");
 		}
-		m_VncJni.setBrightness(0);
+		m_VncHelper.setBrightness(0);
 	}
 
 	private void releaseScreenOn()
@@ -401,7 +410,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 		if (m_DisplayOff)
 		{
-			m_VncJni.setBrightness(m_CurBrightnessValue);
+			m_VncHelper.setBrightness(m_CurBrightnessValue);
 		}
 	}
 
@@ -445,7 +454,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 			case R.id.itemMenuExit:
 			{
-				cleanup();
+				onExit();
 				System.exit(1);
 				return true;
 			}
