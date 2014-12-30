@@ -574,6 +574,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private List<String> getIpAddresses()
 	{
 		List<String> list = new ArrayList<String>();
+		list.add("localhost: adb forward tcp:5901 tcp:5901");
 		try
 		{
 			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();)
