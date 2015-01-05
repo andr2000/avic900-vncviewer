@@ -3,7 +3,7 @@
 #include "client_wince.h"
 #include "config_storage.h"
 
-const wchar_t *CvncviewerDlg::WND_PROC_NAMES[] = {
+const wchar_t *Client_WinCE::WND_PROC_NAMES[] = {
 	/* Launcher MUST be the first entry */
 	{ TEXT("Launcher") },
 	{ TEXT("MainMenu") }
@@ -18,18 +18,33 @@ Client_WinCE::Client_WinCE() : Client() {
 	m_ConfigStorage = NULL;
 	m_FilterAutoRepeat = false;
 	m_LongPress = false;
+	memset(&m_ServerRect, 0, sizeof(m_ServerRect));
+	memset(&m_ClientRect, 0, sizeof(m_ClientRect));
+	m_NeedScaling = false;
+	m_SetupScaling = true;
 }
 
 Client_WinCE::~Client_WinCE() {
 	Cleanup();
 	SetHotkeyHandler(false);
-	KillTimer(ID_TIMER_LONG_PRESS);
+	KillTimer(m_hWnd, ID_TIMER_LONG_PRESS);
+#ifdef SHOW_POINTER_TRACE
+	KillTimer(m_hWnd, ID_TIMER_TRACE);
+#endif
 	if (m_ConfigStorage) {
 		delete m_ConfigStorage;
 	}
 	if (m_hBmp) {
 		DeleteObject(m_hBmp);
 	}
+#ifdef SHOW_POINTER_TRACE
+	m_TraceQueue.clear();
+#endif
+}
+
+void Client_WinCE::SetWindow(HWND hWnd)
+{
+	m_hWnd = hWnd;
 }
 
 void Client_WinCE::Logger(const char *format, ...) {
@@ -91,8 +106,38 @@ void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, i
 }
 
 void Client_WinCE::OnShutdown() {
-	PostMessage(WM_QUIT, 0, 0);
+	PostMessage(m_hWnd, WM_QUIT, 0, 0);
 }
+
+int Client_WinCE::Message(DWORD type, wchar_t *caption, wchar_t *format, ...) {
+	wchar_t msg_text[2 * MAX_PATH + 1];
+	va_list vargs;
+
+	va_start(vargs, format);
+	StringCchVPrintf(msg_text, sizeof(msg_text), format, vargs);
+	va_end(vargs);
+	return MessageBox(m_hWnd, msg_text, caption, type);
+}
+
+#ifdef SHOW_POINTER_TRACE
+void Client_WinCE::AddTracePoint(trace_point_type_e type, LONG x, LONG y) {
+	RECT rect;
+	trace_point_t trace;
+
+	trace.type = type;
+	trace.x = x;
+	trace.y = y;
+	m_TraceQueue.push_back(trace);
+
+	rect.left = x;
+	rect.right = x + TRACE_POINT_BAR_SZ;
+	rect.top = y;
+	rect.bottom = y + TRACE_POINT_BAR_SZ;
+	InvalidateRect(&rect, FALSE);
+	KillTimer(m_hWnd, ID_TIMER_TRACE);
+	SetTimer(m_hWnd, ID_TIMER_TRACE, ID_TIMER_TRACE_DELAY, NULL);
+}
+#endif
 
 int Client_WinCE::Initialize(void *_private)
 {
@@ -114,9 +159,10 @@ int Client_WinCE::Initialize(void *_private)
 	m_ConfigStorage->Initialize(exe, ini);
 
 	SetRect(&m_ClientRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-	server = m_ConfigStorage->GetServer();
-	widestr = std::wstring(server.begin(), server.end());
+	std::string server = m_ConfigStorage->GetServer();
+	std::wstring widestr = std::wstring(server.begin(), server.end());
 	/* let's rock */
+	int i;
 	for (i = 0; i <= CONNECT_MAX_TRY; i++) {
 		if (Client::Initialize(_private) < 0) {
 			return -1;
@@ -126,14 +172,14 @@ int Client_WinCE::Initialize(void *_private)
 		}
 		if (IDCANCEL == Message(MB_RETRYCANCEL, _T("Error"),
 			_T("Failed to connect to %ls\r\nRetry?"), widestr.c_str())) {
-				PostMessage(WM_CLOSE);
+				PostMessage(m_hWnd, WM_CLOSE, 0, 0);
 				return true;
 		}
 	}
 	if (i == CONNECT_MAX_TRY) {
 		Message(MB_OK, _T("Error"),
 			_T("Was not able to connect to %ls\r\nGiving up now"), widestr.c_str());
-		PostMessage(WM_CLOSE);
+		PostMessage(m_hWnd, WM_CLOSE, 0, 0);
 		return -1;
 	}
 	/* install handlers to intercept WM_HOTKEY */
@@ -175,7 +221,8 @@ void Client_WinCE::SetHotkeyHandler(bool set) {
 	}
 }
 
-LRESULT CALLBACK Client_WinCE::SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+#if 0
 	CvncviewerDlg *dlg = CvncviewerDlg::GetInstance();
 
 	if (dlg && (WM_HOTKEY == message)) {
@@ -264,6 +311,7 @@ LRESULT CALLBACK Client_WinCE::SubWndProc(HWND hWnd, UINT message, WPARAM wParam
 	/* skip this message and pass it to the adressee */
 	return CallWindowProc(dlg->m_HotkeyWndProc,
 		hWnd, message, wParam, lParam);
+#endif
 }
 
 void Client_WinCE::HandleMapKey(bool long_press) {
@@ -279,11 +327,70 @@ void Client_WinCE::HandleMapKey(bool long_press) {
 	PostEvent(evt);
 }
 
-void Client_WinCE::OnTimer(void)
+void Client_WinCE::OnTimer(UINT_PTR nIDEvent) {
+	if (ID_TIMER_LONG_PRESS == nIDEvent) {
+		/* MAP long press */
+		KillTimer(m_hWnd, ID_TIMER_LONG_PRESS);
+		m_FilterAutoRepeat = false;
+		m_LongPress = true;
+		HandleMapKey(true);
+	}
+#ifdef SHOW_POINTER_TRACE
+	else if (ID_TIMER_TRACE == nIDEvent) {
+		RECT r;
+
+		KillTimer(ID_TIMER_TRACE);
+		m_TraceQueue.clear();
+		GetWindowRect(&r);
+		InvalidateRect(&r, FALSE);
+		DEBUGMSG(true, (_T("Invalidate x=%d y=%d w=%d h=%d\r\n"),
+			r.left, r.top, r.right, r.bottom));
+	}
+#endif
+}
+
+void Client_WinCE::OnTouchUp(int x, int y) {
+#ifdef SHOW_POINTER_TRACE
+	AddTracePoint(TRACE_POINT_UP, point.x, point.y);
+#endif
+	Client::event_t evt;
+	evt.what = Client::EVT_MOUSE;
+	evt.data.point.is_down = 0;
+	evt.data.point.x = x;
+	evt.data.point.y = y;
+	PostEvent(evt);
+}
+void Client_WinCE::OnTouchDown(int x, int y) {
+
+#ifdef SHOW_POINTER_TRACE
+	AddTracePoint(TRACE_POINT_DOWN, point.x, point.y);
+#endif
+	Client::event_t evt;
+	evt.what = Client::EVT_MOUSE;
+	evt.data.point.is_down = 1;
+	evt.data.point.x = x;
+	evt.data.point.y = y;
+	PostEvent(evt);
+}
+void Client_WinCE::OnTouchMove(int x, int y) {
+#ifdef SHOW_POINTER_TRACE
+	AddTracePoint(TRACE_POINT_MOVE, point.x, point.y);
+#endif
+	Client::event_t evt;
+	evt.what = Client::EVT_MOVE;
+	evt.data.point.is_down = 1;
+	evt.data.point.x = point.x;
+	evt.data.point.y = point.y;
+	m_Client->PostEvent(evt);
+}
+
+void Client_WinCE::OnPaint(void) {
+}
+
+void Client_WinCE::OnActivate(UINT nState)
 {
-	/* MAP long press */
-	KillTimer(ID_TIMER_LONG_PRESS);
-	m_FilterAutoRepeat = false;
-	m_LongPress = true;
-	HandleMapKey(true);
+	SetHotkeyHandler(nState != WA_INACTIVE);
+	if (nState != WA_INACTIVE) {
+		ShowFullScreen();
+	}
 }

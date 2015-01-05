@@ -220,6 +220,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\client_mfc.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\client_wince.cpp"
 				>
 				<FileConfiguration
@@ -1777,6 +1781,10 @@
 			</File>
 			<File
 				RelativePath="..\..\..\client_factory.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client_mfc.h"
 				>
 			</File>
 			<File
