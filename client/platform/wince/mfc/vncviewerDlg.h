@@ -1,13 +1,5 @@
 #pragma once
 
-#ifdef SHOW_POINTER_TRACE
-#include <deque>
-#endif
-
-#include "client_factory.h"
-
-class ConfigStorage;
-
 class CvncviewerDlg : public CDialog {
 public:
 	CvncviewerDlg(CWnd* pParent = NULL);

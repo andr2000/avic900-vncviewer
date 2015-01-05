@@ -13,13 +13,11 @@ public:
 		return m_Instance;
 	};
 
-	int Initialize(void *_private);
 	void ShowFullScreen();
 	void OnPaint(void);
 
 protected:
 	void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
-	void OnShutdown();
 
 	#ifdef SHOW_POINTER_TRACE
 	enum trace_point_type_e {

@@ -1,6 +1,10 @@
 #ifndef _CLIENT_WINCE_H
 #define _CLIENT_WINCE_H
 
+#ifdef SHOW_POINTER_TRACE
+#include <deque>
+#endif
+
 #include <rfb/rfbclient.h>
 #include "client.h"
 #include "compat.h"
@@ -14,8 +18,9 @@ public:
 		return NULL;
 	};
 
-	int Initialize(void *_private);
+	virtual int Initialize(void *_private);
 	void SetWindow(HWND hWnd);
+	virtual void ShowFullScreen();
 	void OnTouchUp(int x, int y);
 	void OnTouchDown(int x, int y);
 	void OnTouchMove(int x, int y);
@@ -41,8 +46,8 @@ protected:
 		ID_TIMER_LONG_PRESS = 1,
 #ifdef SHOW_POINTER_TRACE
 		ID_TIMER_TRACE
-	};
 #endif
+	};
 
 	static const UINT ID_TIMER_LONG_PRESS_DELAY = 1000;
 #ifdef SHOW_POINTER_TRACE

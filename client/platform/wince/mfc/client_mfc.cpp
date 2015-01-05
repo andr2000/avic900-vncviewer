@@ -2,20 +2,14 @@
 #include "vncviewer.h"
 #include "vncviewerDlg.h"
 
-#include "client_wince.h"
+#include "client_mfc.h"
 #include "config_storage.h"
 
 void Client_MFC::ShowFullScreen() {
 	SHFullScreen(m_hWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
 	::ShowWindow(SHFindMenuBar(m_hWnd), SW_HIDE);
-	MoveWindow(&m_ClientRect, false);
-}
-
-
-rfbBool Client_MFC::OnMallocFrameBuffer(rfbClient *client) {
 	CDialog *dlg = static_cast<CDialog *>(m_Private);
-	m_hWnd = dlg->m_hWnd;
-	return Cleint_WinCE::OnMallocFrameBuffer(client);
+	dlg->MoveWindow(&m_ClientRect, false);
 }
 
 void Client_MFC::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
@@ -39,13 +33,13 @@ void Client_MFC::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int
 	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
 }
 
-void Client_WinCE::OnPaint(void) {
+void Client_MFC::OnPaint(void) {
 	PAINTSTRUCT ps;
-	CDC *pDC = BeginPaint(&ps);
+	CDialog *dlg = static_cast<CDialog *>(m_Private);
+	CDC *pDC = dlg->BeginPaint(&ps);
 
 	if (m_Client) {
-		CBitmap *bitmap = CBitmap::FromHandle(
-			static_cast<HBITMAP>(m_Client->GetDrawingContext()));
+		CBitmap *bitmap = CBitmap::FromHandle(m_hBmp);
 		if (bitmap) {
 			CDC dcMem;
 			LONG x, y, w, h;
@@ -54,7 +48,7 @@ void Client_WinCE::OnPaint(void) {
 				int width, height;
 
 				m_SetupScaling = false;
-				m_Client->GetScreenSize(width, height);
+				GetScreenSize(width, height);
 				m_ServerRect.left = 0;
 				m_ServerRect.top = 0;
 				m_ServerRect.right = width;
@@ -62,12 +56,12 @@ void Client_WinCE::OnPaint(void) {
 				DEBUGMSG(true, (_T("Server screen is %dx%d\r\n"), m_ServerRect.right, m_ServerRect.bottom));
 				/* decide if we need to fit */
 				if ((m_ServerRect.right > m_ClientRect.right) || (m_ServerRect.bottom > m_ClientRect.bottom)) {
-					m_Client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
+					SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
 					DEBUGMSG(true, (_T("Will fit the screen\r\n")));
 					m_NeedScaling = true;
 				}
 				if ((m_ServerRect.right < m_ClientRect.right) && (m_ServerRect.bottom < m_ClientRect.bottom)) {
-					m_Client->SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
+					SetClientSize(m_ClientRect.right, m_ClientRect.bottom);
 					DEBUGMSG(true, (_T("Will expand\r\n")));
 					m_NeedScaling = true;
 				}
@@ -150,5 +144,5 @@ void Client_WinCE::OnPaint(void) {
 		pDC->SelectObject(old_pen);
 	}
 #endif
-	EndPaint(&ps);
+	dlg->EndPaint(&ps);
 }

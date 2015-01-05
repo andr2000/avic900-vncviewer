@@ -221,11 +221,13 @@ void Client_WinCE::SetHotkeyHandler(bool set) {
 	}
 }
 
-LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-#if 0
-	CvncviewerDlg *dlg = CvncviewerDlg::GetInstance();
+LRESULT CALLBACK Client_WinCE::SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	Client_WinCE *client = static_cast<Client_WinCE *>(Client::GetInstance());
+	return client->ClientSubWndProc(hWnd, message, wParam, lParam);
+}
 
-	if (dlg && (WM_HOTKEY == message)) {
+LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	if (WM_HOTKEY == message) {
 		Client::event_t evt;
 		evt.what = Client::EVT_KEY;
 
@@ -235,25 +237,25 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 				if (LOWORD(lParam) == 0x0) {
 					/* pressed */
 					DEBUGMSG(true, (_T("MAP pressed\r\n")));
-					if (!dlg->m_FilterAutoRepeat && !dlg->m_LongPress) {
+					if (!m_FilterAutoRepeat && !m_LongPress) {
 						/* start processing long press */
-						dlg->SetTimer(ID_TIMER_LONG_PRESS, ID_TIMER_LONG_PRESS_DELAY, NULL);
-						dlg->m_FilterAutoRepeat = true;
+						SetTimer(m_hWnd, ID_TIMER_LONG_PRESS, ID_TIMER_LONG_PRESS_DELAY, NULL);
+						m_FilterAutoRepeat = true;
 					}
 					return 1;
 				} else if (LOWORD(lParam) == 0x1000) {
 					/* released */
 					DEBUGMSG(true, (_T("MAP released\r\n")));
-					if (dlg->m_FilterAutoRepeat) {
-						dlg->m_FilterAutoRepeat = false;
-						dlg->KillTimer(ID_TIMER_LONG_PRESS);
+					if (m_FilterAutoRepeat) {
+						m_FilterAutoRepeat = false;
+						KillTimer(m_hWnd, ID_TIMER_LONG_PRESS);
 					}
-					if (dlg->m_LongPress) {
+					if (m_LongPress) {
 						/* already handled by the timer */
-						dlg->m_LongPress = false;
+						m_LongPress = false;
 						return 1;
 					}
-					dlg->HandleMapKey(false);
+					HandleMapKey(false);
 				}
 				/* eat the key */
 				return 1;
@@ -264,7 +266,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 					/* pressed */
 					DEBUGMSG(true, (_T("UP pressed\r\n")));
 					evt.data.key = Client::KEY_UP;
-					dlg->SendEvent(evt);
+					PostEvent(evt);
 				}
 				/* eat the key */
 				return 1;
@@ -275,7 +277,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 					/* pressed */
 					DEBUGMSG(true, (_T("DOWN pressed\r\n")));
 					evt.data.key = Client::KEY_DOWN;
-					dlg->SendEvent(evt);
+					PostEvent(evt);
 				}
 				/* eat the key */
 				return 1;
@@ -286,7 +288,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 					/* pressed */
 					DEBUGMSG(true, (_T("LEFT pressed\r\n")));
 					evt.data.key = Client::KEY_LEFT;
-					dlg->SendEvent(evt);
+					PostEvent(evt);
 				}
 				/* eat the key */
 				return 1;
@@ -297,7 +299,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 					/* pressed */
 					DEBUGMSG(true, (_T("RIGHT pressed\r\n")));
 					evt.data.key = Client::KEY_RIGHT;
-					dlg->SendEvent(evt);
+					PostEvent(evt);
 				}
 				/* eat the key */
 				return 1;
@@ -309,9 +311,8 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 		}
 	}
 	/* skip this message and pass it to the adressee */
-	return CallWindowProc(dlg->m_HotkeyWndProc,
+	return CallWindowProc(m_HotkeyWndProc,
 		hWnd, message, wParam, lParam);
-#endif
 }
 
 void Client_WinCE::HandleMapKey(bool long_press) {
@@ -379,9 +380,9 @@ void Client_WinCE::OnTouchMove(int x, int y) {
 	Client::event_t evt;
 	evt.what = Client::EVT_MOVE;
 	evt.data.point.is_down = 1;
-	evt.data.point.x = point.x;
-	evt.data.point.y = point.y;
-	m_Client->PostEvent(evt);
+	evt.data.point.x = x;
+	evt.data.point.y = y;
+	PostEvent(evt);
 }
 
 void Client_WinCE::OnPaint(void) {
@@ -393,4 +394,8 @@ void Client_WinCE::OnActivate(UINT nState)
 	if (nState != WA_INACTIVE) {
 		ShowFullScreen();
 	}
+}
+
+void Client_WinCE::ShowFullScreen()
+{
 }
