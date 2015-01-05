@@ -41,6 +41,9 @@ void Client::Cleanup() {
 		delete m_Mutex;
 		m_Mutex = NULL;
 	}
+	if (m_ConfigStorage) {
+		delete m_ConfigStorage;
+	}
 }
 
 int Client::PollRFB(void *data) {

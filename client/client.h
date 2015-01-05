@@ -17,7 +17,7 @@ public:
 		return m_Instance;
 	};
 
-	int Initialize(void *_private);
+	virtual int Initialize(void *_private);
 	std::string GetServerIP();
 	int Connect();
 	int GetScreenSize(int &width, int &height);
@@ -48,7 +48,6 @@ public:
 		} data;
 	};
 	int PostEvent(event_t &evt);
-	virtual void *GetDrawingContext() = 0;
 protected:
 	static Client *m_Instance;
 	void *m_Private;
