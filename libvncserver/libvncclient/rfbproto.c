@@ -57,7 +57,7 @@
 #endif
 #include <jpeglib.h>
 #endif
-#ifndef WINCE
+#if !defined(WINCE) && !defined(WIN32)
 #include <strings.h>
 #endif
 #include <stdarg.h>
@@ -70,7 +70,7 @@
 #include "minilzo.h"
 #include "tls.h"
 
-#ifdef WINCE
+#if defined(WINCE) || defined (WIN32)
 #define snprintf _snprintf
 #endif
 

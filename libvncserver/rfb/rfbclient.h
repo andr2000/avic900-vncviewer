@@ -34,7 +34,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef WINCE
+
+#if (defined(WIN32) && !defined(__MINGW32__)) || defined(WINCE)
 #include <winsock.h>
 #else
 #include <sys/time.h>

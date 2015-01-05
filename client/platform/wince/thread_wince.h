@@ -1,7 +1,7 @@
 #ifndef _THREAD_WINCE_H
 #define _THREAD_WINCE_H
 
-#include <winbase.h>
+#include <windows.h>
 
 #include "thread.h"
 

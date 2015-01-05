@@ -1,3 +1,4 @@
+#include <windows.h>
 #include <string.h>
 #include "compat.h"
 #include "config_storage.h"
@@ -80,4 +81,8 @@ long ConfigStorage::ForceRefreshToMs() {
 
 bool ConfigStorage::IsScreenRotated() {
 	return GetBoolean(SECTION_NAME, "IsScreenRotated", true);
+}
+
+long ConfigStorage::GetDrawingMethod() {
+	return GetInteger(SECTION_NAME, "DrawingMethod", 0);
 }

@@ -206,7 +206,7 @@ return TRUE;
 					return FALSE;
 				}
 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 				(uint8_t *)buf += result;
 #else
 				buf+=result;

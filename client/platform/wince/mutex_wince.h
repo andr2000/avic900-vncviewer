@@ -1,7 +1,7 @@
 #ifndef _MUTEX_WINCE_H
 #define _MUTEX_WINCE_H
 
-#include <winbase.h>
+#include <windows.h>
 
 #include "mutex.h"
 
