@@ -2,29 +2,16 @@
 #include "vncviewer.h"
 #include "vncviewerDlg.h"
 
-#include "config_storage.h"
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
-
-const wchar_t *CvncviewerDlg::WND_PROC_NAMES[] = {
-	/* Launcher MUST be the first entry */
-	{ TEXT("Launcher") },
-	{ TEXT("MainMenu") }
-};
 
 CvncviewerDlg *CvncviewerDlg::m_Instance = NULL;
 
 CvncviewerDlg::CvncviewerDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CvncviewerDlg::IDD, pParent) {
 	m_Client = NULL;
-	m_HotkeyHwnd = NULL;
-	m_HotkeyWndProc = NULL;
 	m_Instance = this;
-	m_ConfigStorage = NULL;
-	m_FilterAutoRepeat = false;
-	m_LongPress = false;
 	memset(&m_ServerRect, 0, sizeof(m_ServerRect));
 	memset(&m_ClientRect, 0, sizeof(m_ClientRect));
 	m_NeedScaling = false;
@@ -83,23 +70,6 @@ BOOL CvncviewerDlg::OnInitDialog()
 
 	SetWindowText(CvncviewerApp::APP_TITLE);
 
-	m_ConfigStorage = ConfigStorage::GetInstance();
-
-	wchar_t wfilename[MAX_PATH + 1];
-	char filename[MAX_PATH + 1];
-
-	GetModuleFileName(NULL, wfilename, MAX_PATH);
-	wcstombs(filename, wfilename, sizeof(filename));
-	std::string exe(filename);
-	char *dot = strrchr(filename, '.');
-	if (dot) {
-		*dot = '\0';
-	}
-	std::string ini(filename);
-	ini += ".ini";
-
-	m_ConfigStorage->Initialize(exe, ini);
-
 	m_Client = ClientFactory::GetInstance();
 	if (NULL == m_Client) {
 		Message(MB_OK, _T("Error"),
@@ -108,34 +78,10 @@ BOOL CvncviewerDlg::OnInitDialog()
 		return true;
 	}
 
-	/* go full screen */
-	SetRect(&m_ClientRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-	ShowFullScreen();
-
-	server = m_ConfigStorage->GetServer();
-	widestr = std::wstring(server.begin(), server.end());
-	/* let's rock */
-	for (i = 0; i <= CONNECT_MAX_TRY; i++) {
-		if (m_Client->Initialize(static_cast<void *>(this)) < 0) {
-			return true;
-		}
-		if (0 == m_Client->Connect()) {
-			break;
-		}
-		if (IDCANCEL == Message(MB_RETRYCANCEL, _T("Error"),
-			_T("Failed to connect to %ls\r\nRetry?"), widestr.c_str())) {
-				PostMessage(WM_CLOSE);
-				return true;
-		}
+	if (m_Client->Initialize(static_cast<void *>(this) >=0) {
+		/* go full screen */
+		ShowFullScreen();
 	}
-	if (i == CONNECT_MAX_TRY) {
-		Message(MB_OK, _T("Error"),
-			_T("Was not able to connect to %ls\r\nGiving up now"), widestr.c_str());
-		PostMessage(WM_CLOSE);
-		return true;
-	}
-	/* install handlers to intercept WM_HOTKEY */
-	SetHotkeyHandler(true);
 	return true;
 }
 
@@ -351,144 +297,6 @@ void CvncviewerDlg::OnPaint()
 	EndPaint(&ps);
 }
 
-void CvncviewerDlg::SetHotkeyHandler(bool set) {
-	if (set) {
-		if (m_HotkeyHwnd && m_HotkeyWndProc) {
-			return;
-		}
-		int i, num_windows = sizeof(WND_PROC_NAMES)/sizeof(WND_PROC_NAMES[0]);
-		for (i = 0; i < num_windows; i++) {
-			m_HotkeyHwnd = ::FindWindow(NULL, WND_PROC_NAMES[i]);
-			if (NULL == m_HotkeyHwnd) {
-				continue;
-			}
-			/* found, substitute */
-			DEBUGMSG(true, (_T("Found original hotkey handler: %s\r\n"),
-				WND_PROC_NAMES[i]));
-			m_HotkeyWndProc = (WNDPROC)GetWindowLong(m_HotkeyHwnd, GWL_WNDPROC);
-			if (m_HotkeyWndProc) {
-				SetWindowLong(m_HotkeyHwnd, GWL_WNDPROC, (LONG)SubWndProc);
-				break;
-			} else {
-				m_HotkeyHwnd = NULL;
-			}
-		}
-		if (i == num_windows) {
-			DEBUGMSG(true, (_T("DID NOT find the original hotkey handler\r\n")));
-		}
-	} else {
-		if (m_HotkeyWndProc && m_HotkeyHwnd) {
-			SetWindowLong(m_HotkeyHwnd, GWL_WNDPROC, (LONG)m_HotkeyWndProc);
-		}
-		m_HotkeyHwnd = NULL;
-		m_HotkeyWndProc = NULL;
-	}
-}
-
-LRESULT CALLBACK CvncviewerDlg::SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	CvncviewerDlg *dlg = CvncviewerDlg::GetInstance();
-
-	if (dlg && (WM_HOTKEY == message)) {
-		Client::event_t evt;
-		evt.what = Client::EVT_KEY;
-
-		switch (LOWORD(wParam)) {
-			case HW_BTN_MAP:
-			{
-				if (LOWORD(lParam) == 0x0) {
-					/* pressed */
-					DEBUGMSG(true, (_T("MAP pressed\r\n")));
-					if (!dlg->m_FilterAutoRepeat && !dlg->m_LongPress) {
-						/* start processing long press */
-						dlg->SetTimer(ID_TIMER_LONG_PRESS, ID_TIMER_LONG_PRESS_DELAY, NULL);
-						dlg->m_FilterAutoRepeat = true;
-					}
-					return 1;
-				} else if (LOWORD(lParam) == 0x1000) {
-					/* released */
-					DEBUGMSG(true, (_T("MAP released\r\n")));
-					if (dlg->m_FilterAutoRepeat) {
-						dlg->m_FilterAutoRepeat = false;
-						dlg->KillTimer(ID_TIMER_LONG_PRESS);
-					}
-					if (dlg->m_LongPress) {
-						/* already handled by the timer */
-						dlg->m_LongPress = false;
-						return 1;
-					}
-					dlg->HandleMapKey(false);
-				}
-				/* eat the key */
-				return 1;
-			}
-			case HW_BTN_UP:
-			{
-				if (LOWORD(lParam) == 0x0) {
-					/* pressed */
-					DEBUGMSG(true, (_T("UP pressed\r\n")));
-					evt.data.key = Client::KEY_UP;
-					dlg->SendEvent(evt);
-				}
-				/* eat the key */
-				return 1;
-			}
-			case HW_BTN_DOWN:
-			{
-				if (LOWORD(lParam) == 0x0) {
-					/* pressed */
-					DEBUGMSG(true, (_T("DOWN pressed\r\n")));
-					evt.data.key = Client::KEY_DOWN;
-					dlg->SendEvent(evt);
-				}
-				/* eat the key */
-				return 1;
-			}
-			case HW_BTN_LEFT:
-			{
-				if (LOWORD(lParam) == 0x0) {
-					/* pressed */
-					DEBUGMSG(true, (_T("LEFT pressed\r\n")));
-					evt.data.key = Client::KEY_LEFT;
-					dlg->SendEvent(evt);
-				}
-				/* eat the key */
-				return 1;
-			}
-			case HW_BTN_RIGHT:
-			{
-				if (LOWORD(lParam) == 0x0) {
-					/* pressed */
-					DEBUGMSG(true, (_T("RIGHT pressed\r\n")));
-					evt.data.key = Client::KEY_RIGHT;
-					dlg->SendEvent(evt);
-				}
-				/* eat the key */
-				return 1;
-			}
-			default:
-			{
-				break;
-			}
-		}
-	}
-	/* skip this message and pass it to the adressee */
-	return CallWindowProc(dlg->m_HotkeyWndProc,
-		hWnd, message, wParam, lParam);
-}
-
-void CvncviewerDlg::HandleMapKey(bool long_press) {
-	Client::event_t evt;
-	evt.what = Client::EVT_KEY;
-	if (long_press) {
-		/* long press */
-		evt.data.key = Client::KEY_HOME;
-	} else {
-		/* normal press */
-		evt.data.key = Client::KEY_BACK;
-	}
-	SendEvent(evt);
-}
-
 void CvncviewerDlg::SendEvent(Client::event_t &evt) {
 	if (m_Client) {
 		m_Client->PostEvent(evt);
@@ -497,15 +305,8 @@ void CvncviewerDlg::SendEvent(Client::event_t &evt) {
 
 void CvncviewerDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	if (ID_TIMER_LONG_PRESS == nIDEvent) {
-		/* MAP long press */
-		KillTimer(ID_TIMER_LONG_PRESS);
-		m_FilterAutoRepeat = false;
-		m_LongPress = true;
-		HandleMapKey(true);
-	}
 #ifdef SHOW_POINTER_TRACE
-	else  if (ID_TIMER_TRACE == nIDEvent) {
+	if (ID_TIMER_TRACE == nIDEvent) {
 		RECT r;
 
 		KillTimer(ID_TIMER_TRACE);
@@ -520,17 +321,12 @@ void CvncviewerDlg::OnTimer(UINT_PTR nIDEvent)
 }
 
 void CvncviewerDlg::Cleanup() {
-	SetHotkeyHandler(false);
-	KillTimer(ID_TIMER_LONG_PRESS);
 #ifdef SHOW_POINTER_TRACE
 	KillTimer(ID_TIMER_TRACE);
 #endif
 	if (m_Client) {
 		delete m_Client;
 		m_Client = NULL;
-	}
-	if (m_ConfigStorage) {
-		delete m_ConfigStorage;
 	}
 }
 

@@ -34,46 +34,17 @@ public:
 private:
 	static CvncviewerDlg *m_Instance;
 
-	enum AVIC_HW_BUTTONS {
-		HW_BTN_FIRST,
-		HW_BTN_MAP,
-		HW_BTN_MENU,
-		HW_BTN_PUSH,
-		HW_BTN_UP,
-		HW_BTN_DOWN,
-		HW_BTN_LEFT,
-		HW_BTN_RIGHT,
-		HW_BTN_ROTATE_LEFT,
-		HW_BTN_ROTATE_RIGHT,
-		HW_BTN_LAST
-	};
-	static const wchar_t *WND_PROC_NAMES[];
-	HWND m_HotkeyHwnd;
-	WNDPROC m_HotkeyWndProc;
-	bool m_FilterAutoRepeat;
-	bool m_LongPress;
+#ifdef SHOW_POINTER_TRACE
 	enum ID_TIMER {
-		ID_TIMER_LONG_PRESS = 1,
-#ifdef SHOW_POINTER_TRACE
-		ID_TIMER_TRACE
-#endif
+		ID_TIMER_TRACE = 1
 	};
-	static const UINT ID_TIMER_LONG_PRESS_DELAY = 1000;
-#ifdef SHOW_POINTER_TRACE
 	static const UINT ID_TIMER_TRACE_DELAY = 5000;
 #endif
 
-	static const int CONNECT_MAX_TRY = 3;
 	Client *m_Client;
-	RECT m_ServerRect;
-	RECT m_ClientRect;
 	bool m_NeedScaling;
 	bool m_SetupScaling;
-	ConfigStorage *m_ConfigStorage;
 
-	static LRESULT CALLBACK SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	void SetHotkeyHandler(bool set);
-	void HandleMapKey(bool long_press);
 	void SendEvent(Client::event_t &evt);
 	void Cleanup();
 	void ShowFullScreen();

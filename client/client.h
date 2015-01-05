@@ -17,7 +17,7 @@ public:
 		return m_Instance;
 	};
 
-	int Initialize(void *_private);
+	virtual int Initialize(void *_private);
 	std::string GetServerIP();
 	int Connect();
 	int GetScreenSize(int &width, int &height);
