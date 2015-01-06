@@ -72,6 +72,7 @@
 				AdditionalDependencies="winsock.lib aygshell.lib ccrtrtti.lib"
 				OutputFile="$(OutDir)/vncviewer.exe"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(ProjectDir)\arm&quot;"
 				DelayLoadDLLs="$(NOINHERIT)"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/wince.pdb"
