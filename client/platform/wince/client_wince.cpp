@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include <string.h>
 
 #include "client_wince.h"
 #include "config_storage.h"
@@ -20,8 +20,6 @@ Client_WinCE::Client_WinCE() : Client() {
 	m_LongPress = false;
 	memset(&m_ServerRect, 0, sizeof(m_ServerRect));
 	memset(&m_ClientRect, 0, sizeof(m_ClientRect));
-	m_NeedScaling = false;
-	m_SetupScaling = true;
 }
 
 Client_WinCE::~Client_WinCE() {
@@ -40,11 +38,6 @@ Client_WinCE::~Client_WinCE() {
 #ifdef SHOW_POINTER_TRACE
 	m_TraceQueue.clear();
 #endif
-}
-
-void Client_WinCE::SetWindow(HWND hWnd)
-{
-	m_hWnd = hWnd;
 }
 
 void Client_WinCE::Logger(const char *format, ...) {
@@ -67,49 +60,7 @@ void Client_WinCE::SetLogging() {
 	rfbClientErr = Logger;
 }
 
-rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
-	int width, height, depth;
-
-	width = client->width;
-	height = client->height;
-	depth = client->format.bitsPerPixel;
-	DEBUGMSG(TRUE, (_T("OnMallocFrameBuffer: w=%d h=%d d=%d\r\n"), width, height, depth));
-	client->updateRect.x = 0;
-	client->updateRect.y = 0;
-	client->updateRect.w = width;
-	client->updateRect.h = height;
-
-	/* create frambuffer */
-	/* For Windows bitmap is BGR565/BGR888, upside down - see -height below */
-	BITMAPINFO bm_info;
-	memset(&bm_info, 0, sizeof(BITMAPINFO));
-	bm_info.bmiHeader.biSize            = sizeof(BITMAPINFOHEADER);
-	bm_info.bmiHeader.biWidth           = client->width;
-	bm_info.bmiHeader.biHeight          = -client->height;
-	bm_info.bmiHeader.biPlanes          = 1;
-	bm_info.bmiHeader.biBitCount        = client->format.bitsPerPixel;
-	bm_info.bmiHeader.biCompression     = BI_RGB;
-	bm_info.bmiHeader.biSizeImage       = 0;
-	bm_info.bmiHeader.biXPelsPerMeter   = 0;
-	bm_info.bmiHeader.biYPelsPerMeter   = 0;
-	bm_info.bmiHeader.biClrUsed         = 0;
-	bm_info.bmiHeader.biClrImportant    = 0;
-
-	m_hBmp = CreateDIBSection(CreateCompatibleDC(GetDC(m_hWnd)),
-		&bm_info, DIB_RGB_COLORS, reinterpret_cast<void**>(&m_FrameBuffer),
-		NULL, NULL);
-	client->frameBuffer = m_FrameBuffer;
-	return TRUE;
-}
-
-void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
-}
-
-void Client_WinCE::OnShutdown() {
-	PostMessage(m_hWnd, WM_QUIT, 0, 0);
-}
-
-int Client_WinCE::Message(DWORD type, wchar_t *caption, wchar_t *format, ...) {
+int Client_WinCE::ShowMessage(DWORD type, wchar_t *caption, wchar_t *format, ...) {
 	wchar_t msg_text[2 * MAX_PATH + 1];
 	va_list vargs;
 
@@ -139,32 +90,22 @@ void Client_WinCE::AddTracePoint(trace_point_type_e type, LONG x, LONG y) {
 }
 #endif
 
+void Client_WinCE::SetWindowHandle(HWND hWnd)
+{
+	m_hWnd = hWnd;
+}
+
 int Client_WinCE::Initialize(void *_private)
 {
-	m_ConfigStorage = ConfigStorage::GetInstance();
-
-	wchar_t wfilename[MAX_PATH + 1];
-	char filename[MAX_PATH + 1];
-
-	GetModuleFileName(NULL, wfilename, MAX_PATH);
-	wcstombs(filename, wfilename, sizeof(filename));
-	std::string exe(filename);
-	char *dot = strrchr(filename, '.');
-	if (dot) {
-		*dot = '\0';
-	}
-	std::string ini(filename);
-	ini += ".ini";
-
-	m_ConfigStorage->Initialize(exe, ini);
-
+	m_Instance = static_cast<Client *>(_private);
 	SetRect(&m_ClientRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-	std::string server = m_ConfigStorage->GetServer();
+	ConfigStorage *config = ConfigStorage::GetInstance();
+	std::string server = config->GetServer();
 	std::wstring widestr = std::wstring(server.begin(), server.end());
 	/* let's rock */
 	int i;
 	for (i = 0; i <= CONNECT_MAX_TRY; i++) {
-		if (Client::Initialize(_private) < 0) {
+		if (Client::Initialize(NULL) < 0) {
 			return -1;
 		}
 		if (0 == Connect()) {
@@ -311,8 +252,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 		}
 	}
 	/* skip this message and pass it to the adressee */
-	return CallWindowProc(m_HotkeyWndProc,
-		hWnd, message, wParam, lParam);
+	return CallWindowProc(m_HotkeyWndProc, hWnd, message, wParam, lParam);
 }
 
 void Client_WinCE::HandleMapKey(bool long_press) {
@@ -386,16 +326,62 @@ void Client_WinCE::OnTouchMove(int x, int y) {
 }
 
 void Client_WinCE::OnPaint(void) {
+	BeginPaint(m_hWnd, &ps);
+	EndPaint(m_hWnd, &ps);
 }
 
-void Client_WinCE::OnActivate(UINT nState)
-{
-	SetHotkeyHandler(nState != WA_INACTIVE);
-	if (nState != WA_INACTIVE) {
+void Client_WinCE::OnActivate(bool isActive) {
+	SetHotkeyHandler(isActive);
+	if (isActive) {
 		ShowFullScreen();
 	}
 }
 
-void Client_WinCE::ShowFullScreen()
-{
+void Client_WinCE::ShowFullScreen() {
+	SHFullScreen(m_hWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
+	::ShowWindow(SHFindMenuBar(m_hWnd), SW_HIDE);
+	MoveWindow(m_hWnd, m_ClientRect.x, m_ClientRect.y,
+		m_ClientRect.w, m_ClientRect.h, false);
+}
+
+void Client_WinCE::OnShutdown() {
+	PostMessage(m_hWnd, WM_QUIT, 0, 0);
+}
+
+rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
+	int width, height, depth;
+
+	width = client->width;
+	height = client->height;
+	depth = client->format.bitsPerPixel;
+	DEBUGMSG(TRUE, (_T("OnMallocFrameBuffer: w=%d h=%d d=%d\r\n"), width, height, depth));
+	client->updateRect.x = 0;
+	client->updateRect.y = 0;
+	client->updateRect.w = width;
+	client->updateRect.h = height;
+
+	/* create frambuffer */
+	/* For Windows bitmap is BGR565/BGR888, upside down - see -height below */
+	BITMAPINFO bm_info;
+	memset(&bm_info, 0, sizeof(BITMAPINFO));
+	bm_info.bmiHeader.biSize            = sizeof(BITMAPINFOHEADER);
+	bm_info.bmiHeader.biWidth           = client->width;
+	bm_info.bmiHeader.biHeight          = -client->height;
+	bm_info.bmiHeader.biPlanes          = 1;
+	bm_info.bmiHeader.biBitCount        = client->format.bitsPerPixel;
+	bm_info.bmiHeader.biCompression     = BI_RGB;
+	bm_info.bmiHeader.biSizeImage       = 0;
+	bm_info.bmiHeader.biXPelsPerMeter   = 0;
+	bm_info.bmiHeader.biYPelsPerMeter   = 0;
+	bm_info.bmiHeader.biClrUsed         = 0;
+	bm_info.bmiHeader.biClrImportant    = 0;
+
+	m_hBmp = CreateDIBSection(CreateCompatibleDC(GetDC(m_hWnd)),
+		&bm_info, DIB_RGB_COLORS, reinterpret_cast<void**>(&m_FrameBuffer),
+		NULL, NULL);
+	client->frameBuffer = m_FrameBuffer;
+	return TRUE;
+}
+
+void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
 }
