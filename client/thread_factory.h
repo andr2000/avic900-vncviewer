@@ -1,7 +1,7 @@
 #ifndef _THREAD_FACTORY_H
 #define _THREAD_FACTORY_H
 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #include "thread_wince.h"
 #elif __linux__
 #include "thread_linux.h"
@@ -13,7 +13,7 @@
 class ThreadFactory {
 public:
 	static Thread *GetNewThread() {
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 		return new Thread_WinCE();
 #elif __linux__
 		return new Thread_Linux();

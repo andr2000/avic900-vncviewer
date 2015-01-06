@@ -72,9 +72,8 @@
 #include <winsock.h>
 #undef SOCKET
 #define SOCKET int
-#else
-#include <rfb/rfbint.h>
 #endif
+#include <rfb/rfbint.h>
 
 #include <rfb/rfbconfig.h>
 

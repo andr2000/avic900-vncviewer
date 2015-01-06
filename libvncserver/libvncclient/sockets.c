@@ -29,7 +29,7 @@
 # define _POSIX_SOURCE
 #endif
 #endif
-#ifndef WINCE
+#if !defined(WINCE) && !defined(WIN32)
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -38,7 +38,7 @@
 #include <rfb/rfbclient.h>
 #ifdef WIN32
 #undef SOCKET
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #include <winsock.h>
 #include <winerror.h>
 #include "compat.h"
@@ -112,7 +112,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 	  diff.tv_sec--;
 	  diff.tv_usec+=1000000;
         }
-#if !defined(__MINGW32__) && !defined(WINCE)
+#if !defined(__MINGW32__) && !defined(WINCE) && !defined(WIN32)
         sleep (diff.tv_sec);
         usleep (diff.tv_usec);
 #else
@@ -161,7 +161,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 #endif
 	  errno=WSAGetLastError();
 #endif
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 	  if (errno == WSAEWOULDBLOCK || errno == WSATRY_AGAIN) {
 #else
 	  if (errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -207,7 +207,7 @@ ReadFromRFBServer(rfbClient* client, char *out, unsigned int n)
 #endif
 	  errno=WSAGetLastError();
 #endif
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 	  if (errno == WSAEWOULDBLOCK || errno == WSATRY_AGAIN) {
 #else
 	  if (errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -291,7 +291,7 @@ WriteToRFBServer(rfbClient* client, char *buf, int n)
 		errno == ENOENT ||
 #endif
 #endif
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 	    errno == WSATRY_AGAIN) {
 #else
 	    errno == EAGAIN) {

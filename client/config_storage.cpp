@@ -1,3 +1,4 @@
+#include <windows.h>
 #include <string.h>
 #include "compat.h"
 #include "config_storage.h"

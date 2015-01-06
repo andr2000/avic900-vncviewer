@@ -40,8 +40,8 @@ static rfbBool DummyPoint(rfbClient* client, int x, int y) {
 static void DummyRect(rfbClient* client, int x, int y, int w, int h) {
 }
 
-#if defined(__MINGW32__) || defined(WINCE)
-#ifdef WINCE
+#if defined(__MINGW32__) || defined(WINCE) || defined(WIN32)
+#if defined(WINCE) || defined(WIN32)
 #define strdup _strdup
 #include <winsock.h>
 #else
@@ -58,7 +58,7 @@ static char* NoPassword(rfbClient* client) {
 #endif
 
 static char* ReadPassword(rfbClient* client) {
-#if defined(__MINGW32__) || defined (WINCE)
+#if defined(__MINGW32__) || defined (WINCE) || defined(WIN32)
 	/* FIXME */
 	rfbClientErr("ReadPassword on MinGW32 NOT IMPLEMENTED\n");
 	return NoPassword(client);
@@ -281,7 +281,7 @@ rfbBool rfbInitClient(rfbClient* client,int* argc,char** argv) {
 
     for (i = 1; i < *argc; i++) {
       j = i;
-#if !defined(WINCE) && !defined(__linux__)
+#if !defined(WINCE) && !defined(__linux__) && !defined(WIN32)
       if (strcmp(argv[i], "-listen") == 0) {
 	listenForIncomingConnections(client);
 	break;

@@ -1,6 +1,6 @@
 #include "client_gdi.h"
 
-void Client_MFC::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
+void Client_GDI::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
 	RECT ps;
 
 	ps.left = x;
@@ -11,33 +11,24 @@ void Client_MFC::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int
 	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
 }
 
-void Client_MFC::OnPaint(void) {
+void Client_GDI::OnPaint(void) {
 	PAINTSTRUCT ps;
-	HDC *pDC = BeginPaint(m_hWnd, &ps);
+	HDC dc = BeginPaint(m_hWnd, &ps);
+	HDC dcMem;
+	LONG x, y, w, h;
 
-	CBitmap *bitmap = CBitmap::FromHandle(m_hBmp);
-	if (bitmap) {
-		CDC dcMem;
-		LONG x, y, w, h;
+	x = ps.rcPaint.left;
+	y = ps.rcPaint.top;
+	w = ps.rcPaint.right - ps.rcPaint.left;
+	h = ps.rcPaint.bottom - ps.rcPaint.top;
 
-		x = ps.rcPaint.left;
-		y = ps.rcPaint.top;
-		w = ps.rcPaint.right - ps.rcPaint.left;
-		h = ps.rcPaint.bottom - ps.rcPaint.top;
+	DEBUGMSG(true, (_T("OnPaint x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
 
-		DEBUGMSG(true, (_T("OnPaint x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
-
-		dcMem.CreateCompatibleDC(pDC);
-		CBitmap *old_bitmap = dcMem.SelectObject(bitmap);
-		if (m_NeedScaling) {
-			pDC->StretchBlt(m_ClientRect.left, m_ClientRect.top, m_ClientRect.right, m_ClientRect.bottom, &dcMem,
-				m_ServerRect.left, m_ServerRect.top, m_ServerRect.right, m_ServerRect.bottom, SRCCOPY);
-		} else {
-			pDC->BitBlt(x, y, w, h, &dcMem, x, y, SRCCOPY);
-		}
-		dcMem.SelectObject(old_bitmap);
-		dcMem.DeleteDC();
-	}
+	dcMem = CreateCompatibleDC(dc);
+	HGDIOBJ old_bitmap = SelectObject(dcMem, m_hBmp);
+	BitBlt(dc, x, y, w, h, dcMem, x, y, SRCCOPY);
+	SelectObject(dcMem, old_bitmap);
+	DeleteDC(dcMem);
 #ifdef SHOW_POINTER_TRACE
 	{
 		CBrush *brush, *old_brush;

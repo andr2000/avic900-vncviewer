@@ -1,9 +1,8 @@
 #include <stdio.h>
-#include <tchar.h>
-#include <winbase.h>
 
 #include "compat.h"
 
+#ifdef WINCE
 char *
 strerror(int errno)
 {
@@ -12,3 +11,4 @@ strerror(int errno)
 	sprintf(buf, "error %d", errno);
 	return buf;
 }
+#endif

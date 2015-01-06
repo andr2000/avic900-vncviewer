@@ -18,7 +18,7 @@
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
 #ifndef LIBVNCSERVER_HAVE_ARPA_INET_H 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #undef LIBVNCSERVER_HAVE_ARPA_INET_H
 #else
 #define LIBVNCSERVER_HAVE_ARPA_INET_H  1 
@@ -47,7 +47,7 @@
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #ifndef LIBVNCSERVER_HAVE_FCNTL_H 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #undef LIBVNCSERVER_HAVE_FCNTL_H
 #else
 #define LIBVNCSERVER_HAVE_FCNTL_H  1 
@@ -134,7 +134,7 @@
 
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #ifndef LIBVNCSERVER_HAVE_LIBPTHREAD 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #undef LIBVNCSERVER_HAVE_LIBPTHREAD
 #else
 #define LIBVNCSERVER_HAVE_LIBPTHREAD  1 
@@ -215,7 +215,7 @@
 /* Define to 1 if you have the <netinet/in.h> header file. */
 
 #ifndef LIBVNCSERVER_HAVE_NETINET_IN_H 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #undef LIBVNCSERVER_HAVE_NETINET_IN_H
 #else
 #define LIBVNCSERVER_HAVE_NETINET_IN_H  1 
@@ -307,7 +307,7 @@
 
 /* Define to 1 if you have the <strings.h> header file. */
 #ifndef LIBVNCSERVER_HAVE_STRINGS_H 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #undef LIBVNCSERVER_HAVE_STRINGS_H
 #else
 #define LIBVNCSERVER_HAVE_STRINGS_H  1 
@@ -350,7 +350,7 @@
 
 /* Define to 1 if you have the <sys/timeb.h> header file. */
 #ifndef LIBVNCSERVER_HAVE_SYS_TIMEB_H 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #undef LIBVNCSERVER_HAVE_SYS_TIMEB_H
 #else
 #define LIBVNCSERVER_HAVE_SYS_TIMEB_H  1 
@@ -364,7 +364,7 @@
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #ifndef LIBVNCSERVER_HAVE_SYS_TYPES_H 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #undef LIBVNCSERVER_HAVE_SYS_TYPES_H
 #else
 #define LIBVNCSERVER_HAVE_SYS_TYPES_H  1 
@@ -382,7 +382,7 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 
 #ifndef LIBVNCSERVER_HAVE_UNISTD_H 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #undef LIBVNCSERVER_HAVE_UNISTD_H
 #else
 #define LIBVNCSERVER_HAVE_UNISTD_H  1 

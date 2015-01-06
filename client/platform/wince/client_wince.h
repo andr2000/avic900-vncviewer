@@ -45,6 +45,7 @@ protected:
 	RECT m_ClientRect;
 
 	virtual void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
+	virtual rfbBool OnMallocFrameBuffer(rfbClient *client);
 	virtual void OnShutdown();
 
 	long GetTimeMs() {
@@ -101,7 +102,6 @@ private:
 	void SetHotkeyHandler(bool set);
 	void HandleMapKey(bool long_press);
 
-	rfbBool OnMallocFrameBuffer(rfbClient *client);
 	void ShowFullScreen();
 
 	void SetLogging();

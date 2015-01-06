@@ -1,7 +1,7 @@
 #ifndef _MUTEX_FACTORY_H
 #define _MUTEX_FACTORY_H
 
-#ifdef WINCE
+#if defined(WINCE) || defined(WIN32)
 #include "mutex_wince.h"
 #elif __linux__
 #include "mutex_linux.h"
@@ -13,7 +13,7 @@
 class MutexFactory {
 public:
 	static Mutex *GetNewMutex() {
-#ifdef WINCE
+#if defined(WINCE) || defined (WIN32)
 		return new Mutex_WinCE();
 #elif __linux__
 		return new Mutex_Linux();

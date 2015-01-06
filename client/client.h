@@ -48,7 +48,6 @@ public:
 		} data;
 	};
 	int PostEvent(event_t &evt);
-	virtual void *GetDrawingContext() = 0;
 protected:
 	static Client *m_Instance;
 	void *m_Private;

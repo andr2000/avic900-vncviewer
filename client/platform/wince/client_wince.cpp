@@ -1,4 +1,7 @@
 #include <string.h>
+#ifdef WINCE
+#include <aygshell.h>
+#endif
 
 #include "client_wince.h"
 #include "config_storage.h"
@@ -29,9 +32,6 @@ Client_WinCE::~Client_WinCE() {
 #ifdef SHOW_POINTER_TRACE
 	KillTimer(m_hWnd, ID_TIMER_TRACE);
 #endif
-	if (m_ConfigStorage) {
-		delete m_ConfigStorage;
-	}
 	if (m_hBmp) {
 		DeleteObject(m_hBmp);
 	}
@@ -41,6 +41,7 @@ Client_WinCE::~Client_WinCE() {
 }
 
 void Client_WinCE::Logger(const char *format, ...) {
+#ifndef WIN32
 	va_list args;
 	char buf[LOG_BUF_SZ];
 	wchar_t buf_w [LOG_BUF_SZ];
@@ -53,6 +54,7 @@ void Client_WinCE::Logger(const char *format, ...) {
 	va_end(args);
 	mbstowcs(buf_w, buf, LOG_BUF_SZ);
 	DEBUGMSG(TRUE, (_T("%s\r\n"), buf_w));
+#endif
 }
 
 void Client_WinCE::SetLogging() {
@@ -61,6 +63,7 @@ void Client_WinCE::SetLogging() {
 }
 
 int Client_WinCE::ShowMessage(DWORD type, wchar_t *caption, wchar_t *format, ...) {
+#ifndef WIN32
 	wchar_t msg_text[2 * MAX_PATH + 1];
 	va_list vargs;
 
@@ -68,6 +71,9 @@ int Client_WinCE::ShowMessage(DWORD type, wchar_t *caption, wchar_t *format, ...
 	StringCchVPrintf(msg_text, sizeof(msg_text), format, vargs);
 	va_end(vargs);
 	return MessageBox(m_hWnd, msg_text, caption, type);
+#else
+	return 0;
+#endif
 }
 
 #ifdef SHOW_POINTER_TRACE
@@ -99,9 +105,6 @@ int Client_WinCE::Initialize(void *_private)
 {
 	m_Instance = static_cast<Client *>(_private);
 	SetRect(&m_ClientRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-	ConfigStorage *config = ConfigStorage::GetInstance();
-	std::string server = config->GetServer();
-	std::wstring widestr = std::wstring(server.begin(), server.end());
 	/* let's rock */
 	int i;
 	for (i = 0; i <= CONNECT_MAX_TRY; i++) {
@@ -111,15 +114,19 @@ int Client_WinCE::Initialize(void *_private)
 		if (0 == Connect()) {
 			break;
 		}
-		if (IDCANCEL == Message(MB_RETRYCANCEL, _T("Error"),
-			_T("Failed to connect to %ls\r\nRetry?"), widestr.c_str())) {
+		std::string server = m_ConfigStorage->GetServer();
+		std::wstring widestr = std::wstring(server.begin(), server.end());
+		if (IDCANCEL == ShowMessage(MB_RETRYCANCEL, TEXT("Error"),
+			TEXT("Failed to connect to %ls\r\nRetry?"), widestr.c_str())) {
 				PostMessage(m_hWnd, WM_CLOSE, 0, 0);
 				return true;
 		}
 	}
 	if (i == CONNECT_MAX_TRY) {
-		Message(MB_OK, _T("Error"),
-			_T("Was not able to connect to %ls\r\nGiving up now"), widestr.c_str());
+		std::string server = m_ConfigStorage->GetServer();
+		std::wstring widestr = std::wstring(server.begin(), server.end());
+		ShowMessage(MB_OK, TEXT("Error"),
+			TEXT("Was not able to connect to %ls\r\nGiving up now"), widestr.c_str());
 		PostMessage(m_hWnd, WM_CLOSE, 0, 0);
 		return -1;
 	}
@@ -326,6 +333,7 @@ void Client_WinCE::OnTouchMove(int x, int y) {
 }
 
 void Client_WinCE::OnPaint(void) {
+	PAINTSTRUCT ps;
 	BeginPaint(m_hWnd, &ps);
 	EndPaint(m_hWnd, &ps);
 }
@@ -338,10 +346,13 @@ void Client_WinCE::OnActivate(bool isActive) {
 }
 
 void Client_WinCE::ShowFullScreen() {
+#ifdef WINCE
 	SHFullScreen(m_hWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
 	::ShowWindow(SHFindMenuBar(m_hWnd), SW_HIDE);
-	MoveWindow(m_hWnd, m_ClientRect.x, m_ClientRect.y,
-		m_ClientRect.w, m_ClientRect.h, false);
+	MoveWindow(m_hWnd, m_ClientRect.left, m_ClientRect.top,
+		m_ClientRect.left + m_ClientRect.right,
+		m_ClientRect.top + m_ClientRect.bottom, false);
+#endif
 }
 
 void Client_WinCE::OnShutdown() {

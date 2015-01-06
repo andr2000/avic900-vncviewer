@@ -23,7 +23,7 @@ HWND g_hWndMain;
 Client_WinCE *g_Client;
 ConfigStorage *g_Config;
 
-Cleaunup()
+void Cleanup(void)
 {
 	if (g_hMutex)
 	{
@@ -62,6 +62,16 @@ long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		case WM_PAINT:
 		{
+			if (g_Client)
+			{
+				g_Client->OnPaint();
+			}
+			else
+			{
+				PAINTSTRUCT ps;
+				BeginPaint(hWnd, &ps);
+				EndPaint(hWnd, &ps);
+			}
 			return 0;
 		}
 		case WM_CLOSE:
@@ -132,19 +142,19 @@ bool isAlreadyRunning()
 	return FALSE;
 }
 
-bool initialize(HANDLE hInstance, int nCmdShow)
+bool initialize(HINSTANCE hInstance, int nCmdShow)
 {
 	WNDCLASS wc;
 	bool rc;
 
+	memset(&wc, 0, sizeof(wc));
 	wc.style = CS_DBLCLKS;
 	wc.lpfnWndProc = MainWndproc;
 	wc.cbClsExtra = 0;
 	wc.cbWndExtra = 0;
 	wc.hInstance = hInstance;
-	wc.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = GetStockObject(BLACK_BRUSH);
+	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = TEXT("VncViewerClass");
 	rc = RegisterClass(&wc);
@@ -152,11 +162,15 @@ bool initialize(HANDLE hInstance, int nCmdShow)
 	{
 		return false;
 	}
-
 	g_hWndMain = CreateWindowEx(WS_EX_TOPMOST, wc.lpszClassName, APP_TITLE,
 		WS_VISIBLE | /* so we don't have to call ShowWindow */
 		WS_POPUP, /* non-app window */
-		0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
+		0, 0,
+#ifdef WINCE
+		GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
+#else
+		800, 480,
+#endif
 		NULL, NULL, hInstance, NULL);
 	if (!g_hWndMain)
 	{
@@ -164,7 +178,6 @@ bool initialize(HANDLE hInstance, int nCmdShow)
 	}
 	SetFocus(g_hWndMain);
 	return true;
-
 }
 
 bool initializeClient()
@@ -208,7 +221,11 @@ bool initializeClient()
 	return g_Client->Initialize(g_Client) == 0;
 }
 
+#ifdef WINCE
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
+#else
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#endif
 {
 	if (isAlreadyRunning())
 	{
@@ -221,11 +238,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLin
 	}
 	if (!initializeClient())
 	{
-		Cleaunup();
+		Cleanup();
 		return FALSE;
 	}
 
-	bool ret;
+	int ret;
 	MSG msg;
 	while ((ret = GetMessage(&msg, g_hWndMain, 0, 0)) != 0)
 	{
@@ -239,6 +256,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLin
 			DispatchMessage(&msg);
 		}
 	}
-	Cleaunup();
+	Cleanup();
 	return 0;
 }
