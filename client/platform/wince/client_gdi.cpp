@@ -1,14 +1,14 @@
 #include "client_gdi.h"
 
-void Client_GDI::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
+void Client_GDI::OnFinishedFrameBufferUpdate(rfbClient *client) {
 	RECT ps;
 
-	ps.left = x;
-	ps.top = y;
-	ps.right = x + w;
-	ps.bottom = y + h;
+	ps.left = m_UpdateRect.x1;
+	ps.top = m_UpdateRect.y1;
+	ps.right = m_UpdateRect.x2;
+	ps.bottom = m_UpdateRect.y2;
 	InvalidateRect(m_hWnd, &ps, FALSE);
-	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
+	Client_WinCE::OnFinishedFrameBufferUpdate(client);
 }
 
 void Client_GDI::OnPaint(void) {

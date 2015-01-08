@@ -8,7 +8,7 @@ public:
 	void OnPaint(void);
 
 protected:
-	void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
+	void OnFinishedFrameBufferUpdate(rfbClient *client);
 };
 
 #endif
