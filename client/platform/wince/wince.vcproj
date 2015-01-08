@@ -223,6 +223,7 @@
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
+				InterworkCalls="true"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -238,7 +239,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions=" /subsystem:windowsce,4.20 /machine:ARM /ARMPADCODE"
+				AdditionalOptions=" /subsystem:windowsce,4.20 /ARMPADCODE"
 				AdditionalDependencies="winsock.lib aygshell.lib ccrtrtti.lib ddraw.lib dxguid.lib"
 				OutputFile="$(OutDir)/vncviewer.exe"
 				LinkIncremental="1"
@@ -251,6 +252,7 @@
 				StackCommitSize="4096"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				TargetMachine="16"
 			/>
 			<Tool
 				Name="VCALinkTool"
