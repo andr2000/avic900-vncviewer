@@ -42,6 +42,10 @@ long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	{
 		case WM_ACTIVATE:
 		{
+			if (g_Client)
+			{
+				g_Client->OnActivate(wParam ? true : false);
+			}
 			break;
 		}
 		case WM_SETCURSOR:
@@ -68,6 +72,36 @@ long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			}
 			return 0;
 		}
+		case WM_LBUTTONUP:
+		{
+			if (g_Client)
+			{
+				g_Client->OnTouchUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				return 0;
+			}
+			break;
+		}
+		case WM_LBUTTONDOWN:
+		{
+			if (g_Client)
+			{
+				g_Client->OnTouchDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				return 0;
+			}
+			break;
+		}
+		case WM_MOUSEMOVE:
+		{
+			if (g_Client)
+			{
+		        if (wParam & MK_LBUTTON)
+				{
+					g_Client->OnTouchMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+					return 0;
+				}
+			}
+			break;
+		}
 		case WM_CLOSE:
 		{
 			DestroyWindow(hWnd);
@@ -77,36 +111,6 @@ long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		{
 			PostQuitMessage(0);
 			return 0;
-		}
-		case WM_KEYDOWN:
-		{
-			switch (wParam)
-			{
-				case VK_UP:
-				{
-					break;
-				}
-				default:
-				{
-					break;
-				}
-			}
-			break;
-		}
-		case WM_KEYUP:
-		{
-			switch (wParam)
-			{
-				case VK_UP:
-				{
-					break;
-				}
-				default:
-				{
-					break;
-				}
-			}
-			break;
 		}
 		default:
 		{
@@ -151,7 +155,7 @@ bool initialize(HINSTANCE hInstance, int nCmdShow)
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = TEXT("VncViewerClass");
-	rc = RegisterClass(&wc);
+	rc = RegisterClass(&wc) ? true : false;
 	if (!rc)
 	{
 		return false;
