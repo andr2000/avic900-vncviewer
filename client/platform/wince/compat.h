@@ -10,7 +10,7 @@ extern "C"
 char *strerror(int errno);
 #endif
 
-#ifdef WIN32
+#ifndef WINCE
 #define DEBUGMSG(cond,printf_exp) ((void)0)
 #endif
 

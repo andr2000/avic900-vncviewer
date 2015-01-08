@@ -40,7 +40,6 @@ Client_WinCE::~Client_WinCE() {
 }
 
 void Client_WinCE::Logger(const char *format, ...) {
-#ifndef WIN32
 	va_list args;
 	char buf[LOG_BUF_SZ];
 	wchar_t buf_w [LOG_BUF_SZ];
@@ -53,7 +52,6 @@ void Client_WinCE::Logger(const char *format, ...) {
 	va_end(args);
 	mbstowcs(buf_w, buf, LOG_BUF_SZ);
 	DEBUGMSG(TRUE, (_T("%s\r\n"), buf_w));
-#endif
 }
 
 void Client_WinCE::SetLogging() {
@@ -62,17 +60,13 @@ void Client_WinCE::SetLogging() {
 }
 
 int Client_WinCE::ShowMessage(DWORD type, wchar_t *caption, wchar_t *format, ...) {
-#ifndef WIN32
 	wchar_t msg_text[2 * MAX_PATH + 1];
 	va_list vargs;
 
 	va_start(vargs, format);
-	StringCchVPrintf(msg_text, sizeof(msg_text), format, vargs);
+	_vsnwprintf(msg_text, sizeof(msg_text), format, vargs);
 	va_end(vargs);
 	return MessageBox(m_hWnd, msg_text, caption, type);
-#else
-	return 0;
-#endif
 }
 
 #ifdef SHOW_POINTER_TRACE
