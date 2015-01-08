@@ -106,7 +106,7 @@ int Client_WinCE::Initialize()
 	/* let's rock */
 	int i;
 	for (i = 0; i <= CONNECT_MAX_TRY; i++) {
-		if (Client::Initialize(NULL) < 0) {
+		if (Client::Initialize() < 0) {
 			return -1;
 		}
 		if (0 == Connect()) {

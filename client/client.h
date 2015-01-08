@@ -49,6 +49,17 @@ public:
 	};
 	int PostEvent(event_t &evt);
 protected:
+	/* update rectangle */
+	static const int UPDRECT_DEFAULT_MIN = 10000;
+	static const int UPDRECT_DEFAULT_MAX = -1;
+
+	struct {
+		int x1;
+		int y1;
+		int x2;
+		int y2;
+	} m_UpdateRect;;
+
 	static Client *m_Instance;
 	rfbClient* m_Client;
 	Thread *m_Thread;
@@ -75,16 +86,6 @@ protected:
 	virtual void OnShutdown() = 0;
 	virtual long GetTimeMs() = 0;
 private:
-	/* update rectangle */
-	const int UPDRECT_DEFAULT_MIN = 10000;
-	const int UPDRECT_DEFAULT_MAX = -1;
-
-	struct {
-		int x1;
-		int y1;
-		int x2;
-		int y2;
-	} m_UpdateRect;;
 
 	bool m_NeedsVirtInpHack;
 	static int PollRFB(void *data);
