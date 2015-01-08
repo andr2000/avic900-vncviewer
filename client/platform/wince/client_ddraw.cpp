@@ -15,12 +15,73 @@ rfbBool Client_DDraw::OnMallocFrameBuffer(rfbClient *client)
 	return TRUE;
 }
 
+void Client_DDraw::BlitFrontToBack(LPRECT rect) {
+	while (true)
+	{
+		HRESULT ddrval = lpBackBuffer->BltFast(rect->left, rect->top,
+			lpFrontBuffer, rect, DDBLTFAST_NOCOLORKEY);
+		if (ddrval == DD_OK)
+		{
+			break;
+		}
+		if (ddrval == DDERR_SURFACELOST)
+		{
+			if (!RestoreSurfaces())
+			{
+				return;
+			}
+			if (ddrval != DDERR_WASSTILLDRAWING)
+			{
+				return;
+			}
+		}
+	}
+}
+
 void Client_DDraw::OnFinishedFrameBufferUpdate(rfbClient *client) {
 	int w = m_UpdateRect.x2 - m_UpdateRect.x1;
 	int h = m_UpdateRect.y2 - m_UpdateRect.y1;
 	DEBUGMSG(TRUE, (_T("OnFinishedFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"),
 		m_UpdateRect.x1, m_UpdateRect.y1, w, h));
 
+	/* blit from front to back those pixels which will not be updated by the m_UpdateRect */
+	RECT rect;
+	if (m_UpdateRect.y1 > 0)
+	{
+		/* have rectangle on top */
+		rect.left = rect.top = 0;
+		rect.right = m_ClientRect.right;
+		rect.bottom = m_UpdateRect.y1;
+		BlitFrontToBack(&rect);
+	}
+	if (m_UpdateRect.y2 < m_ClientRect.bottom)
+	{
+		/* have rectangle at bottom */
+		rect.left = 0;
+		rect.top = m_UpdateRect.y2;
+		rect.right = m_ClientRect.right;
+		rect.bottom = m_ClientRect.bottom;
+		BlitFrontToBack(&rect);
+	}
+	if (m_UpdateRect.x1 > 0)
+	{
+		/* have rectangle on left */
+		rect.left = 0;
+		rect.top = m_UpdateRect.y1;
+		rect.right = m_UpdateRect.x1;
+		rect.bottom = m_UpdateRect.y2;
+		BlitFrontToBack(&rect);
+	}
+	if (m_UpdateRect.x2 < m_ClientRect.right)
+	{
+		/* have rectangle on right */
+		rect.left = m_UpdateRect.x2;
+		rect.top = m_UpdateRect.y1;
+		rect.right = m_ClientRect.right;
+		rect.bottom = m_UpdateRect.y2;
+		BlitFrontToBack(&rect);
+	}
+	/* now blit the update we have just received */
 	HRESULT ddrval;
 	HDC hdc;
 	if ((ddrval = lpBackBuffer->GetDC(&hdc)) == DD_OK)

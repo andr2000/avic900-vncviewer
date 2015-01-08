@@ -30,6 +30,7 @@ private:
 
 	bool RestoreSurfaces(void);
 	void ReleaseResources(void);
+	void BlitFrontToBack(LPRECT rect);
 };
 
 #endif
