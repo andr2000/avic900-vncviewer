@@ -1,4 +1,6 @@
+#ifndef __linux__
 #include <windows.h>
+#endif
 #include <string.h>
 #include "compat.h"
 #include "config_storage.h"
