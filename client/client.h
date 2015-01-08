@@ -81,7 +81,7 @@ protected:
 	void Cleanup();
 	int GetEvent(event_t &evt);
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
-	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h);
+	void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h);
 	virtual void OnFinishedFrameBufferUpdate(rfbClient *client);
 	virtual void OnShutdown() = 0;
 	virtual long GetTimeMs() = 0;
