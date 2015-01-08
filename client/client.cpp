@@ -44,6 +44,7 @@ void Client::Cleanup() {
 	}
 	if (m_ConfigStorage) {
 		delete m_ConfigStorage;
+		m_ConfigStorage = NULL;
 	}
 }
 
