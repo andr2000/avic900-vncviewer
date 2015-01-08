@@ -15,20 +15,25 @@ rfbBool Client_DDraw::OnMallocFrameBuffer(rfbClient *client)
 	return TRUE;
 }
 
-void Client_DDraw::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
-	DEBUGMSG(TRUE, (_T("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
+void Client_DDraw::OnFinishedFrameBufferUpdate(rfbClient *client) {
+	int w = m_UpdateRect.x2 - m_UpdateRect.x1;
+	int h = m_UpdateRect.y2 - m_UpdateRect.y1;
+	DEBUGMSG(TRUE, (_T("OnFinishedFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"),
+		m_UpdateRect.x1, m_UpdateRect.y1, w, h));
 
 	HRESULT ddrval;
 	HDC hdc;
 	if ((ddrval = lpBackBuffer->GetDC(&hdc)) == DD_OK)
 	{
-		if (!BitBlt(hdc, x, y, w, h, hdcImage, x, y, SRCCOPY))
+		if (!BitBlt(hdc, m_UpdateRect.x1, m_UpdateRect.y1, w, h,
+			hdcImage, m_UpdateRect.x1, m_UpdateRect.y1, SRCCOPY))
 		{
 			ddrval = E_FAIL;
 		}
 		lpBackBuffer->ReleaseDC(hdc);
 	}
 	ddrval = lpFrontBuffer->Flip(NULL, 0);
+	Client_WinCE::OnFinishedFrameBufferUpdate(client);
 }
 
 void Client_DDraw::OnShutdown()
@@ -37,7 +42,7 @@ void Client_DDraw::OnShutdown()
 	Client_WinCE::OnShutdown();
 }
 
-int Client_DDraw::Initialize(void *_private)
+int Client_DDraw::Initialize()
 {
 	lpDD = NULL;
 	lpFrontBuffer = NULL;
@@ -89,5 +94,5 @@ int Client_DDraw::Initialize(void *_private)
 	{
 		return -1;
 	}
-	return Client_WinCE::Initialize(_private);
+	return Client_WinCE::Initialize();
 }

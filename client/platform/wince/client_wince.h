@@ -14,7 +14,7 @@ public:
 	Client_WinCE();
 	~Client_WinCE();
 
-	virtual int Initialize(void *_private);
+	virtual int Initialize();
 	void SetWindowHandle(HWND hWnd);
 	void OnTouchUp(int x, int y);
 	void OnTouchDown(int x, int y);
@@ -44,7 +44,6 @@ protected:
 	RECT m_ServerRect;
 	RECT m_ClientRect;
 
-	virtual void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client);
 	virtual void OnShutdown();
 

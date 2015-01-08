@@ -15,9 +15,11 @@
 
 class Client_DDraw : public Client_WinCE {
 public:
-	int Initialize(void *_private);
-	void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
+	int Initialize();
+
+protected:
 	rfbBool OnMallocFrameBuffer(rfbClient *client);
+	void OnFinishedFrameBufferUpdate(rfbClient *client);
 	void OnShutdown();
 
 private:
