@@ -21,10 +21,10 @@ public:
 	void OnShutdown();
 
 private:
-	LPDIRECTDRAW4           lpDD;
-	LPDIRECTDRAWSURFACE4    lpFrontBuffer;
-	LPDIRECTDRAWSURFACE4    lpBackBuffer;
-    HDC hdcImage;
+	LPDIRECTDRAW4 lpDD;
+	LPDIRECTDRAWSURFACE4 lpFrontBuffer;
+	LPDIRECTDRAWSURFACE4 lpBackBuffer;
+	HDC hdcImage;
 };
 
 #endif
