@@ -20,7 +20,7 @@ static const wchar_t *APP_NAME = TEXT("avic_vncviewer");
 
 HANDLE g_hMutex;
 HWND g_hWndMain;
-ConfigStorage *g_Config;
+Client_WinCE *g_Client;
 
 void Cleanup(void)
 {
@@ -192,7 +192,7 @@ bool initializeClient()
 
 	ConfigStorage *config = ConfigStorage::GetInstance();
 	config->Initialize(exe, ini);
-	switch (g_Config->GetDrawingMethod())
+	switch (config->GetDrawingMethod())
 	{
 		case 0:
 		{
@@ -212,7 +212,7 @@ bool initializeClient()
 		}
 	}
 	g_Client->SetWindowHandle(g_hWndMain);
-	return g_Client->Initialize(g_Client) == 0;
+	return g_Client->Initialize() == 0;
 }
 
 #ifdef WINCE
