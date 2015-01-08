@@ -9,19 +9,16 @@ ConfigStorage *ConfigStorage::m_Instance = NULL;
 const std::string ConfigStorage::SECTION_NAME = "General";
 
 ConfigStorage::ConfigStorage() {
-	m_ArgC = 0;
-	m_ArgV = NULL;
 	m_Instance = this;
 }
 
 ConfigStorage::~ConfigStorage() {
-	Clear();
 }
 
 void ConfigStorage::Initialize(std::string &exe, std::string &ini) {
 	/* if fails, then use default parameters */
 	INIReader::Initialize(ini);
-	Clear();
+	m_Args.clear();
 	m_Args.push_back(exe);
 	/* supported encodings */
 	m_Args.push_back("-encodings");
@@ -32,27 +29,12 @@ void ConfigStorage::Initialize(std::string &exe, std::string &ini) {
 	}
 	/* the last one MUST be the server ip + port */
 	m_Args.push_back(GetServer());
-	m_ArgC = m_Args.size();
 	Prepare();
 }
 
-void ConfigStorage::Clear() {
-	if (m_ArgV) {
-		for (int i = 0; i < m_ArgC; i++) {
-			delete[] m_ArgV[i];
-		}
-		delete[] m_ArgV;
-	}
-	m_Args.clear();
-	m_ArgC = 0;
-	m_ArgV = NULL;
-}
-
 void ConfigStorage::Prepare() {
-	m_ArgV = new char *[m_Args.size()];
 	for (size_t i = 0; i < m_Args.size(); i++) {
-		m_ArgV[i] = new char[MAX_PATH + 1];
-		strcpy(m_ArgV[i], m_Args[i].c_str());
+		m_ArgV[i] = const_cast<char *>(m_Args[i].c_str());
 	}
 }
 
