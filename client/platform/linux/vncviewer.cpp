@@ -2,7 +2,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "client_factory.h"
+#include "client_gtk.h"
 #include "config_storage.h"
 
 int main(int argc, char *argv[]) {
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 
 	ini = exe + ".ini";
 	cfg->Initialize(exe, ini);
-	vnc_client = ClientFactory::GetInstance();
+	vnc_client = new Client_Gtk();
 	if (NULL == vnc_client) {
 		fprintf(stderr, "Failed to instantiate VNC client\n");
 		return -1;
