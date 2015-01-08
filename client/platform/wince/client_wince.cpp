@@ -101,9 +101,8 @@ void Client_WinCE::SetWindowHandle(HWND hWnd)
 	m_hWnd = hWnd;
 }
 
-int Client_WinCE::Initialize(void *_private)
+int Client_WinCE::Initialize()
 {
-	m_Instance = static_cast<Client *>(_private);
 	SetRect(&m_ClientRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
 	/* let's rock */
 	int i;
@@ -392,7 +391,4 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
 		NULL, NULL);
 	client->frameBuffer = m_FrameBuffer;
 	return TRUE;
-}
-
-void Client_WinCE::OnFrameBufferUpdate(rfbClient* client, int x, int y, int w, int h) {
 }

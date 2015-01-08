@@ -8,7 +8,6 @@ const char Client::VERSION[] = "AVIC-F900BT VNC client 0.1alpha " __DATE__;
 const char Client::COPYRIGHT[] = "(c) 2014 Andrushchenko, Oleksandr andr2000@gmail.com";
 
 Client::Client() {
-	m_Private = NULL;
 	m_Client = NULL;
 	m_Thread = NULL;
 	m_Mutex = MutexFactory::GetNewMutex();
@@ -20,6 +19,8 @@ Client::Client() {
 	m_LastRefreshTimeMs = -1L;
 	m_ForceRefreshToMs = 0;
 	m_IsScreenRotated = false;
+	memset(&m_UpdateRect, 0, sizeof(m_UpdateRect));
+	m_Instance = this;
 }
 
 Client::~Client() {
@@ -51,7 +52,7 @@ int Client::PollRFB(void *data) {
 	return context->Poll();
 }
 
-int Client::Initialize(void *_private) {
+int Client::Initialize() {
 	m_ConfigStorage = ConfigStorage::GetInstance();
 	/* set logging options */
 	rfbEnableClientLogging = m_ConfigStorage->LoggingEnabled();
@@ -63,7 +64,6 @@ int Client::Initialize(void *_private) {
 	/* is the screen rotated? If so handle Arrows differently */
 	m_IsScreenRotated  = m_ConfigStorage->IsScreenRotated();
 	rfbClientLog("Initializing VNC Client\n");
-	m_Private = _private;
 	/* get new RFB client */
 	m_Client = rfbGetClient(5, 3, 2);
 	if (NULL == m_Client) {
@@ -73,6 +73,7 @@ int Client::Initialize(void *_private) {
 	m_Client->MallocFrameBuffer = MallocFrameBuffer;
 	m_Client->canHandleNewFBSize = FALSE;
 	m_Client->GotFrameBufferUpdate = GotFrameBufferUpdate;
+	m_Client->FinishedFrameBufferUpdate = FinishedFrameBufferUpdate;
 	m_Client->listenPort = -1;
 	m_Client->listen6Port = -1;
 
@@ -133,6 +134,10 @@ rfbBool Client::MallocFrameBuffer(rfbClient *client) {
 
 void Client::GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h) {
 	Client::GetInstance()->OnFrameBufferUpdate(client, x, y, w, h);
+}
+
+void Client::FinishedFrameBufferUpdate(rfbClient *client) {
+	Client::GetInstance()->OnFinishedFrameBufferUpdate(client);
 }
 
 int Client::PostEvent(event_t &evt) {
@@ -269,4 +274,42 @@ int Client::Poll() {
 		}
 	}
 	return result;
+}
+
+void Client::OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) {
+	rfbClientLog("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\n", x, y, w, h);
+	if (m_UpdateRect.x1 + m_UpdateRect.y1 + m_UpdateRect.x2 + m_UpdateRect.y2 == 0)
+	{
+		/* new frame */
+		m_UpdateRect.x1 = x;
+		m_UpdateRect.y1 = y;
+		m_UpdateRect.x2 = x + w;
+		m_UpdateRect.y2 = y + h;
+	}
+	else
+	{
+		if (x < m_UpdateRect.x1)
+		{
+			m_UpdateRect.x1 = x;
+		}
+		if (m_UpdateRect.x2 < x + w)
+		{
+			m_UpdateRect.x2 = x + w;
+		}
+		if (y < m_UpdateRect.y1)
+		{
+			m_UpdateRect.y1 = y;
+		}
+		if (m_UpdateRect.y2 < y + h)
+		{
+			m_UpdateRect.y2 = y + h;
+		}
+	}
+}
+
+void Client::OnFinishedFrameBufferUpdate(rfbClient *client) {
+	rfbClientLog("\n---------------- Update rectangle is (%d, %d) - (%d, %d)\n\n",
+		m_UpdateRect.x1, m_UpdateRect.y1, m_UpdateRect.x2, m_UpdateRect.y2);
+	/* frame is done */
+	memset(&m_UpdateRect, 0, sizeof(m_UpdateRect));
 }

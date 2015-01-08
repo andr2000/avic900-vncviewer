@@ -17,7 +17,7 @@ public:
 		return m_Instance;
 	};
 
-	virtual int Initialize(void *_private);
+	virtual int Initialize();
 	std::string GetServerIP();
 	int Connect();
 	int GetScreenSize(int &width, int &height);
@@ -50,7 +50,6 @@ public:
 	int PostEvent(event_t &evt);
 protected:
 	static Client *m_Instance;
-	void *m_Private;
 	rfbClient* m_Client;
 	Thread *m_Thread;
 	Mutex *m_Mutex;
@@ -71,14 +70,28 @@ protected:
 	void Cleanup();
 	int GetEvent(event_t &evt);
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
-	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) = 0;
+	virtual void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h);
+	virtual void OnFinishedFrameBufferUpdate(rfbClient *client);
 	virtual void OnShutdown() = 0;
 	virtual long GetTimeMs() = 0;
 private:
+	/* update rectangle */
+	const int UPDRECT_DEFAULT_MIN = 10000;
+	const int UPDRECT_DEFAULT_MAX = -1;
+
+	struct {
+		int x1;
+		int y1;
+		int x2;
+		int y2;
+	} m_UpdateRect;;
+
 	bool m_NeedsVirtInpHack;
 	static int PollRFB(void *data);
 	static rfbBool MallocFrameBuffer(rfbClient *client);
 	static void GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
+	static void FinishedFrameBufferUpdate(rfbClient *client);
+
 	void HandleKey(key_t key);
 
 	static const char VERSION[];

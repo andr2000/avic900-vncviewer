@@ -9,20 +9,9 @@ public:
 	Client_Gtk();
 	virtual ~Client_Gtk();
 
-	static Client *GetInstance_Gtk() {
-		if (NULL != Client::GetInstance()) {
-			return Client::GetInstance();
-		}
-		m_Instance = new Client_Gtk();
-		return m_Instance;
-	};
-	void *GetDrawingContext() {
-		return NULL;
-	};
 protected:
 	void SetLogging();
 	rfbBool OnMallocFrameBuffer(rfbClient *client);
-	void OnFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h);
 	void OnShutdown();
 	long GetTimeMs();
 private:
