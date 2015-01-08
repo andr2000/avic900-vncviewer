@@ -27,6 +27,9 @@ private:
 	LPDIRECTDRAWSURFACE4 lpFrontBuffer;
 	LPDIRECTDRAWSURFACE4 lpBackBuffer;
 	HDC hdcImage;
+
+	bool RestoreSurfaces(void);
+	void ReleaseResources(void);
 };
 
 #endif

@@ -32,13 +32,33 @@ void Client_DDraw::OnFinishedFrameBufferUpdate(rfbClient *client) {
 		}
 		lpBackBuffer->ReleaseDC(hdc);
 	}
-	ddrval = lpFrontBuffer->Flip(NULL, 0);
+	/* now flip */
+	while (true)
+	{
+		ddrval = lpFrontBuffer->Flip(NULL, 0);
+		if (ddrval == DD_OK)
+		{
+			break;
+		}
+		if (ddrval == DDERR_SURFACELOST)
+		{
+			if (!RestoreSurfaces())
+			{
+				return;
+			}
+		}
+		if (ddrval != DDERR_WASSTILLDRAWING)
+		{
+			break;
+		}
+	}
 	Client_WinCE::OnFinishedFrameBufferUpdate(client);
 }
 
 void Client_DDraw::OnShutdown()
 {
 	DeleteDC(hdcImage);
+	ReleaseResources();
 	Client_WinCE::OnShutdown();
 }
 
@@ -53,12 +73,16 @@ int Client_DDraw::Initialize()
 	ddrval = DirectDrawCreate(NULL, &pDD, NULL);
 	if (ddrval != DD_OK)
 	{
+		DEBUGMSG(TRUE, (TEXT("DirectDrawCreate Failed!\r\n")));
+		ReleaseResources();
 		return -1;
 	}
 	/* Fetch DirectDraw4 interface */
 	ddrval = pDD->QueryInterface(IID_IDirectDraw4, (LPVOID*)&lpDD);
 	if (ddrval != DD_OK)
 	{
+		DEBUGMSG(TRUE, (TEXT("QueryInterface Failed!\r\n")));
+		ReleaseResources();
 		return -1;
 	}
 	pDD->Release();
@@ -67,6 +91,8 @@ int Client_DDraw::Initialize()
 	ddrval = lpDD->SetCooperativeLevel(m_hWnd, DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN);
 	if (ddrval != DD_OK)
 	{
+		DEBUGMSG(TRUE, (TEXT("SetCooperativeLevel Failed!\r\n")));
+		ReleaseResources();
 		return -1;
 	}
 	/* Create surface */
@@ -82,8 +108,12 @@ int Client_DDraw::Initialize()
 	{
 		if (ddrval == DDERR_NOFLIPHW)
 		{
+			DEBUGMSG(TRUE, (TEXT("Display driver doesn't support flipping surfaces!\r\n")));
+			ReleaseResources();
 			return -1;
 		}
+		DEBUGMSG(TRUE, (TEXT("CreateSurface FrontBuffer Failed!\r\n")));
+		ReleaseResources();
 		return -1;
 	}
 	/* get a pointer to the back buffer */
@@ -92,7 +122,38 @@ int Client_DDraw::Initialize()
 	ddrval = lpFrontBuffer->GetAttachedSurface(&ddscaps, &lpBackBuffer);
 	if (ddrval != DD_OK)
 	{
+		DEBUGMSG(TRUE, (TEXT("GetAttachedSurface Failed!\r\n")));
+		ReleaseResources();
 		return -1;
 	}
 	return Client_WinCE::Initialize();
+}
+
+bool Client_DDraw::RestoreSurfaces(void)
+{
+	HRESULT ddrval = lpFrontBuffer->Restore();
+	if (ddrval != DD_OK)
+	{
+		return false;
+	}
+	return true;
+}
+
+void Client_DDraw::ReleaseResources(void)
+{
+	if (lpBackBuffer != NULL)
+	{
+		lpBackBuffer->Release();
+		lpBackBuffer = NULL;
+	}
+	if (lpFrontBuffer != NULL)
+	{
+		lpFrontBuffer->Release();
+		lpFrontBuffer = NULL;
+	}
+	if (lpDD != NULL)
+	{
+		lpDD->Release();
+		lpDD = NULL;
+	}
 }
