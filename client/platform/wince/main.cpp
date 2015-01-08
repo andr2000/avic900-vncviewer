@@ -48,12 +48,14 @@ long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			}
 			break;
 		}
+#ifdef WINCE
 		case WM_SETCURSOR:
 		{
 			/* Turn off the cursor since this is a full-screen app */
 			SetCursor(NULL);
 			return TRUE;
 		}
+#endif
 		case WM_ERASEBKGND:
 		{
 			return 1;
