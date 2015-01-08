@@ -129,6 +129,11 @@ int Client_DDraw::Initialize()
 	lpFrontBuffer = NULL;
 	lpBackBuffer = NULL;
 
+	if (Client_WinCE::Initialize() < 0)
+	{
+		return -1;
+	}
+
 	HRESULT ddrval;
 	LPDIRECTDRAW pDD;
 	ddrval = DirectDrawCreate(NULL, &pDD, NULL);
@@ -187,7 +192,7 @@ int Client_DDraw::Initialize()
 		ReleaseResources();
 		return -1;
 	}
-	return Client_WinCE::Initialize();
+	return 0;
 }
 
 bool Client_DDraw::RestoreSurfaces(void)

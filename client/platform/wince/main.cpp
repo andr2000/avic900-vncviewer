@@ -163,7 +163,6 @@ bool initialize(HINSTANCE hInstance, int nCmdShow)
 		return false;
 	}
 	g_hWndMain = CreateWindowEx(WS_EX_TOPMOST, wc.lpszClassName, APP_TITLE,
-		WS_VISIBLE | /* so we don't have to call ShowWindow */
 		WS_POPUP, /* non-app window */
 		0, 0,
 #ifdef WINCE
@@ -218,7 +217,12 @@ bool initializeClient()
 		}
 	}
 	g_Client->SetWindowHandle(g_hWndMain);
-	return g_Client->Initialize() == 0;
+	if (g_Client->Initialize() < 0)
+	{
+		return false;
+	}
+	ShowWindow(g_hWndMain, SW_SHOW);
+	return true;
 }
 
 #ifdef WINCE
