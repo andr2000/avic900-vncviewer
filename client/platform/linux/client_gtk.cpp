@@ -8,7 +8,6 @@ Client_Gtk::Client_Gtk() : Client() {
 }
 
 Client_Gtk::~Client_Gtk() {
-	Cleanup();
 	if (m_FrameBuffer) {
 		delete m_FrameBuffer;
 	}

@@ -20,7 +20,6 @@ static const wchar_t *APP_NAME = TEXT("avic_vncviewer");
 
 HANDLE g_hMutex;
 HWND g_hWndMain;
-Client_WinCE *g_Client;
 ConfigStorage *g_Config;
 
 void Cleanup(void)
@@ -33,11 +32,6 @@ void Cleanup(void)
 	{
 		delete g_Client;
 		g_Client = NULL;
-	}
-	if (g_Config)
-	{
-		delete g_Config;
-		g_Config = NULL;
 	}
 	DestroyWindow(g_hWndMain);
 }
@@ -196,8 +190,8 @@ bool initializeClient()
 	std::string ini(filename);
 	ini += ".ini";
 
-	g_Config = ConfigStorage::GetInstance();
-	g_Config->Initialize(exe, ini);
+	ConfigStorage *config = ConfigStorage::GetInstance();
+	config->Initialize(exe, ini);
 	switch (g_Config->GetDrawingMethod())
 	{
 		case 0:

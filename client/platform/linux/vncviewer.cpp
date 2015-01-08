@@ -109,8 +109,5 @@ int main(int argc, char *argv[]) {
 	if (vnc_client) {
 		delete vnc_client;
 	}
-	if (cfg) {
-		delete cfg;
-	}
 	return 0;
 }

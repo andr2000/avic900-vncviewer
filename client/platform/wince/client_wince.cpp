@@ -26,7 +26,6 @@ Client_WinCE::Client_WinCE() : Client() {
 }
 
 Client_WinCE::~Client_WinCE() {
-	Cleanup();
 	SetHotkeyHandler(false);
 	KillTimer(m_hWnd, ID_TIMER_LONG_PRESS);
 #ifdef SHOW_POINTER_TRACE
