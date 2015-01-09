@@ -51,7 +51,7 @@ void Client_WinCE::Logger(const char *format, ...) {
 	_vsnprintf(buf, LOG_BUF_SZ, format, args);
 	va_end(args);
 	mbstowcs(buf_w, buf, LOG_BUF_SZ);
-	DEBUGMSG(TRUE, (_T("%s\r\n"), buf_w));
+	DEBUGMSG(TRUE, (TEXT("%s\r\n"), buf_w));
 }
 
 void Client_WinCE::SetLogging() {
@@ -139,7 +139,7 @@ void Client_WinCE::SetHotkeyHandler(bool set) {
 				continue;
 			}
 			/* found, substitute */
-			DEBUGMSG(true, (_T("Found original hotkey handler: %s\r\n"),
+			DEBUGMSG(true, (TEXT("Found original hotkey handler: %s\r\n"),
 				WND_PROC_NAMES[i]));
 			m_HotkeyWndProc = (WNDPROC)GetWindowLong(m_HotkeyHwnd, GWL_WNDPROC);
 			if (m_HotkeyWndProc) {
@@ -150,7 +150,7 @@ void Client_WinCE::SetHotkeyHandler(bool set) {
 			}
 		}
 		if (i == num_windows) {
-			DEBUGMSG(true, (_T("DID NOT find the original hotkey handler\r\n")));
+			DEBUGMSG(true, (TEXT("DID NOT find the original hotkey handler\r\n")));
 		}
 	} else {
 		if (m_HotkeyWndProc && m_HotkeyHwnd) {
@@ -176,7 +176,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 			{
 				if (LOWORD(lParam) == 0x0) {
 					/* pressed */
-					DEBUGMSG(true, (_T("MAP pressed\r\n")));
+					DEBUGMSG(true, (TEXT("MAP pressed\r\n")));
 					if (!m_FilterAutoRepeat && !m_LongPress) {
 						/* start processing long press */
 						SetTimer(m_hWnd, ID_TIMER_LONG_PRESS, ID_TIMER_LONG_PRESS_DELAY, NULL);
@@ -185,7 +185,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 					return 1;
 				} else if (LOWORD(lParam) == 0x1000) {
 					/* released */
-					DEBUGMSG(true, (_T("MAP released\r\n")));
+					DEBUGMSG(true, (TEXT("MAP released\r\n")));
 					if (m_FilterAutoRepeat) {
 						m_FilterAutoRepeat = false;
 						KillTimer(m_hWnd, ID_TIMER_LONG_PRESS);
@@ -204,7 +204,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 			{
 				if (LOWORD(lParam) == 0x0) {
 					/* pressed */
-					DEBUGMSG(true, (_T("UP pressed\r\n")));
+					DEBUGMSG(true, (TEXT("UP pressed\r\n")));
 					evt.data.key = Client::KEY_UP;
 					PostEvent(evt);
 				}
@@ -215,7 +215,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 			{
 				if (LOWORD(lParam) == 0x0) {
 					/* pressed */
-					DEBUGMSG(true, (_T("DOWN pressed\r\n")));
+					DEBUGMSG(true, (TEXT("DOWN pressed\r\n")));
 					evt.data.key = Client::KEY_DOWN;
 					PostEvent(evt);
 				}
@@ -226,7 +226,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 			{
 				if (LOWORD(lParam) == 0x0) {
 					/* pressed */
-					DEBUGMSG(true, (_T("LEFT pressed\r\n")));
+					DEBUGMSG(true, (TEXT("LEFT pressed\r\n")));
 					evt.data.key = Client::KEY_LEFT;
 					PostEvent(evt);
 				}
@@ -237,7 +237,7 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 			{
 				if (LOWORD(lParam) == 0x0) {
 					/* pressed */
-					DEBUGMSG(true, (_T("RIGHT pressed\r\n")));
+					DEBUGMSG(true, (TEXT("RIGHT pressed\r\n")));
 					evt.data.key = Client::KEY_RIGHT;
 					PostEvent(evt);
 				}
@@ -283,7 +283,7 @@ void Client_WinCE::OnTimer(UINT_PTR nIDEvent) {
 		m_TraceQueue.clear();
 		GetWindowRect(&r);
 		InvalidateRect(&r, FALSE);
-		DEBUGMSG(true, (_T("Invalidate x=%d y=%d w=%d h=%d\r\n"),
+		DEBUGMSG(true, (TEXT("Invalidate x=%d y=%d w=%d h=%d\r\n"),
 			r.left, r.top, r.right, r.bottom));
 	}
 #endif
@@ -357,7 +357,7 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
 	width = client->width;
 	height = client->height;
 	depth = client->format.bitsPerPixel;
-	DEBUGMSG(TRUE, (_T("OnMallocFrameBuffer: w=%d h=%d d=%d\r\n"), width, height, depth));
+	DEBUGMSG(TRUE, (TEXT("OnMallocFrameBuffer: w=%d h=%d d=%d\r\n"), width, height, depth));
 	client->updateRect.x = 0;
 	client->updateRect.y = 0;
 	client->updateRect.w = width;

@@ -34,6 +34,9 @@ void Cleanup(void)
 		g_Client = NULL;
 	}
 	DestroyWindow(g_hWndMain);
+#ifndef WINCE
+	FreeConsole();
+#endif
 }
 
 long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -135,7 +138,7 @@ bool isAlreadyRunning()
 	}
 	if (ERROR_ALREADY_EXISTS == GetLastError()) {
 		HWND hWnd = FindWindow(0, APP_TITLE);
-		DEBUGMSG(TRUE, (_T("Found running instance, will exit now\r\n")));
+		DEBUGMSG(TRUE, (TEXT("Found running instance, will exit now\r\n")));
 		SetForegroundWindow(hWnd);
 		return TRUE;
 	}
@@ -235,6 +238,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		return 0;
 	}
+#ifndef WINCE
+	AllocConsole();
+	freopen("CONOUT$","w",stdout);
+#endif
 	if (!initialize(hInstance, nCmdShow))
 	{
 		Cleanup();

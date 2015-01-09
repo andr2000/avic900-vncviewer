@@ -11,7 +11,8 @@ char *strerror(int errno);
 #endif
 
 #ifndef WINCE
-#define DEBUGMSG(cond,printf_exp) ((void)0)
+#define DEBUGMSG(cond, printf_exp)   \
+	((void)((cond)?(wprintf printf_exp),1:0))
 #endif
 
 #if(defined __cplusplus)
