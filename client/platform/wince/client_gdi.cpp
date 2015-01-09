@@ -22,7 +22,7 @@ void Client_GDI::OnPaint(void) {
 	w = ps.rcPaint.right - ps.rcPaint.left;
 	h = ps.rcPaint.bottom - ps.rcPaint.top;
 
-	DEBUGMSG(true, (_T("OnPaint x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
+	DEBUGMSG(TRUE, (TEXT("OnPaint x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
 
 	dcMem = CreateCompatibleDC(dc);
 	HGDIOBJ old_bitmap = SelectObject(dcMem, m_hBmp);

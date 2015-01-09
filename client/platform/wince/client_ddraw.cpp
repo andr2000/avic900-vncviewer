@@ -18,7 +18,7 @@ rfbBool Client_DDraw::OnMallocFrameBuffer(rfbClient *client)
 void Client_DDraw::OnFinishedFrameBufferUpdate(rfbClient *client) {
 	int w = m_UpdateRect.x2 - m_UpdateRect.x1;
 	int h = m_UpdateRect.y2 - m_UpdateRect.y1;
-	DEBUGMSG(TRUE, (_T("OnFinishedFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"),
+	DEBUGMSG(TRUE, (TEXT("OnFinishedFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"),
 		m_UpdateRect.x1, m_UpdateRect.y1, w, h));
 
 	/* blit the update we have just received */
