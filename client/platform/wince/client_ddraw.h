@@ -17,6 +17,7 @@ class Client_DDraw : public Client_WinCE {
 public:
 	int Initialize();
 	void OnActivate(bool isActive);
+	void OnPaint(void);
 
 protected:
 	rfbBool OnMallocFrameBuffer(rfbClient *client);

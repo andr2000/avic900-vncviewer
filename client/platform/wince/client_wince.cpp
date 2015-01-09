@@ -339,12 +339,6 @@ void Client_WinCE::OnActivate(bool isActive) {
 	{
 		ShowFullScreen();
 	}
-#ifndef WIN32
-	else
-	{
-		ShowWindow(m_hWnd, SW_HIDE);
-	}
-#endif
 }
 
 void Client_WinCE::ShowFullScreen() {
@@ -354,8 +348,6 @@ void Client_WinCE::ShowFullScreen() {
 	MoveWindow(m_hWnd, m_ClientRect.left, m_ClientRect.top,
 		m_ClientRect.left + m_ClientRect.right,
 		m_ClientRect.top + m_ClientRect.bottom, false);
-#else
-	ShowWindow(m_hWnd, SW_SHOW);
 #endif
 }
 

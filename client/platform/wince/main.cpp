@@ -169,7 +169,7 @@ bool initialize(HINSTANCE hInstance, int nCmdShow)
 	{
 		return false;
 	}
-	g_hWndMain = CreateWindowEx(WS_EX_TOPMOST, wc.lpszClassName, APP_TITLE,
+	g_hWndMain = CreateWindowEx(0, wc.lpszClassName, APP_TITLE,
 		WS_POPUP, /* non-app window */
 		0, 0,
 #ifdef WINCE
