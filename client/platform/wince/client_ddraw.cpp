@@ -171,3 +171,19 @@ void Client_DDraw::OnActivate(bool isActive)
 			m_ClientRect.bottom - m_ClientRect.top);
 	}
 }
+
+void Client_DDraw::OnPaint(void)
+{
+	/* we are running a normal window, so we
+	   can be inactive, but still partially visible */
+	PAINTSTRUCT ps;
+	BeginPaint(m_hWnd, &ps);
+	LONG x, y, w, h;
+
+	x = ps.rcPaint.left;
+	y = ps.rcPaint.top;
+	w = ps.rcPaint.right - ps.rcPaint.left;
+	h = ps.rcPaint.bottom - ps.rcPaint.top;
+	Blit(x, y, w, h);
+	EndPaint(m_hWnd, &ps);
+}
