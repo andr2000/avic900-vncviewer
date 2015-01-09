@@ -5,7 +5,8 @@
 
 #include "mutex.h"
 
-class Mutex_Linux : public Mutex {
+class Mutex_Linux : public Mutex
+{
 public:
 	Mutex_Linux();
 	~Mutex_Linux();

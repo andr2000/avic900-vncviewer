@@ -2,25 +2,31 @@
 
 #include "thread.h"
 
-Thread::Thread() {
+Thread::Thread()
+{
 	m_Worker = NULL;
 	m_Context = NULL;
 }
 
-Thread::~Thread() {
+Thread::~Thread()
+{
 }
 
-void Thread::SetWorker(ThreadWorkerFunc &worker, void *context) {
+void Thread::SetWorker(ThreadWorkerFunc &worker, void *context)
+{
 	m_Worker = worker;
 	m_Context = context;
 }
 
-int Thread::Run() {
+int Thread::Run()
+{
 	int result;
 
-	while (!ShouldStop()) {
+	while (!ShouldStop())
+	{
 		result = m_Worker(m_Context);
-		if (result < 0) {
+		if (result < 0)
+		{
 			return result;
 		}
 	}

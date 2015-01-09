@@ -29,7 +29,8 @@ void Client_DDraw::Blit(int x, int y, int w, int h)
 	}
 }
 
-void Client_DDraw::OnFinishedFrameBufferUpdate(rfbClient *client) {
+void Client_DDraw::OnFinishedFrameBufferUpdate(rfbClient *client)
+{
 	if (m_Active)
 	{
 		int w = m_UpdateRect.x2 - m_UpdateRect.x1;
@@ -71,7 +72,7 @@ int Client_DDraw::Initialize()
 		return -1;
 	}
 	/* Fetch DirectDraw4 interface */
-	ddrval = pDD->QueryInterface(IID_IDirectDraw4, (LPVOID*)&lpDD);
+	ddrval = pDD->QueryInterface(IID_IDirectDraw4, (LPVOID*) &lpDD);
 	if (ddrval != DD_OK)
 	{
 		DEBUGMSG(TRUE, (TEXT("QueryInterface Failed!\r\n")));
@@ -92,7 +93,7 @@ int Client_DDraw::Initialize()
 	/* Create surface */
 	DDSURFACEDESC2 ddsd;
 	memset(&ddsd, 0, sizeof(ddsd));
-	ddsd.dwSize = sizeof( ddsd );
+	ddsd.dwSize = sizeof(ddsd);
 	ddsd.dwFlags = DDSD_CAPS;
 	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 	ddrval = lpDD->CreateSurface(&ddsd, &lpFrontBuffer, NULL);
@@ -166,8 +167,7 @@ void Client_DDraw::OnActivate(bool isActive)
 	if (isActive)
 	{
 		/* framebuffer might already have been updated */
-		Blit(m_ClientRect.left, m_ClientRect.top,
-			m_ClientRect.right - m_ClientRect.left,
+		Blit(m_ClientRect.left, m_ClientRect.top, m_ClientRect.right - m_ClientRect.left,
 			m_ClientRect.bottom - m_ClientRect.top);
 	}
 }
@@ -175,7 +175,7 @@ void Client_DDraw::OnActivate(bool isActive)
 void Client_DDraw::OnPaint(void)
 {
 	/* we are running a normal window, so we
-	   can be inactive, but still partially visible */
+	 can be inactive, but still partially visible */
 	PAINTSTRUCT ps;
 	BeginPaint(m_hWnd, &ps);
 	LONG x, y, w, h;

@@ -5,7 +5,8 @@
 
 #include "thread.h"
 
-class Thread_WinCE : public Thread {
+class Thread_WinCE : public Thread
+{
 public:
 	Thread_WinCE();
 	~Thread_WinCE();
@@ -13,12 +14,13 @@ public:
 	void SleepMs(int ms);
 protected:
 	int Start();
-	int ShouldStop() {
+	int ShouldStop()
+	{
 		return InterlockedExchange(&m_Terminated, m_Terminated);
 	}
 private:
 	LONG m_Terminated;
-	HANDLE m_Thread;;
+	HANDLE m_Thread;
 	DWORD m_ThreadID;
 
 	static DWORD WINAPI ThreadFunc(LPVOID lpParam);

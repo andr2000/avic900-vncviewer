@@ -5,7 +5,8 @@
 #include "client_gtk.h"
 #include "config_storage.h"
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	std::string exe(argv[0]);
 	ConfigStorage *cfg = ConfigStorage::GetInstance();
 	Client *vnc_client;
@@ -17,16 +18,19 @@ int main(int argc, char *argv[]) {
 	ini = exe + ".ini";
 	cfg->Initialize(exe, ini);
 	vnc_client = new Client_Gtk();
-	if (NULL == vnc_client) {
+	if (NULL == vnc_client)
+	{
 		fprintf(stderr, "Failed to instantiate VNC client\n");
 		return -1;
 	}
-	if (vnc_client->Initialize() < 0) {
-	fprintf(stderr, "Failed to initialize VNC client\n");
+	if (vnc_client->Initialize() < 0)
+	{
+		fprintf(stderr, "Failed to initialize VNC client\n");
 		return -1;
 	}
 	fprintf(stdout, "Trying to connect to %s\n", cfg->GetServer().c_str());
-	if (vnc_client->Connect() < 0) {
+	if (vnc_client->Connect() < 0)
+	{
 		fprintf(stderr, "Failed to start VNC client\n");
 		return -1;
 	}
@@ -34,79 +38,82 @@ int main(int argc, char *argv[]) {
 	newt = oldt;
 	newt.c_lflag &= ~(ICANON);
 	tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-	while (run) {
+	while (run)
+	{
 		fprintf(stdout, "q to quit, h for Home or e for Escape:\n");
 		c = getchar();
-		switch (c) {
-		case 'q':
-			run = false;
-			break;
-		case 'h':
+		switch (c)
 		{
-			Client::event_t evt;
+			case 'q':
+				run = false;
+				break;
+			case 'h':
+			{
+				Client::event_t evt;
 
-			fprintf(stdout, "KEY_HOME\n");
-			evt.what = Client::EVT_KEY;
-			evt.data.key = Client::KEY_HOME;
-			vnc_client->PostEvent(evt);
-			break;
-		}
-		case 'e':
-		{
-			Client::event_t evt;
+				fprintf(stdout, "KEY_HOME\n");
+				evt.what = Client::EVT_KEY;
+				evt.data.key = Client::KEY_HOME;
+				vnc_client->PostEvent(evt);
+				break;
+			}
+			case 'e':
+			{
+				Client::event_t evt;
 
-			fprintf(stdout, "KEY_BACK\n");
-			evt.what = Client::EVT_KEY;
-			evt.data.key = Client::KEY_BACK;
-			vnc_client->PostEvent(evt);
-			break;
-		}
-		case 'w':
-		{
-			Client::event_t evt;
+				fprintf(stdout, "KEY_BACK\n");
+				evt.what = Client::EVT_KEY;
+				evt.data.key = Client::KEY_BACK;
+				vnc_client->PostEvent(evt);
+				break;
+			}
+			case 'w':
+			{
+				Client::event_t evt;
 
-			fprintf(stdout, "KEY_UP\n");
-			evt.what = Client::EVT_KEY;
-			evt.data.key = Client::KEY_UP;
-			vnc_client->PostEvent(evt);
-			break;
-		}
-		case 's':
-		{
-			Client::event_t evt;
+				fprintf(stdout, "KEY_UP\n");
+				evt.what = Client::EVT_KEY;
+				evt.data.key = Client::KEY_UP;
+				vnc_client->PostEvent(evt);
+				break;
+			}
+			case 's':
+			{
+				Client::event_t evt;
 
-			fprintf(stdout, "KEY_DOWN\n");
-			evt.what = Client::EVT_KEY;
-			evt.data.key = Client::KEY_DOWN;
-			vnc_client->PostEvent(evt);
-			break;
-		}
-		case 'a':
-		{
-			Client::event_t evt;
+				fprintf(stdout, "KEY_DOWN\n");
+				evt.what = Client::EVT_KEY;
+				evt.data.key = Client::KEY_DOWN;
+				vnc_client->PostEvent(evt);
+				break;
+			}
+			case 'a':
+			{
+				Client::event_t evt;
 
-			fprintf(stdout, "KEY_LEFT\n");
-			evt.what = Client::EVT_KEY;
-			evt.data.key = Client::KEY_LEFT;
-			vnc_client->PostEvent(evt);
-			break;
-		}
-		case 'd':
-		{
-			Client::event_t evt;
+				fprintf(stdout, "KEY_LEFT\n");
+				evt.what = Client::EVT_KEY;
+				evt.data.key = Client::KEY_LEFT;
+				vnc_client->PostEvent(evt);
+				break;
+			}
+			case 'd':
+			{
+				Client::event_t evt;
 
-			fprintf(stdout, "KEY_RIGHT\n");
-			evt.what = Client::EVT_KEY;
-			evt.data.key = Client::KEY_RIGHT;
-			vnc_client->PostEvent(evt);
-			break;
-		}
-		default:
-			break;
+				fprintf(stdout, "KEY_RIGHT\n");
+				evt.what = Client::EVT_KEY;
+				evt.data.key = Client::KEY_RIGHT;
+				vnc_client->PostEvent(evt);
+				break;
+			}
+			default:
+				break;
 		}
 	}
 	tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
-	if (vnc_client) {
+	if (vnc_client)
+	{
 		delete vnc_client;
 	}
 	return 0;

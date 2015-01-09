@@ -3,7 +3,8 @@
 
 #include "client_wince.h"
 
-class Client_GDI : public Client_WinCE {
+class Client_GDI : public Client_WinCE
+{
 public:
 	void OnPaint(void);
 

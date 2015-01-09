@@ -9,7 +9,8 @@
 #include "client.h"
 #include "compat.h"
 
-class Client_WinCE : public Client {
+class Client_WinCE : public Client
+{
 public:
 	Client_WinCE();
 	~Client_WinCE();
@@ -24,12 +25,14 @@ public:
 
 protected:
 #ifdef SHOW_POINTER_TRACE
-	enum trace_point_type_e {
+	enum trace_point_type_e
+	{
 		TRACE_POINT_DOWN,
 		TRACE_POINT_UP,
 		TRACE_POINT_MOVE
 	};
-	struct trace_point_t {
+	struct trace_point_t
+	{
 		LONG x;
 		LONG y;
 		trace_point_type_e type;
@@ -48,7 +51,8 @@ protected:
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client);
 	virtual void OnShutdown();
 
-	long GetTimeMs() {
+	long GetTimeMs()
+	{
 		return GetTickCount();
 	}
 
@@ -61,7 +65,8 @@ protected:
 private:
 	static const int CONNECT_MAX_TRY = 3;
 
-	enum AVIC_HW_BUTTONS {
+	enum AVIC_HW_BUTTONS
+	{
 		HW_BTN_FIRST,
 		HW_BTN_MAP,
 		HW_BTN_MENU,
@@ -75,7 +80,8 @@ private:
 		HW_BTN_LAST
 	};
 
-	enum ID_TIMER {
+	enum ID_TIMER
+	{
 		ID_TIMER_LONG_PRESS = 1,
 #ifdef SHOW_POINTER_TRACE
 		ID_TIMER_TRACE

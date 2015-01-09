@@ -5,13 +5,16 @@
 
 #include "INIReader.h"
 
-class ConfigStorage : public INIReader {
+class ConfigStorage : public INIReader
+{
 public:
 	ConfigStorage();
 	virtual ~ConfigStorage();
 
-	static ConfigStorage *GetInstance() {
-		if (NULL == m_Instance) {
+	static ConfigStorage *GetInstance()
+	{
+		if (NULL == m_Instance)
+		{
 			m_Instance = new ConfigStorage();
 			return m_Instance;
 		}
@@ -19,10 +22,12 @@ public:
 	}
 	void Initialize(std::string &exe, std::string &ini);
 
-	int GetArgC() {
+	int GetArgC()
+	{
 		return m_Args.size();
 	}
-	char **GetArgV() {
+	char **GetArgV()
+	{
 		return m_ArgV;
 	}
 	bool LoggingEnabled();
@@ -36,7 +41,7 @@ protected:
 	static ConfigStorage *m_Instance;
 	static const std::string SECTION_NAME;
 
-	std::vector <std::string> m_Args;
+	std::vector<std::string> m_Args;
 	char *m_ArgV[16];
 
 	void Prepare();

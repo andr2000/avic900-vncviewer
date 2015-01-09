@@ -1,6 +1,7 @@
 #include "client_gdi.h"
 
-void Client_GDI::OnFinishedFrameBufferUpdate(rfbClient *client) {
+void Client_GDI::OnFinishedFrameBufferUpdate(rfbClient *client)
+{
 	RECT ps;
 
 	ps.left = m_UpdateRect.x1;
@@ -11,7 +12,8 @@ void Client_GDI::OnFinishedFrameBufferUpdate(rfbClient *client) {
 	Client_WinCE::OnFinishedFrameBufferUpdate(client);
 }
 
-void Client_GDI::OnPaint(void) {
+void Client_GDI::OnPaint(void)
+{
 	PAINTSTRUCT ps;
 	HDC dc = BeginPaint(m_hWnd, &ps);
 	HDC dcMem;
@@ -46,8 +48,10 @@ void Client_GDI::OnPaint(void) {
 
 		old_brush = pDC->SelectObject(&brush_red);
 		old_pen = pDC->SelectObject(&pen_red);
-		for (size_t i = 0; i < m_TraceQueue.size(); i++) {
-			switch (m_TraceQueue[i].type) {
+		for (size_t i = 0; i < m_TraceQueue.size(); i++)
+		{
+			switch (m_TraceQueue[i].type)
+			{
 				case TRACE_POINT_DOWN:
 				{
 					brush = &brush_red;
@@ -82,7 +86,7 @@ void Client_GDI::OnPaint(void) {
 			pDC->FillRect(&r, brush);
 
 			DEBUGMSG(true, (_T("touch at x=%d y=%d\r\n"),
-				m_TraceQueue[i].x, m_TraceQueue[i].y));
+					m_TraceQueue[i].x, m_TraceQueue[i].y));
 		}
 		pDC->SelectObject(old_brush);
 		pDC->SelectObject(old_pen);

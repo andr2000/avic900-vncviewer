@@ -15,7 +15,7 @@
 
 #define INITGUID
 
-static const wchar_t *APP_TITLE  = TEXT("VncViewer");
+static const wchar_t *APP_TITLE = TEXT("VncViewer");
 static const wchar_t *APP_NAME = TEXT("avic_vncviewer");
 
 HANDLE g_hMutex;
@@ -103,7 +103,7 @@ long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		{
 			if (g_Client)
 			{
-		        if (wParam & MK_LBUTTON)
+				if (wParam & MK_LBUTTON)
 				{
 					g_Client->OnTouchMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 					return 0;
@@ -135,12 +135,13 @@ bool isAlreadyRunning()
 	g_hMutex = CreateMutex(NULL, FALSE, APP_NAME);
 	if (!g_hMutex)
 	{
-		MessageBox(NULL, TEXT("Failed to create named mutex\r\n") \
+		MessageBox(NULL, TEXT("Failed to create named mutex\r\n")
 			TEXT("Unable to check if single instance is running... Will exit now"),
 			TEXT("Error"), MB_OK);
 		return TRUE;
 	}
-	if (ERROR_ALREADY_EXISTS == GetLastError()) {
+	if (ERROR_ALREADY_EXISTS == GetLastError())
+	{
 		HWND hWnd = FindWindow(0, APP_TITLE);
 		DEBUGMSG(TRUE, (TEXT("Found running instance, will exit now\r\n")));
 		SetForegroundWindow(hWnd);
@@ -161,7 +162,7 @@ bool initialize(HINSTANCE hInstance, int nCmdShow)
 	wc.cbWndExtra = 0;
 	wc.hInstance = hInstance;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+	wc.hbrBackground = (HBRUSH) GetStockObject(BLACK_BRUSH);
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName = TEXT("VncViewerClass");
 	rc = RegisterClass(&wc) ? true : false;
@@ -169,9 +170,8 @@ bool initialize(HINSTANCE hInstance, int nCmdShow)
 	{
 		return false;
 	}
-	g_hWndMain = CreateWindowEx(0, wc.lpszClassName, APP_TITLE,
-		WS_POPUP, /* non-app window */
-		0, 0,
+	g_hWndMain = CreateWindowEx(0, wc.lpszClassName, APP_TITLE, WS_POPUP, /* non-app window */
+	0, 0,
 #ifdef WINCE
 		GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
 #else

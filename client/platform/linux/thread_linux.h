@@ -7,17 +7,20 @@
 
 #include "thread.h"
 
-class Thread_Linux : public Thread {
+class Thread_Linux : public Thread
+{
 public:
 	Thread_Linux();
 	~Thread_Linux();
-	void SleepMs(int ms) {
+	void SleepMs(int ms)
+	{
 		usleep(ms * 1000);
 	}
 protected:
 	int Start();
 	void Terminate();
-	int ShouldStop() {
+	int ShouldStop()
+	{
 		return m_Terminated;
 	}
 private:

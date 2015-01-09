@@ -1,7 +1,8 @@
 #ifndef _THREAD_H
 #define _THREAD_H
 
-class Thread {
+class Thread
+{
 public:
 	typedef int ThreadWorkerFunc(void *data);
 
