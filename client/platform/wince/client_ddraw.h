@@ -16,6 +16,7 @@
 class Client_DDraw : public Client_WinCE {
 public:
 	int Initialize();
+	void OnActivate(bool isActive);
 
 protected:
 	rfbBool OnMallocFrameBuffer(rfbClient *client);
@@ -30,6 +31,7 @@ private:
 
 	bool RestoreSurfaces(void);
 	void ReleaseResources(void);
+	void Blit(int x, int y, int w, int h);
 };
 
 #endif

@@ -278,7 +278,6 @@ int Client::Poll() {
 }
 
 void Client::OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) {
-	rfbClientLog("OnFrameBufferUpdate: x=%d y=%d w=%d h=%d\n", x, y, w, h);
 	if (m_UpdateRect.x1 + m_UpdateRect.y1 + m_UpdateRect.x2 + m_UpdateRect.y2 == 0)
 	{
 		/* new frame */
@@ -309,8 +308,6 @@ void Client::OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) {
 }
 
 void Client::OnFinishedFrameBufferUpdate(rfbClient *client) {
-	rfbClientLog("\n---------------- Update rectangle is (%d, %d) - (%d, %d)\n\n",
-		m_UpdateRect.x1, m_UpdateRect.y1, m_UpdateRect.x2, m_UpdateRect.y2);
 	/* frame is done */
 	memset(&m_UpdateRect, 0, sizeof(m_UpdateRect));
 }

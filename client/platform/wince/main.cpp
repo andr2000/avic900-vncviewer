@@ -43,11 +43,15 @@ long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 {
 	switch (message)
 	{
+#ifdef WINCE
 		case WM_ACTIVATE:
+#else
+		case WM_ACTIVATEAPP:
+#endif
 		{
 			if (g_Client)
 			{
-				g_Client->OnActivate(wParam ? true : false);
+				g_Client->OnActivate(wParam != WA_INACTIVE);
 			}
 			break;
 		}
@@ -165,7 +169,7 @@ bool initialize(HINSTANCE hInstance, int nCmdShow)
 	{
 		return false;
 	}
-	g_hWndMain = CreateWindowEx(0, wc.lpszClassName, APP_TITLE,
+	g_hWndMain = CreateWindowEx(WS_EX_TOPMOST, wc.lpszClassName, APP_TITLE,
 		WS_POPUP, /* non-app window */
 		0, 0,
 #ifdef WINCE
@@ -178,7 +182,6 @@ bool initialize(HINSTANCE hInstance, int nCmdShow)
 	{
 		return false;
 	}
-	SetFocus(g_hWndMain);
 	return true;
 }
 
@@ -224,6 +227,7 @@ bool initializeClient()
 	{
 		return false;
 	}
+	SetFocus(g_hWndMain);
 	ShowWindow(g_hWndMain, SW_SHOW);
 	return true;
 }
