@@ -25,12 +25,11 @@ protected:
 private:
 	LPDIRECTDRAW4 lpDD;
 	LPDIRECTDRAWSURFACE4 lpFrontBuffer;
-	LPDIRECTDRAWSURFACE4 lpBackBuffer;
+	LPDIRECTDRAWCLIPPER lpClipper;
 	HDC hdcImage;
 
 	bool RestoreSurfaces(void);
 	void ReleaseResources(void);
-	void BlitFrontToBack(LPRECT rect);
 };
 
 #endif
