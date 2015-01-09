@@ -20,7 +20,7 @@ public:
 	void OnTouchDown(int x, int y);
 	void OnTouchMove(int x, int y);
 	virtual void OnPaint(void);
-	void OnActivate(bool isActive);
+	virtual void OnActivate(bool isActive);
 
 protected:
 #ifdef SHOW_POINTER_TRACE
@@ -40,6 +40,7 @@ protected:
 #endif
 
 	HWND m_hWnd;
+	bool m_Active;
 
 	RECT m_ServerRect;
 	RECT m_ClientRect;

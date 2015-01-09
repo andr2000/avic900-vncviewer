@@ -21,6 +21,7 @@ Client_WinCE::Client_WinCE() : Client() {
 	m_ConfigStorage = NULL;
 	m_FilterAutoRepeat = false;
 	m_LongPress = false;
+	m_Active = false;
 	memset(&m_ServerRect, 0, sizeof(m_ServerRect));
 	memset(&m_ClientRect, 0, sizeof(m_ClientRect));
 }
@@ -331,10 +332,19 @@ void Client_WinCE::OnPaint(void) {
 }
 
 void Client_WinCE::OnActivate(bool isActive) {
-	SetHotkeyHandler(isActive);
-	if (isActive) {
+	DEBUGMSG(TRUE, (TEXT("====================================\r\nOnActivate %d\r\n"), isActive));
+	m_Active = isActive;
+	SetHotkeyHandler(m_Active);
+	if (m_Active)
+	{
 		ShowFullScreen();
 	}
+#ifndef WIN32
+	else
+	{
+		ShowWindow(m_hWnd, SW_HIDE);
+	}
+#endif
 }
 
 void Client_WinCE::ShowFullScreen() {
@@ -344,6 +354,8 @@ void Client_WinCE::ShowFullScreen() {
 	MoveWindow(m_hWnd, m_ClientRect.left, m_ClientRect.top,
 		m_ClientRect.left + m_ClientRect.right,
 		m_ClientRect.top + m_ClientRect.bottom, false);
+#else
+	ShowWindow(m_hWnd, SW_SHOW);
 #endif
 }
 
