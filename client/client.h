@@ -8,14 +8,17 @@
 #include "mutex_factory.h"
 #include "thread_factory.h"
 
-class Client {
+class Client
+{
 public:
 	Client();
 	virtual ~Client();
 
-	static Client *GetInstance() {
+	static Client *GetInstance()
+	{
 		return m_Instance;
-	};
+	}
+	;
 
 	virtual int Initialize();
 	std::string GetServerIP();
@@ -23,23 +26,21 @@ public:
 	int GetScreenSize(int &width, int &height);
 	void SetClientSize(int width, int height);
 
-	enum event_type_t {
-		EVT_MOUSE,
-		EVT_MOVE,
-		EVT_KEY
+	enum event_type_t
+	{
+		EVT_MOUSE, EVT_MOVE, EVT_KEY
 	};
-	enum key_t {
-		KEY_BACK,
-		KEY_HOME,
-		KEY_UP,
-		KEY_DOWN,
-		KEY_LEFT,
-		KEY_RIGHT
+	enum key_t
+	{
+		KEY_BACK, KEY_HOME, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT
 	};
-	struct event_t {
+	struct event_t
+	{
 		event_type_t what;
-		union event_data_t {
-			struct pointer_action_t {
+		union event_data_t
+		{
+			struct pointer_action_t
+			{
 				int is_down;
 				int x;
 				int y;
@@ -53,19 +54,21 @@ protected:
 	static const int UPDRECT_DEFAULT_MIN = 10000;
 	static const int UPDRECT_DEFAULT_MAX = -1;
 
-	struct {
+	struct
+	{
 		int x1;
 		int y1;
 		int x2;
 		int y2;
-	} m_UpdateRect;;
+	} m_UpdateRect;
+	;
 
 	static Client *m_Instance;
 	rfbClient* m_Client;
 	Thread *m_Thread;
 	Mutex *m_Mutex;
 	/* message queue */
-	std::deque< event_t > m_MessageQueue;
+	std::deque<event_t> m_MessageQueue;
 	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
 	ConfigStorage *m_ConfigStorage;
 	long m_ForceRefreshToMs;

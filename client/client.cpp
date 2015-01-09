@@ -7,7 +7,8 @@ Client *Client::m_Instance = NULL;
 const char Client::VERSION[] = "AVIC-F900BT VNC client 0.1alpha " __DATE__;
 const char Client::COPYRIGHT[] = "(c) 2014 Andrushchenko, Oleksandr andr2000@gmail.com";
 
-Client::Client() {
+Client::Client()
+{
 	m_Client = NULL;
 	m_Thread = NULL;
 	m_Mutex = MutexFactory::GetNewMutex();
@@ -23,37 +24,45 @@ Client::Client() {
 	m_Instance = this;
 }
 
-Client::~Client() {
+Client::~Client()
+{
 	Cleanup();
 }
 
-void Client::Cleanup() {
-	if (m_Thread) {
+void Client::Cleanup()
+{
+	if (m_Thread)
+	{
 		m_Thread->Terminate();
 		delete m_Thread;
 		m_Thread = NULL;
 	}
-	if (m_Client) {
+	if (m_Client)
+	{
 		rfbClientCleanup(m_Client);
 		m_Client = NULL;
 	}
 	m_MessageQueue.clear();
-	if (m_Mutex) {
+	if (m_Mutex)
+	{
 		delete m_Mutex;
 		m_Mutex = NULL;
 	}
-	if (m_ConfigStorage) {
+	if (m_ConfigStorage)
+	{
 		delete m_ConfigStorage;
 		m_ConfigStorage = NULL;
 	}
 }
 
-int Client::PollRFB(void *data) {
+int Client::PollRFB(void *data)
+{
 	Client *context = reinterpret_cast<Client *>(data);
 	return context->Poll();
 }
 
-int Client::Initialize() {
+int Client::Initialize()
+{
 	m_ConfigStorage = ConfigStorage::GetInstance();
 	/* set logging options */
 	rfbEnableClientLogging = m_ConfigStorage->LoggingEnabled();
@@ -63,11 +72,12 @@ int Client::Initialize() {
 	/* force screen refresh? */
 	m_ForceRefreshToMs = m_ConfigStorage->ForceRefreshToMs();
 	/* is the screen rotated? If so handle Arrows differently */
-	m_IsScreenRotated  = m_ConfigStorage->IsScreenRotated();
+	m_IsScreenRotated = m_ConfigStorage->IsScreenRotated();
 	rfbClientLog("Initializing VNC Client\n");
 	/* get new RFB client */
 	m_Client = rfbGetClient(5, 3, 2);
-	if (NULL == m_Client) {
+	if (NULL == m_Client)
+	{
 		return -1;
 	}
 	/* initialize it */
@@ -88,23 +98,27 @@ int Client::Initialize() {
 	return 0;
 }
 
-std::string Client::GetServerIP() {
+std::string Client::GetServerIP()
+{
 	std::string server = m_ConfigStorage->GetServer();
 	return server.erase(server.find_first_of(':'));
 }
 
-int Client::Connect() {
+int Client::Connect()
+{
 	int argc;
 	char **argv;
 	argc = m_ConfigStorage->GetArgC();
 	argv = m_ConfigStorage->GetArgV();
-	if (!rfbInitClient(m_Client, &argc, argv)) {
+	if (!rfbInitClient(m_Client, &argc, argv))
+	{
 		/* rfbInitClient has already freed the client struct */
 		m_Client = NULL;
 		return -1;
 	}
 	/* start worker thread */
-	if (NULL == m_Thread) {
+	if (NULL == m_Thread)
+	{
 		/* m_Thread will be non-null if we try to reconnect  */
 		m_Thread = ThreadFactory::GetNewThread();
 		m_Thread->SetWorker(PollRFB, static_cast<void *>(this));
@@ -112,10 +126,12 @@ int Client::Connect() {
 	return m_Thread->Start();
 }
 
-int Client::GetScreenSize(int &width, int &height) {
+int Client::GetScreenSize(int &width, int &height)
+{
 	width = 0;
 	height = 0;
-	if (NULL == m_Client) {
+	if (NULL == m_Client)
+	{
 		return -1;
 	}
 	width = m_Client->width;
@@ -123,36 +139,43 @@ int Client::GetScreenSize(int &width, int &height) {
 	return 0;
 }
 
-void Client::SetClientSize(int width, int height) {
+void Client::SetClientSize(int width, int height)
+{
 	m_ScalingFactorX = static_cast<float>(m_Client->width) / width;
 	m_ScalingFactorY = static_cast<float>(m_Client->height) / height;
 	m_NeedScaling = m_Client->width != width || m_Client->height != height;
 }
 
-rfbBool Client::MallocFrameBuffer(rfbClient *client) {
+rfbBool Client::MallocFrameBuffer(rfbClient *client)
+{
 	return Client::GetInstance()->OnMallocFrameBuffer(client);
 }
 
-void Client::GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h) {
+void Client::GotFrameBufferUpdate(rfbClient *client, int x, int y, int w, int h)
+{
 	Client::GetInstance()->OnFrameBufferUpdate(client, x, y, w, h);
 }
 
-void Client::FinishedFrameBufferUpdate(rfbClient *client) {
+void Client::FinishedFrameBufferUpdate(rfbClient *client)
+{
 	Client::GetInstance()->OnFinishedFrameBufferUpdate(client);
 }
 
-int Client::PostEvent(event_t &evt) {
+int Client::PostEvent(event_t &evt)
+{
 	m_Mutex->lock();
 	m_MessageQueue.push_back(evt);
 	m_Mutex->unlock();
 	return 0;
 }
 
-int Client::GetEvent(event_t &evt) {
+int Client::GetEvent(event_t &evt)
+{
 	int result = 0;
 
 	m_Mutex->lock();
-	if (m_MessageQueue.size()) {
+	if (m_MessageQueue.size())
+	{
 		evt = m_MessageQueue.front();
 		m_MessageQueue.pop_front();
 		result = 1;
@@ -161,7 +184,8 @@ int Client::GetEvent(event_t &evt) {
 	return result;
 }
 
-void Client::HandleKey(key_t key) {
+void Client::HandleKey(key_t key)
+{
 	uint32_t rfb_key;
 
 	/* Unfortunately, when screen rotates key mappings for Up/Down/Left/Right
@@ -169,115 +193,152 @@ void Client::HandleKey(key_t key) {
 	 * We cannot sense if screen is rotated by means of OnFrameBufferAllocate,
 	 * e.g. it always returns the same width and height. So, use a configuration key for that
 	 */
-	if (m_IsScreenRotated) {
+	if (m_IsScreenRotated)
+	{
 		/* remap keys */
-		switch (key) {
-		case KEY_UP:
-			key = KEY_RIGHT;
-			break;
-		case KEY_DOWN:
-			key = KEY_LEFT;
-			break;
-		case KEY_LEFT:
-			key = KEY_UP;
-			break;
-		case KEY_RIGHT:
-			key = KEY_DOWN;
-			break;
-		default:
-			break;
+		switch (key)
+		{
+			case KEY_UP:
+			{
+				key = KEY_RIGHT;
+				break;
+			}
+			case KEY_DOWN:
+			{
+				key = KEY_LEFT;
+				break;
+			}
+			case KEY_LEFT:
+			{
+				key = KEY_UP;
+				break;
+			}
+			case KEY_RIGHT:
+			{
+				key = KEY_DOWN;
+				break;
+			}
+			default:
+			{
+				break;
+			}
 		}
 	}
-	switch (key) {
-	case KEY_BACK:
-		rfb_key = XK_Escape;
-		rfbClientLog("Key event: KEY_BACK\n");
-		break;
-	case KEY_HOME:
-		rfb_key = XK_Home;
-		rfbClientLog("Key event: KEY_HOME\n");
-		break;
-	case KEY_UP:
-		rfb_key = XK_Up;
-		rfbClientLog("Key event: KEY_UP\n");
-		break;
-	case KEY_DOWN:
-		rfb_key = XK_Down;
-		rfbClientLog("Key event: KEY_DOWN\n");
-		break;
-	case KEY_LEFT:
-		rfb_key = XK_Left;
-		rfbClientLog("Key event: KEY_LEFT\n");
-		break;
-	case KEY_RIGHT:
-		rfb_key = XK_Right;
-		rfbClientLog("Key event: KEY_RIGHT\n");
-		break;
-	default:
-		return;
+	switch (key)
+	{
+		case KEY_BACK:
+		{
+			rfb_key = XK_Escape;
+			rfbClientLog("Key event: KEY_BACK\n");
+			break;
+		}
+		case KEY_HOME:
+		{
+			rfb_key = XK_Home;
+			rfbClientLog("Key event: KEY_HOME\n");
+			break;
+		}
+		case KEY_UP:
+		{
+			rfb_key = XK_Up;
+			rfbClientLog("Key event: KEY_UP\n");
+			break;
+		}
+		case KEY_DOWN:
+		{
+			rfb_key = XK_Down;
+			rfbClientLog("Key event: KEY_DOWN\n");
+			break;
+		}
+		case KEY_LEFT:
+		{
+			rfb_key = XK_Left;
+			rfbClientLog("Key event: KEY_LEFT\n");
+			break;
+		}
+		case KEY_RIGHT:
+		{
+			rfb_key = XK_Right;
+			rfbClientLog("Key event: KEY_RIGHT\n");
+			break;
+		}
+		default:
+		{
+			return;
+		}
 	}
-	if (m_NeedsVirtInpHack) {
+	if (m_NeedsVirtInpHack)
+	{
 		SendPointerEvent(m_Client, -1, -1, rfbButton1Mask);
 	}
 	SendKeyEvent(m_Client, rfb_key, TRUE);
 	SendKeyEvent(m_Client, rfb_key, FALSE);
-	if (m_NeedsVirtInpHack) {
+	if (m_NeedsVirtInpHack)
+	{
 		SendPointerEvent(m_Client, -1, -1, 0);
 	}
 }
 
-int Client::Poll() {
+int Client::Poll()
+{
 	int result, evt_count;
 	event_t evt;
 
 	result = WaitForMessage(m_Client, 500);
-	if (result < 0) {
+	if (result < 0)
+	{
 		/* terminating due to error */
 		OnShutdown();
 		return result;
 	}
-	if (result) {
-		if (!HandleRFBServerMessage(m_Client)) {
+	if (result)
+	{
+		if (!HandleRFBServerMessage(m_Client))
+		{
 			/* terminating due to error */
 			OnShutdown();
 			return -1;
 		}
 	}
-	if (m_ForceRefreshToMs && (GetTimeMs() - m_LastRefreshTimeMs > m_ForceRefreshToMs)) {
+	if (m_ForceRefreshToMs && (GetTimeMs() - m_LastRefreshTimeMs > m_ForceRefreshToMs))
+	{
 		SendFramebufferUpdateRequest(m_Client, 0, 0, m_Client->width, m_Client->height, false);
 		m_LastRefreshTimeMs = GetTimeMs();
 		rfbClientLog("\nSendFramebufferUpdateRequest\n\n");
 	}
 	/* checki if there are input events */
 	evt_count = 0;
-	while ((evt_count < MAX_EVT_PROCESS_AT_ONCE) && GetEvent(evt)) {
+	while ((evt_count < MAX_EVT_PROCESS_AT_ONCE) && GetEvent(evt))
+	{
 		/* send to the server */
-		switch (evt.what) {
-		case EVT_MOUSE:
-		/* fall through */
-		case EVT_MOVE:
+		switch (evt.what)
 		{
-			SendPointerEvent(m_Client,
-				static_cast<int>(evt.data.point.x * m_ScalingFactorX),
-				static_cast<int>(evt.data.point.y * m_ScalingFactorY),
-				evt.data.point.is_down ? rfbButton1Mask : 0);
-			rfbClientLog("Mouse event at %d:%d, is_down %d\n",
-				evt.data.point.x, evt.data.point.y, evt.data.point.is_down);
-			break;
-		}
-		case EVT_KEY:
-		{
-			HandleKey(evt.data.key);
-			break;
-		}
-		default:
-			break;
+			case EVT_MOUSE:
+				/* fall through */
+			case EVT_MOVE:
+			{
+				SendPointerEvent(m_Client, static_cast<int>(evt.data.point.x * m_ScalingFactorX),
+					static_cast<int>(evt.data.point.y * m_ScalingFactorY), evt.data.point.is_down ? rfbButton1Mask : 0);
+				rfbClientLog("Mouse event at %d:%d, is_down %d\n", evt.data.point.x, evt.data.point.y,
+					evt.data.point.is_down);
+				break;
+			}
+			case EVT_KEY:
+			{
+				HandleKey(evt.data.key);
+				break;
+			}
+			default:
+			{
+				break;
+			}
 		}
 	}
 	return result;
 }
 
-void Client::OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) {
+void Client::OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h)
+{
 	if (m_UpdateRect.x1 + m_UpdateRect.y1 + m_UpdateRect.x2 + m_UpdateRect.y2 == 0)
 	{
 		/* new frame */
@@ -307,7 +368,8 @@ void Client::OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h) {
 	}
 }
 
-void Client::OnFinishedFrameBufferUpdate(rfbClient *client) {
+void Client::OnFinishedFrameBufferUpdate(rfbClient *client)
+{
 	/* frame is done */
 	memset(&m_UpdateRect, 0, sizeof(m_UpdateRect));
 }

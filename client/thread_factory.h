@@ -9,10 +9,11 @@
 #error Unsupported OS
 #endif
 
-
-class ThreadFactory {
+class ThreadFactory
+{
 public:
-	static Thread *GetNewThread() {
+	static Thread *GetNewThread()
+	{
 #if defined(WINCE) || defined(WIN32)
 		return new Thread_WinCE();
 #elif __linux__

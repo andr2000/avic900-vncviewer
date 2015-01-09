@@ -9,10 +9,11 @@
 #error Unsupported OS
 #endif
 
-
-class MutexFactory {
+class MutexFactory
+{
 public:
-	static Mutex *GetNewMutex() {
+	static Mutex *GetNewMutex()
+	{
 #if defined(WINCE) || defined (WIN32)
 		return new Mutex_WinCE();
 #elif __linux__

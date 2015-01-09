@@ -13,7 +13,8 @@
 
 #include "client_wince.h"
 
-class Client_DDraw : public Client_WinCE {
+class Client_DDraw : public Client_WinCE
+{
 public:
 	int Initialize();
 	void OnActivate(bool isActive);

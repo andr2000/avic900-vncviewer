@@ -3,33 +3,40 @@
 #include <rfb/rfbclient.h>
 #include "client_gtk.h"
 
-Client_Gtk::Client_Gtk() : Client() {
+Client_Gtk::Client_Gtk() :
+	Client()
+{
 	m_FrameBuffer = NULL;
 }
 
-Client_Gtk::~Client_Gtk() {
-	if (m_FrameBuffer) {
+Client_Gtk::~Client_Gtk()
+{
+	if (m_FrameBuffer)
+	{
 		delete m_FrameBuffer;
 	}
 }
 
-void Client_Gtk::Logger(const char *format, ...) {
-    va_list args;
+void Client_Gtk::Logger(const char *format, ...)
+{
+	va_list args;
 
-    if(!rfbEnableClientLogging)
-      return;
+	if (!rfbEnableClientLogging)
+		return;
 
-    va_start(args, format);
+	va_start(args, format);
 	vfprintf(stdout, format, args);
-    va_end(args);
+	va_end(args);
 }
 
-void Client_Gtk::SetLogging() {
+void Client_Gtk::SetLogging()
+{
 	rfbClientLog = Logger;
 	rfbClientErr = Logger;
 }
 
-rfbBool Client_Gtk::OnMallocFrameBuffer(rfbClient *client) {
+rfbBool Client_Gtk::OnMallocFrameBuffer(rfbClient *client)
+{
 	int width, height, depth;
 
 	width = client->width;
@@ -47,11 +54,13 @@ rfbBool Client_Gtk::OnMallocFrameBuffer(rfbClient *client) {
 	return TRUE;
 }
 
-void Client_Gtk::OnShutdown() {
+void Client_Gtk::OnShutdown()
+{
 }
 
-long Client_Gtk::GetTimeMs() {
-	struct timeval  tv;
+long Client_Gtk::GetTimeMs()
+{
+	struct timeval tv;
 
 	gettimeofday(&tv, NULL);
 	return tv.tv_sec * 1000 + tv.tv_usec / 1000;

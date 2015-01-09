@@ -4,7 +4,8 @@
 #include <rfb/rfbclient.h>
 #include "client.h"
 
-class Client_Gtk : public Client {
+class Client_Gtk : public Client
+{
 public:
 	Client_Gtk();
 	virtual ~Client_Gtk();

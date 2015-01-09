@@ -5,7 +5,8 @@
 
 #include "mutex.h"
 
-class Mutex_WinCE : public Mutex {
+class Mutex_WinCE : public Mutex
+{
 public:
 	Mutex_WinCE();
 	~Mutex_WinCE();
