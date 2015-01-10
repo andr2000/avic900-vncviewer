@@ -27,11 +27,10 @@ void Client_GDI::OnPaint(void)
 	if (m_NeedScaling)
 	{
 		/* blit all */
-		 StretchBlt(dc, m_WindowRect.left, m_WindowRect.top,
-			 m_WindowRect.right - m_WindowRect.left,
-			 m_WindowRect.bottom - m_WindowRect.top,
-			 hdcImage, 0, 0, m_Client->width, m_Client->height, SRCCOPY);
-
+		StretchBlt(dc, m_WindowRect.left, m_WindowRect.top,
+			m_WindowRect.right - m_WindowRect.left,
+			m_WindowRect.bottom - m_WindowRect.top,
+			hdcImage, 0, 0, m_Client->width, m_Client->height, SRCCOPY);
 	}
 	else
 	{

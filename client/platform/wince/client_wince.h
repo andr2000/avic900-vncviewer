@@ -103,8 +103,10 @@ private:
 	bool m_LongPress;
 
 	void OnTimer(UINT_PTR nIDEvent);
+
 	static LRESULT CALLBACK SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	LRESULT CALLBACK ClientSubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 	void SetHotkeyHandler(bool set);
 	void HandleMapKey(bool long_press);
 
