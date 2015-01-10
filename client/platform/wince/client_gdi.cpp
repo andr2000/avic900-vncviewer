@@ -28,7 +28,19 @@ void Client_GDI::OnPaint(void)
 
 	dcMem = CreateCompatibleDC(dc);
 	HGDIOBJ old_bitmap = SelectObject(dcMem, m_hBmp);
-	BitBlt(dc, x, y, w, h, dcMem, x, y, SRCCOPY);
+	if (m_NeedScaling)
+	{
+		/* blit all */
+		 StretchBlt(dc, m_WindowRect.left, m_WindowRect.top,
+			 m_WindowRect.right - m_WindowRect.left,
+			 m_WindowRect.bottom - m_WindowRect.top,
+			 dcMem, 0, 0, m_Client->width, m_Client->height, SRCCOPY);
+
+	}
+	else
+	{
+		BitBlt(dc, x, y, w, h, dcMem, x, y, SRCCOPY);
+	}
 	SelectObject(dcMem, old_bitmap);
 	DeleteDC(dcMem);
 #ifdef SHOW_POINTER_TRACE

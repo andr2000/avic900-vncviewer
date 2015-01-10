@@ -17,14 +17,11 @@ public:
 	static Client *GetInstance()
 	{
 		return m_Instance;
-	}
-	;
+	};
 
 	virtual int Initialize();
 	std::string GetServerIP();
 	int Connect();
-	int GetScreenSize(int &width, int &height);
-	void SetClientSize(int width, int height);
 
 	enum event_type_t
 	{
@@ -61,7 +58,6 @@ protected:
 		int x2;
 		int y2;
 	} m_UpdateRect;
-	;
 
 	static Client *m_Instance;
 	rfbClient* m_Client;
@@ -74,8 +70,6 @@ protected:
 	long m_ForceRefreshToMs;
 	long m_LastRefreshTimeMs;
 
-	float m_ScalingFactorX;
-	float m_ScalingFactorY;
 	bool m_NeedScaling;
 	bool m_IsScreenRotated;
 
@@ -84,12 +78,13 @@ protected:
 	void Cleanup();
 	int GetEvent(event_t &evt);
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client) = 0;
+	void SetupScaling(int width, int height);
 	void OnFrameBufferUpdate(rfbClient *cl, int x, int y, int w, int h);
 	virtual void OnFinishedFrameBufferUpdate(rfbClient *client);
 	virtual void OnShutdown() = 0;
 	virtual long GetTimeMs() = 0;
-private:
 
+private:
 	bool m_NeedsVirtInpHack;
 	static int PollRFB(void *data);
 	static rfbBool MallocFrameBuffer(rfbClient *client);
@@ -100,6 +95,9 @@ private:
 
 	static const char VERSION[];
 	static const char COPYRIGHT[];
+
+	float m_ScalingFactorX;
+	float m_ScalingFactorY;
 };
 
 #endif
