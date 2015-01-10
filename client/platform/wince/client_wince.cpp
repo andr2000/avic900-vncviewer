@@ -22,8 +22,7 @@ Client_WinCE::Client_WinCE() : Client() {
 	m_FilterAutoRepeat = false;
 	m_LongPress = false;
 	m_Active = false;
-	memset(&m_ServerRect, 0, sizeof(m_ServerRect));
-	memset(&m_ClientRect, 0, sizeof(m_ClientRect));
+	memset(&m_WindowRect, 0, sizeof(m_WindowRect));
 }
 
 Client_WinCE::~Client_WinCE() {
@@ -97,7 +96,7 @@ void Client_WinCE::SetWindowHandle(HWND hWnd)
 
 int Client_WinCE::Initialize()
 {
-	SetRect(&m_ClientRect, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+	GetClientRect(m_hWnd, &m_WindowRect);
 	/* let's rock */
 	int i;
 	for (i = 0; i <= CONNECT_MAX_TRY; i++) {
@@ -345,9 +344,9 @@ void Client_WinCE::ShowFullScreen() {
 #ifdef WINCE
 	SHFullScreen(m_hWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
 	::ShowWindow(SHFindMenuBar(m_hWnd), SW_HIDE);
-	MoveWindow(m_hWnd, m_ClientRect.left, m_ClientRect.top,
-		m_ClientRect.left + m_ClientRect.right,
-		m_ClientRect.top + m_ClientRect.bottom, false);
+	MoveWindow(m_hWnd, m_WindowRect.left, m_WindowRect.top,
+		m_WindowRect.left + m_WindowRect.right,
+		m_WindowRect.top + m_WindowRect.bottom, false);
 #endif
 }
 
@@ -387,5 +386,6 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
 		&bm_info, DIB_RGB_COLORS, reinterpret_cast<void**>(&m_FrameBuffer),
 		NULL, NULL);
 	client->frameBuffer = m_FrameBuffer;
+	SetupScaling(m_WindowRect.right - m_WindowRect.left, m_WindowRect.bottom - m_WindowRect.top);
 	return TRUE;
 }

@@ -126,20 +126,7 @@ int Client::Connect()
 	return m_Thread->Start();
 }
 
-int Client::GetScreenSize(int &width, int &height)
-{
-	width = 0;
-	height = 0;
-	if (NULL == m_Client)
-	{
-		return -1;
-	}
-	width = m_Client->width;
-	height = m_Client->height;
-	return 0;
-}
-
-void Client::SetClientSize(int width, int height)
+void Client::SetupScaling(int width, int height)
 {
 	m_ScalingFactorX = static_cast<float>(m_Client->width) / width;
 	m_ScalingFactorY = static_cast<float>(m_Client->height) / height;

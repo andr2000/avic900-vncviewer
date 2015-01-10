@@ -45,8 +45,7 @@ protected:
 	HWND m_hWnd;
 	bool m_Active;
 
-	RECT m_ServerRect;
-	RECT m_ClientRect;
+	RECT m_WindowRect;
 
 	virtual rfbBool OnMallocFrameBuffer(rfbClient *client);
 	virtual void OnShutdown();

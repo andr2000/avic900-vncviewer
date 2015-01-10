@@ -21,9 +21,17 @@ void Client_DDraw::Blit(int x, int y, int w, int h)
 	HDC hdc;
 	if ((ddrval = lpFrontBuffer->GetDC(&hdc)) == DD_OK)
 	{
-		if (!BitBlt(hdc, x, y, w, h, hdcImage, x, y, SRCCOPY))
+		if (m_NeedScaling)
 		{
-			ddrval = E_FAIL;
+			/* blit all */
+			StretchBlt(hdc, m_WindowRect.left, m_WindowRect.top,
+				m_WindowRect.right - m_WindowRect.left,
+				m_WindowRect.bottom - m_WindowRect.top,
+				hdcImage, 0, 0, m_Client->width, m_Client->height, SRCCOPY);
+		}
+		else
+		{
+			BitBlt(hdc, x, y, w, h, hdcImage, x, y, SRCCOPY);
 		}
 		lpFrontBuffer->ReleaseDC(hdc);
 	}
@@ -167,8 +175,8 @@ void Client_DDraw::OnActivate(bool isActive)
 	if (isActive)
 	{
 		/* framebuffer might already have been updated */
-		Blit(m_ClientRect.left, m_ClientRect.top, m_ClientRect.right - m_ClientRect.left,
-			m_ClientRect.bottom - m_ClientRect.top);
+		Blit(m_WindowRect.left, m_WindowRect.top, m_WindowRect.right - m_WindowRect.left,
+			m_WindowRect.bottom - m_WindowRect.top);
 	}
 }
 
