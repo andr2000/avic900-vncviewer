@@ -351,6 +351,7 @@ void Client_WinCE::ShowFullScreen() {
 }
 
 void Client_WinCE::OnShutdown() {
+	DeleteDC(hdcImage);
 	PostMessage(m_hWnd, WM_QUIT, 0, 0);
 }
 
@@ -386,6 +387,12 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
 		&bm_info, DIB_RGB_COLORS, reinterpret_cast<void**>(&m_FrameBuffer),
 		NULL, NULL);
 	client->frameBuffer = m_FrameBuffer;
+	hdcImage = CreateCompatibleDC(NULL);
+	if (!hdcImage)
+	{
+		return FALSE;
+	}
+	SelectObject(hdcImage, m_hBmp);
 	SetupScaling(m_WindowRect.right - m_WindowRect.left, m_WindowRect.bottom - m_WindowRect.top);
 	return TRUE;
 }

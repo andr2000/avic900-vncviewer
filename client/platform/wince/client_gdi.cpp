@@ -16,7 +16,6 @@ void Client_GDI::OnPaint(void)
 {
 	PAINTSTRUCT ps;
 	HDC dc = BeginPaint(m_hWnd, &ps);
-	HDC dcMem;
 	LONG x, y, w, h;
 
 	x = ps.rcPaint.left;
@@ -25,24 +24,19 @@ void Client_GDI::OnPaint(void)
 	h = ps.rcPaint.bottom - ps.rcPaint.top;
 
 	DEBUGMSG(TRUE, (TEXT("OnPaint x=%d y=%d w=%d h=%d\r\n"), x, y, w, h));
-
-	dcMem = CreateCompatibleDC(dc);
-	HGDIOBJ old_bitmap = SelectObject(dcMem, m_hBmp);
 	if (m_NeedScaling)
 	{
 		/* blit all */
 		 StretchBlt(dc, m_WindowRect.left, m_WindowRect.top,
 			 m_WindowRect.right - m_WindowRect.left,
 			 m_WindowRect.bottom - m_WindowRect.top,
-			 dcMem, 0, 0, m_Client->width, m_Client->height, SRCCOPY);
+			 hdcImage, 0, 0, m_Client->width, m_Client->height, SRCCOPY);
 
 	}
 	else
 	{
-		BitBlt(dc, x, y, w, h, dcMem, x, y, SRCCOPY);
+		BitBlt(dc, x, y, w, h, hdcImage, x, y, SRCCOPY);
 	}
-	SelectObject(dcMem, old_bitmap);
-	DeleteDC(dcMem);
 #ifdef SHOW_POINTER_TRACE
 	{
 		HBRUSH brush_red = CreateSolidBrush(RGB(255, 0, 0));
