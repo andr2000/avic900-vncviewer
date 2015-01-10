@@ -57,6 +57,7 @@ protected:
 
 	uint8_t *m_FrameBuffer;
 	HBITMAP m_hBmp;
+	HDC hdcImage;
 
 	static void Logger(const char *format, ...);
 	int ShowMessage(DWORD type, wchar_t *caption, wchar_t *format, ...);

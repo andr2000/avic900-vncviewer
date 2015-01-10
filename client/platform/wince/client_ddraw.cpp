@@ -1,20 +1,5 @@
 #include "client_ddraw.h"
 
-rfbBool Client_DDraw::OnMallocFrameBuffer(rfbClient *client)
-{
-	if (!Client_WinCE::OnMallocFrameBuffer(client))
-	{
-		return FALSE;
-	}
-	hdcImage = CreateCompatibleDC(NULL);
-	if (!hdcImage)
-	{
-		return -1;
-	}
-	SelectObject(hdcImage, m_hBmp);
-	return TRUE;
-}
-
 void Client_DDraw::Blit(int x, int y, int w, int h)
 {
 	HRESULT ddrval;
@@ -54,7 +39,6 @@ void Client_DDraw::OnFinishedFrameBufferUpdate(rfbClient *client)
 
 void Client_DDraw::OnShutdown()
 {
-	DeleteDC(hdcImage);
 	ReleaseResources();
 	Client_WinCE::OnShutdown();
 }

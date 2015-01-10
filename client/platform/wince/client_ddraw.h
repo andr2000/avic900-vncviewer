@@ -21,7 +21,6 @@ public:
 	void OnPaint(void);
 
 protected:
-	rfbBool OnMallocFrameBuffer(rfbClient *client);
 	void OnFinishedFrameBufferUpdate(rfbClient *client);
 	void OnShutdown();
 
@@ -29,7 +28,6 @@ private:
 	LPDIRECTDRAW4 lpDD;
 	LPDIRECTDRAWSURFACE4 lpFrontBuffer;
 	LPDIRECTDRAWCLIPPER lpClipper;
-	HDC hdcImage;
 
 	bool RestoreSurfaces(void);
 	void ReleaseResources(void);
