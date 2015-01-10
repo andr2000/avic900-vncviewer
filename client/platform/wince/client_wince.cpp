@@ -83,7 +83,7 @@ void Client_WinCE::AddTracePoint(trace_point_type_e type, LONG x, LONG y) {
 	rect.right = x + TRACE_POINT_BAR_SZ;
 	rect.top = y;
 	rect.bottom = y + TRACE_POINT_BAR_SZ;
-	InvalidateRect(&rect, FALSE);
+	InvalidateRect(m_hWnd, &rect, FALSE);
 	KillTimer(m_hWnd, ID_TIMER_TRACE);
 	SetTimer(m_hWnd, ID_TIMER_TRACE, ID_TIMER_TRACE_DELAY, NULL);
 }
@@ -279,10 +279,10 @@ void Client_WinCE::OnTimer(UINT_PTR nIDEvent) {
 	else if (ID_TIMER_TRACE == nIDEvent) {
 		RECT r;
 
-		KillTimer(ID_TIMER_TRACE);
+		KillTimer(m_hWnd, ID_TIMER_TRACE);
 		m_TraceQueue.clear();
-		GetWindowRect(&r);
-		InvalidateRect(&r, FALSE);
+		GetWindowRect(m_hWnd, &r);
+		InvalidateRect(m_hWnd, &r, FALSE);
 		DEBUGMSG(true, (TEXT("Invalidate x=%d y=%d w=%d h=%d\r\n"),
 			r.left, r.top, r.right, r.bottom));
 	}
@@ -291,7 +291,7 @@ void Client_WinCE::OnTimer(UINT_PTR nIDEvent) {
 
 void Client_WinCE::OnTouchUp(int x, int y) {
 #ifdef SHOW_POINTER_TRACE
-	AddTracePoint(TRACE_POINT_UP, point.x, point.y);
+	AddTracePoint(TRACE_POINT_UP, x, y);
 #endif
 	Client::event_t evt;
 	evt.what = Client::EVT_MOUSE;
@@ -303,7 +303,7 @@ void Client_WinCE::OnTouchUp(int x, int y) {
 void Client_WinCE::OnTouchDown(int x, int y) {
 
 #ifdef SHOW_POINTER_TRACE
-	AddTracePoint(TRACE_POINT_DOWN, point.x, point.y);
+	AddTracePoint(TRACE_POINT_DOWN, x, y);
 #endif
 	Client::event_t evt;
 	evt.what = Client::EVT_MOUSE;
@@ -314,7 +314,7 @@ void Client_WinCE::OnTouchDown(int x, int y) {
 }
 void Client_WinCE::OnTouchMove(int x, int y) {
 #ifdef SHOW_POINTER_TRACE
-	AddTracePoint(TRACE_POINT_MOVE, point.x, point.y);
+	AddTracePoint(TRACE_POINT_MOVE, x, y);
 #endif
 	Client::event_t evt;
 	evt.what = Client::EVT_MOVE;

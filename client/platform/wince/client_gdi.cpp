@@ -45,41 +45,38 @@ void Client_GDI::OnPaint(void)
 	DeleteDC(dcMem);
 #ifdef SHOW_POINTER_TRACE
 	{
-		CBrush *brush, *old_brush;
-		CPen *pen, *old_pen;
-		RECT r;
-		CPen pen_red, pen_green, pen_blue;
+		HBRUSH brush_red = CreateSolidBrush(RGB(255, 0, 0));
+		HBRUSH brush_green = CreateSolidBrush(RGB(0, 255, 0));
+		HBRUSH brush_blue = CreateSolidBrush(RGB(0, 0, 255));
 
-		CBrush brush_red(RGB(255, 0, 0));
-		CBrush brush_green(RGB(0, 255, 0));
-		CBrush brush_blue(RGB(0, 0, 255));
+		HPEN pen_red = CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
+		HPEN pen_green = CreatePen(PS_SOLID, 3, RGB(0, 255, 0));
+		HPEN pen_blue = CreatePen(PS_SOLID, 3, RGB(0, 0, 255));
 
-		pen_red.CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
-		pen_green.CreatePen(PS_SOLID, 3, RGB(0, 255, 0));
-		pen_blue.CreatePen(PS_SOLID, 3, RGB(0, 0, 255));
-
-		old_brush = pDC->SelectObject(&brush_red);
-		old_pen = pDC->SelectObject(&pen_red);
+		HGDIOBJ old_brush = SelectObject(dc, brush_red);
+		HGDIOBJ old_pen = SelectObject(dc, pen_red);
+		HBRUSH brush;
+		HPEN pen;
 		for (size_t i = 0; i < m_TraceQueue.size(); i++)
 		{
 			switch (m_TraceQueue[i].type)
 			{
 				case TRACE_POINT_DOWN:
 				{
-					brush = &brush_red;
-					pen = &pen_red;
+					brush = brush_red;
+					pen = pen_red;
 					break;
 				}
 				case TRACE_POINT_MOVE:
 				{
-					brush = &brush_green;
-					pen = &pen_green;
+					brush = brush_green;
+					pen = pen_green;
 					break;
 				}
 				case TRACE_POINT_UP:
 				{
-					brush = &brush_blue;
-					pen = &pen_blue;
+					brush = brush_blue;
+					pen = pen_blue;
 					break;
 				}
 				default:
@@ -87,21 +84,21 @@ void Client_GDI::OnPaint(void)
 					break;
 				}
 			}
-
+			RECT r;
 			r.left = m_TraceQueue[i].x;
 			r.right = r.left + TRACE_POINT_BAR_SZ;
 			r.top = m_TraceQueue[i].y;
 			r.bottom = r.top + TRACE_POINT_BAR_SZ;
 
-			pDC->SelectObject(&brush_red);
-			pDC->SelectObject(&pen_red);
-			pDC->FillRect(&r, brush);
+			SelectObject(dc, &brush_red);
+			SelectObject(dc, &pen_red);
+			FillRect(dc, &r, brush);
 
-			DEBUGMSG(true, (_T("touch at x=%d y=%d\r\n"),
+			DEBUGMSG(true, (TEXT("touch at x=%d y=%d\r\n"),
 					m_TraceQueue[i].x, m_TraceQueue[i].y));
 		}
-		pDC->SelectObject(old_brush);
-		pDC->SelectObject(old_pen);
+		SelectObject(dc, old_brush);
+		SelectObject(dc, old_pen);
 	}
 #endif
 	EndPaint(m_hWnd, &ps);
