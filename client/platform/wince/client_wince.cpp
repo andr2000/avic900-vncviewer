@@ -6,13 +6,16 @@
 #include "client_wince.h"
 #include "config_storage.h"
 
-const wchar_t *Client_WinCE::WND_PROC_NAMES[] = {
+const wchar_t *Client_WinCE::WND_PROC_NAMES[] =
+{
 	/* Launcher MUST be the first entry */
 	{ TEXT("Launcher") },
 	{ TEXT("MainMenu") }
 };
 
-Client_WinCE::Client_WinCE() : Client() {
+Client_WinCE::Client_WinCE() :
+	Client()
+{
 	m_hWnd = NULL;
 	m_FrameBuffer = NULL;
 	m_hBmp = NULL;
@@ -25,13 +28,15 @@ Client_WinCE::Client_WinCE() : Client() {
 	memset(&m_WindowRect, 0, sizeof(m_WindowRect));
 }
 
-Client_WinCE::~Client_WinCE() {
+Client_WinCE::~Client_WinCE()
+{
 	SetHotkeyHandler(false);
 	KillTimer(m_hWnd, ID_TIMER_LONG_PRESS);
 #ifdef SHOW_POINTER_TRACE
 	KillTimer(m_hWnd, ID_TIMER_TRACE);
 #endif
-	if (m_hBmp) {
+	if (m_hBmp)
+	{
 		DeleteObject(m_hBmp);
 	}
 #ifdef SHOW_POINTER_TRACE
@@ -39,12 +44,14 @@ Client_WinCE::~Client_WinCE() {
 #endif
 }
 
-void Client_WinCE::Logger(const char *format, ...) {
+void Client_WinCE::Logger(const char *format, ...)
+{
 	va_list args;
 	char buf[LOG_BUF_SZ];
-	wchar_t buf_w [LOG_BUF_SZ];
+	wchar_t buf_w[LOG_BUF_SZ];
 
-	if (!rfbEnableClientLogging) {
+	if (!rfbEnableClientLogging)
+	{
 		return;
 	}
 	va_start(args, format);
@@ -54,12 +61,14 @@ void Client_WinCE::Logger(const char *format, ...) {
 	DEBUGMSG(TRUE, (TEXT("%s\r\n"), buf_w));
 }
 
-void Client_WinCE::SetLogging() {
+void Client_WinCE::SetLogging()
+{
 	rfbClientLog = Logger;
 	rfbClientErr = Logger;
 }
 
-int Client_WinCE::ShowMessage(DWORD type, wchar_t *caption, wchar_t *format, ...) {
+int Client_WinCE::ShowMessage(DWORD type, wchar_t *caption, wchar_t *format, ...)
+{
 	wchar_t msg_text[2 * MAX_PATH + 1];
 	va_list vargs;
 
@@ -70,7 +79,8 @@ int Client_WinCE::ShowMessage(DWORD type, wchar_t *caption, wchar_t *format, ...
 }
 
 #ifdef SHOW_POINTER_TRACE
-void Client_WinCE::AddTracePoint(trace_point_type_e type, LONG x, LONG y) {
+void Client_WinCE::AddTracePoint(trace_point_type_e type, LONG x, LONG y)
+{
 	RECT rect;
 	trace_point_t trace;
 
@@ -99,22 +109,27 @@ int Client_WinCE::Initialize()
 	GetClientRect(m_hWnd, &m_WindowRect);
 	/* let's rock */
 	int i;
-	for (i = 0; i <= CONNECT_MAX_TRY; i++) {
-		if (Client::Initialize() < 0) {
+	for (i = 0; i <= CONNECT_MAX_TRY; i++)
+	{
+		if (Client::Initialize() < 0)
+		{
 			return -1;
 		}
-		if (0 == Connect()) {
+		if (0 == Connect())
+		{
 			break;
 		}
 		std::string server = m_ConfigStorage->GetServer();
 		std::wstring widestr = std::wstring(server.begin(), server.end());
 		if (IDCANCEL == ShowMessage(MB_RETRYCANCEL, TEXT("Error"),
-			TEXT("Failed to connect to %ls\r\nRetry?"), widestr.c_str())) {
-				PostMessage(m_hWnd, WM_CLOSE, 0, 0);
-				return true;
+			TEXT("Failed to connect to %ls\r\nRetry?"), widestr.c_str()))
+		{
+			PostMessage(m_hWnd, WM_CLOSE, 0, 0);
+			return true;
 		}
 	}
-	if (i == CONNECT_MAX_TRY) {
+	if (i == CONNECT_MAX_TRY)
+	{
 		std::string server = m_ConfigStorage->GetServer();
 		std::wstring widestr = std::wstring(server.begin(), server.end());
 		ShowMessage(MB_OK, TEXT("Error"),
@@ -127,70 +142,91 @@ int Client_WinCE::Initialize()
 	return 0;
 }
 
-void Client_WinCE::SetHotkeyHandler(bool set) {
-	if (set) {
-		if (m_HotkeyHwnd && m_HotkeyWndProc) {
+void Client_WinCE::SetHotkeyHandler(bool set)
+{
+	if (set)
+	{
+		if (m_HotkeyHwnd && m_HotkeyWndProc)
+		{
 			return;
 		}
-		int i, num_windows = sizeof(WND_PROC_NAMES)/sizeof(WND_PROC_NAMES[0]);
-		for (i = 0; i < num_windows; i++) {
+		int i, num_windows = sizeof(WND_PROC_NAMES) / sizeof(WND_PROC_NAMES[0]);
+		for (i = 0; i < num_windows; i++)
+		{
 			m_HotkeyHwnd = ::FindWindow(NULL, WND_PROC_NAMES[i]);
-			if (NULL == m_HotkeyHwnd) {
+			if (NULL == m_HotkeyHwnd)
+			{
 				continue;
 			}
 			/* found, substitute */
-			DEBUGMSG(true, (TEXT("Found original hotkey handler: %s\r\n"),
-				WND_PROC_NAMES[i]));
-			m_HotkeyWndProc = (WNDPROC)GetWindowLong(m_HotkeyHwnd, GWL_WNDPROC);
-			if (m_HotkeyWndProc) {
-				SetWindowLong(m_HotkeyHwnd, GWL_WNDPROC, (LONG)SubWndProc);
+			DEBUGMSG(true, (TEXT("Found original hotkey handler: %s\r\n"), WND_PROC_NAMES[i]));
+			m_HotkeyWndProc = (WNDPROC) GetWindowLong(m_HotkeyHwnd, GWL_WNDPROC);
+			if (m_HotkeyWndProc)
+			{
+				SetWindowLong(m_HotkeyHwnd, GWL_WNDPROC, (LONG) SubWndProc);
 				break;
-			} else {
+			}
+			else
+			{
 				m_HotkeyHwnd = NULL;
 			}
 		}
-		if (i == num_windows) {
+		if (i == num_windows)
+		{
 			DEBUGMSG(true, (TEXT("DID NOT find the original hotkey handler\r\n")));
 		}
-	} else {
-		if (m_HotkeyWndProc && m_HotkeyHwnd) {
-			SetWindowLong(m_HotkeyHwnd, GWL_WNDPROC, (LONG)m_HotkeyWndProc);
+	}
+	else
+	{
+		if (m_HotkeyWndProc && m_HotkeyHwnd)
+		{
+			SetWindowLong(m_HotkeyHwnd, GWL_WNDPROC, (LONG) m_HotkeyWndProc);
 		}
 		m_HotkeyHwnd = NULL;
 		m_HotkeyWndProc = NULL;
 	}
 }
 
-LRESULT CALLBACK Client_WinCE::SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK Client_WinCE::SubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
 	Client_WinCE *client = static_cast<Client_WinCE *>(Client::GetInstance());
 	return client->ClientSubWndProc(hWnd, message, wParam, lParam);
 }
 
-LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
-	if (WM_HOTKEY == message) {
+LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if (WM_HOTKEY == message)
+	{
 		Client::event_t evt;
 		evt.what = Client::EVT_KEY;
 
-		switch (LOWORD(wParam)) {
+		switch (LOWORD(wParam))
+		{
 			case HW_BTN_MAP:
 			{
-				if (LOWORD(lParam) == 0x0) {
+				if (LOWORD(lParam) == 0x0)
+				{
 					/* pressed */
 					DEBUGMSG(true, (TEXT("MAP pressed\r\n")));
-					if (!m_FilterAutoRepeat && !m_LongPress) {
+					if (!m_FilterAutoRepeat && !m_LongPress)
+					{
 						/* start processing long press */
 						SetTimer(m_hWnd, ID_TIMER_LONG_PRESS, ID_TIMER_LONG_PRESS_DELAY, NULL);
 						m_FilterAutoRepeat = true;
 					}
 					return 1;
-				} else if (LOWORD(lParam) == 0x1000) {
+				}
+				else if (LOWORD(lParam) == 0x1000)
+				{
 					/* released */
 					DEBUGMSG(true, (TEXT("MAP released\r\n")));
-					if (m_FilterAutoRepeat) {
+					if (m_FilterAutoRepeat)
+					{
 						m_FilterAutoRepeat = false;
 						KillTimer(m_hWnd, ID_TIMER_LONG_PRESS);
 					}
-					if (m_LongPress) {
+					if (m_LongPress)
+					{
 						/* already handled by the timer */
 						m_LongPress = false;
 						return 1;
@@ -202,7 +238,8 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 			}
 			case HW_BTN_UP:
 			{
-				if (LOWORD(lParam) == 0x0) {
+				if (LOWORD(lParam) == 0x0)
+				{
 					/* pressed */
 					DEBUGMSG(true, (TEXT("UP pressed\r\n")));
 					evt.data.key = Client::KEY_UP;
@@ -213,7 +250,8 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 			}
 			case HW_BTN_DOWN:
 			{
-				if (LOWORD(lParam) == 0x0) {
+				if (LOWORD(lParam) == 0x0)
+				{
 					/* pressed */
 					DEBUGMSG(true, (TEXT("DOWN pressed\r\n")));
 					evt.data.key = Client::KEY_DOWN;
@@ -224,7 +262,8 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 			}
 			case HW_BTN_LEFT:
 			{
-				if (LOWORD(lParam) == 0x0) {
+				if (LOWORD(lParam) == 0x0)
+				{
 					/* pressed */
 					DEBUGMSG(true, (TEXT("LEFT pressed\r\n")));
 					evt.data.key = Client::KEY_LEFT;
@@ -235,7 +274,8 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 			}
 			case HW_BTN_RIGHT:
 			{
-				if (LOWORD(lParam) == 0x0) {
+				if (LOWORD(lParam) == 0x0)
+				{
 					/* pressed */
 					DEBUGMSG(true, (TEXT("RIGHT pressed\r\n")));
 					evt.data.key = Client::KEY_RIGHT;
@@ -254,21 +294,27 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 	return CallWindowProc(m_HotkeyWndProc, hWnd, message, wParam, lParam);
 }
 
-void Client_WinCE::HandleMapKey(bool long_press) {
+void Client_WinCE::HandleMapKey(bool long_press)
+{
 	Client::event_t evt;
 	evt.what = Client::EVT_KEY;
-	if (long_press) {
+	if (long_press)
+	{
 		/* long press */
 		evt.data.key = Client::KEY_HOME;
-	} else {
+	}
+	else
+	{
 		/* normal press */
 		evt.data.key = Client::KEY_BACK;
 	}
 	PostEvent(evt);
 }
 
-void Client_WinCE::OnTimer(UINT_PTR nIDEvent) {
-	if (ID_TIMER_LONG_PRESS == nIDEvent) {
+void Client_WinCE::OnTimer(UINT_PTR nIDEvent)
+{
+	if (ID_TIMER_LONG_PRESS == nIDEvent)
+	{
 		/* MAP long press */
 		KillTimer(m_hWnd, ID_TIMER_LONG_PRESS);
 		m_FilterAutoRepeat = false;
@@ -276,7 +322,8 @@ void Client_WinCE::OnTimer(UINT_PTR nIDEvent) {
 		HandleMapKey(true);
 	}
 #ifdef SHOW_POINTER_TRACE
-	else if (ID_TIMER_TRACE == nIDEvent) {
+	else if (ID_TIMER_TRACE == nIDEvent)
+	{
 		RECT r;
 
 		KillTimer(m_hWnd, ID_TIMER_TRACE);
@@ -289,7 +336,8 @@ void Client_WinCE::OnTimer(UINT_PTR nIDEvent) {
 #endif
 }
 
-void Client_WinCE::OnTouchUp(int x, int y) {
+void Client_WinCE::OnTouchUp(int x, int y)
+{
 #ifdef SHOW_POINTER_TRACE
 	AddTracePoint(TRACE_POINT_UP, x, y);
 #endif
@@ -300,7 +348,8 @@ void Client_WinCE::OnTouchUp(int x, int y) {
 	evt.data.point.y = y;
 	PostEvent(evt);
 }
-void Client_WinCE::OnTouchDown(int x, int y) {
+void Client_WinCE::OnTouchDown(int x, int y)
+{
 
 #ifdef SHOW_POINTER_TRACE
 	AddTracePoint(TRACE_POINT_DOWN, x, y);
@@ -312,7 +361,8 @@ void Client_WinCE::OnTouchDown(int x, int y) {
 	evt.data.point.y = y;
 	PostEvent(evt);
 }
-void Client_WinCE::OnTouchMove(int x, int y) {
+void Client_WinCE::OnTouchMove(int x, int y)
+{
 #ifdef SHOW_POINTER_TRACE
 	AddTracePoint(TRACE_POINT_MOVE, x, y);
 #endif
@@ -324,14 +374,17 @@ void Client_WinCE::OnTouchMove(int x, int y) {
 	PostEvent(evt);
 }
 
-void Client_WinCE::OnPaint(void) {
+void Client_WinCE::OnPaint(void)
+{
 	PAINTSTRUCT ps;
 	BeginPaint(m_hWnd, &ps);
 	EndPaint(m_hWnd, &ps);
 }
 
-void Client_WinCE::OnActivate(bool isActive) {
-	DEBUGMSG(TRUE, (TEXT("====================================\r\nOnActivate %d\r\n"), isActive));
+void Client_WinCE::OnActivate(bool isActive)
+{
+	DEBUGMSG(TRUE, (TEXT("====================================\r\nOnActivate %d\r\n"),
+		isActive));
 	m_Active = isActive;
 	SetHotkeyHandler(m_Active);
 	if (m_Active)
@@ -340,7 +393,8 @@ void Client_WinCE::OnActivate(bool isActive) {
 	}
 }
 
-void Client_WinCE::ShowFullScreen() {
+void Client_WinCE::ShowFullScreen()
+{
 #ifdef WINCE
 	SHFullScreen(m_hWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
 	::ShowWindow(SHFindMenuBar(m_hWnd), SW_HIDE);
@@ -350,12 +404,14 @@ void Client_WinCE::ShowFullScreen() {
 #endif
 }
 
-void Client_WinCE::OnShutdown() {
+void Client_WinCE::OnShutdown()
+{
 	DeleteDC(hdcImage);
 	PostMessage(m_hWnd, WM_QUIT, 0, 0);
 }
 
-rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
+rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client)
+{
 	int width, height, depth;
 
 	width = client->width;
@@ -371,21 +427,20 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client) {
 	/* For Windows bitmap is BGR565/BGR888, upside down - see -height below */
 	BITMAPINFO bm_info;
 	memset(&bm_info, 0, sizeof(BITMAPINFO));
-	bm_info.bmiHeader.biSize            = sizeof(BITMAPINFOHEADER);
-	bm_info.bmiHeader.biWidth           = client->width;
-	bm_info.bmiHeader.biHeight          = -client->height;
-	bm_info.bmiHeader.biPlanes          = 1;
-	bm_info.bmiHeader.biBitCount        = client->format.bitsPerPixel;
-	bm_info.bmiHeader.biCompression     = BI_RGB;
-	bm_info.bmiHeader.biSizeImage       = 0;
-	bm_info.bmiHeader.biXPelsPerMeter   = 0;
-	bm_info.bmiHeader.biYPelsPerMeter   = 0;
-	bm_info.bmiHeader.biClrUsed         = 0;
-	bm_info.bmiHeader.biClrImportant    = 0;
+	bm_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bm_info.bmiHeader.biWidth = client->width;
+	bm_info.bmiHeader.biHeight = -client->height;
+	bm_info.bmiHeader.biPlanes = 1;
+	bm_info.bmiHeader.biBitCount = client->format.bitsPerPixel;
+	bm_info.bmiHeader.biCompression = BI_RGB;
+	bm_info.bmiHeader.biSizeImage = 0;
+	bm_info.bmiHeader.biXPelsPerMeter = 0;
+	bm_info.bmiHeader.biYPelsPerMeter = 0;
+	bm_info.bmiHeader.biClrUsed = 0;
+	bm_info.bmiHeader.biClrImportant = 0;
 
-	m_hBmp = CreateDIBSection(CreateCompatibleDC(GetDC(m_hWnd)),
-		&bm_info, DIB_RGB_COLORS, reinterpret_cast<void**>(&m_FrameBuffer),
-		NULL, NULL);
+	m_hBmp = CreateDIBSection(CreateCompatibleDC(GetDC(m_hWnd)), &bm_info, DIB_RGB_COLORS,
+		reinterpret_cast<void**>(&m_FrameBuffer), NULL, NULL);
 	client->frameBuffer = m_FrameBuffer;
 	hdcImage = CreateCompatibleDC(NULL);
 	if (!hdcImage)
