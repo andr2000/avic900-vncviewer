@@ -179,12 +179,7 @@ bool initialize(HINSTANCE hInstance, int nCmdShow)
 	w = 800;
 	h = 480;
 #endif
-	DWORD extStyle = 0;
-	if (ConfigStorage::GetInstance()->GetDrawingMethod() == ConfigStorage::DDRAW_EXCLUSIVE)
-	{
-		extStyle = WS_EX_TOPMOST;
-	}
-	g_hWndMain = CreateWindowEx(extStyle, wc.lpszClassName, APP_TITLE, WS_POPUP, /* non-app window */
+	g_hWndMain = CreateWindowEx(0, wc.lpszClassName, APP_TITLE, WS_POPUP, /* non-app window */
 		0, 0, w, h, NULL, NULL, hInstance, NULL);
 	if (!g_hWndMain)
 	{
