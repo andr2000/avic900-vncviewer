@@ -558,6 +558,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\client_ddraw_exclusive.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\client_gdi.cpp"
 				>
 			</File>
@@ -893,6 +897,10 @@
 			</File>
 			<File
 				RelativePath=".\client_ddraw.h"
+				>
+			</File>
+			<File
+				RelativePath=".\client_ddraw_exclusive.h"
 				>
 			</File>
 			<File

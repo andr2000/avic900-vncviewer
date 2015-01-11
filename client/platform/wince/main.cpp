@@ -10,6 +10,7 @@
 #endif
 
 #include "client_ddraw.h"
+#include "client_ddraw_exclusive.h"
 #include "client_gdi.h"
 #include "config_storage.h"
 
@@ -170,14 +171,21 @@ bool initialize(HINSTANCE hInstance, int nCmdShow)
 	{
 		return false;
 	}
-	g_hWndMain = CreateWindowEx(0, wc.lpszClassName, APP_TITLE, WS_POPUP, /* non-app window */
-	0, 0,
+	int w, h;
 #ifdef WINCE
-		GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
+	w = GetSystemMetrics(SM_CXSCREEN);
+	h = GetSystemMetrics(SM_CYSCREEN);
 #else
-		800, 480,
+	w = 800;
+	h = 480;
 #endif
-		NULL, NULL, hInstance, NULL);
+	DWORD extStyle = 0;
+	if (ConfigStorage::GetInstance()->GetDrawingMethod() == ConfigStorage::DDRAW_EXCLUSIVE)
+	{
+		extStyle = WS_EX_TOPMOST;
+	}
+	g_hWndMain = CreateWindowEx(extStyle, wc.lpszClassName, APP_TITLE, WS_POPUP, /* non-app window */
+		0, 0, w, h, NULL, NULL, hInstance, NULL);
 	if (!g_hWndMain)
 	{
 		return false;
@@ -201,20 +209,27 @@ bool initializeClient()
 	std::string ini(filename);
 	ini += ".ini";
 
-	ConfigStorage *config = ConfigStorage::GetInstance();
-	config->Initialize(exe, ini);
-	switch (config->GetDrawingMethod())
+	ConfigStorage::GetInstance()->Initialize(exe, ini);
+	/* do not use global client pointer until we are fully initialized, so
+	 window proc doesn't call us yet */
+	switch (ConfigStorage::GetInstance()->GetDrawingMethod())
 	{
-		case 0:
+		case ConfigStorage::GDI:
 		{
 			/* GDI - default */
 			g_Client = new Client_GDI();
 			break;
 		}
-		case 1:
+		case ConfigStorage::DDRAW_WINDOWED:
 		{
 			/* DDraw */
 			g_Client = new Client_DDraw();
+			break;
+		}
+		case ConfigStorage::DDRAW_EXCLUSIVE:
+		{
+			/* DDraw exclusive */
+			g_Client = new Client_DDraw_Exclusive();
 			break;
 		}
 		default:

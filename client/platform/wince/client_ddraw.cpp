@@ -1,25 +1,48 @@
 #include "client_ddraw.h"
 
-void Client_DDraw::Blit(int x, int y, int w, int h)
+Client_DDraw::Client_DDraw() : Client_WinCE()
 {
-	HRESULT ddrval;
+	lpDD = NULL;
+	lpBlitSurface = NULL;
+	lpFrontBuffer = NULL;
+	lpClipper = NULL;
+	m_Initialized = false;
+	m_CooperativeLevel = DDSCL_NORMAL;
+}
+
+BOOL Client_DDraw::Blit(int x, int y, int w, int h)
+{
 	HDC hdc;
-	if ((ddrval = lpFrontBuffer->GetDC(&hdc)) == DD_OK)
+	while (true)
 	{
-		if (m_NeedScaling)
+		HRESULT ddrval = lpBlitSurface->GetDC(&hdc);
+		if (ddrval == DD_OK)
 		{
-			/* blit all */
-			StretchBlt(hdc, m_WindowRect.left, m_WindowRect.top,
-				m_WindowRect.right - m_WindowRect.left,
-				m_WindowRect.bottom - m_WindowRect.top,
-				hdcImage, 0, 0, m_Client->width, m_Client->height, SRCCOPY);
+			break;
 		}
-		else
+		if (ddrval == DDERR_SURFACELOST)
 		{
-			BitBlt(hdc, x, y, w, h, hdcImage, x, y, SRCCOPY);
+			if (!RestoreSurfaces())
+			{
+				return false;
+			}
 		}
-		lpFrontBuffer->ReleaseDC(hdc);
 	}
+	BOOL result;
+	if (m_NeedScaling)
+	{
+		/* blit all */
+		result = StretchBlt(hdc, m_WindowRect.left, m_WindowRect.top,
+			m_WindowRect.right - m_WindowRect.left,
+			m_WindowRect.bottom - m_WindowRect.top,
+			hdcImage, 0, 0, m_Client->width, m_Client->height, SRCCOPY);
+	}
+	else
+	{
+		result = BitBlt(hdc, x, y, w, h, hdcImage, x, y, SRCCOPY);
+	}
+	lpBlitSurface->ReleaseDC(hdc);
+	return result;
 }
 
 void Client_DDraw::OnFinishedFrameBufferUpdate(rfbClient *client)
@@ -42,60 +65,10 @@ void Client_DDraw::OnShutdown()
 	Client_WinCE::OnShutdown();
 }
 
-int Client_DDraw::Initialize()
+int Client_DDraw::SetupClipper()
 {
-	lpDD = NULL;
-	lpFrontBuffer = NULL;
-	lpClipper = NULL;
-
-	if (Client_WinCE::Initialize() < 0)
-	{
-		return -1;
-	}
-
-	HRESULT ddrval;
-	LPDIRECTDRAW pDD;
-	ddrval = DirectDrawCreate(NULL, &pDD, NULL);
-	if (ddrval != DD_OK)
-	{
-		DEBUGMSG(TRUE, (TEXT("DirectDrawCreate Failed!\r\n")));
-		ReleaseResources();
-		return -1;
-	}
-	/* Fetch DirectDraw4 interface */
-	ddrval = pDD->QueryInterface(IID_IDirectDraw4, (LPVOID*) &lpDD);
-	if (ddrval != DD_OK)
-	{
-		DEBUGMSG(TRUE, (TEXT("QueryInterface Failed!\r\n")));
-		ReleaseResources();
-		return -1;
-	}
-	pDD->Release();
-	pDD = NULL;
-
-	/* windowed mode, so we can switch to other GDI aps */
-	ddrval = lpDD->SetCooperativeLevel(m_hWnd, DDSCL_NORMAL);
-	if (ddrval != DD_OK)
-	{
-		DEBUGMSG(TRUE, (TEXT("SetCooperativeLevel Failed!\r\n")));
-		ReleaseResources();
-		return -1;
-	}
-	/* Create surface */
-	DDSURFACEDESC2 ddsd;
-	memset(&ddsd, 0, sizeof(ddsd));
-	ddsd.dwSize = sizeof(ddsd);
-	ddsd.dwFlags = DDSD_CAPS;
-	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-	ddrval = lpDD->CreateSurface(&ddsd, &lpFrontBuffer, NULL);
-	if (ddrval != DD_OK)
-	{
-		DEBUGMSG(TRUE, (TEXT("CreateSurface FrontBuffer Failed!\r\n")));
-		ReleaseResources();
-		return -1;
-	}
 	/* create clipper */
-	ddrval = lpDD->CreateClipper(0, &lpClipper, NULL);
+	HRESULT ddrval = lpDD->CreateClipper(0, &lpClipper, NULL);
 	if (ddrval != DD_OK)
 	{
 		DEBUGMSG(TRUE, (TEXT("CreateClipper Failed!\r\n")));
@@ -116,6 +89,70 @@ int Client_DDraw::Initialize()
 		ReleaseResources();
 		return -1;
 	}
+	return 0;
+}
+
+int Client_DDraw::CreateSurface()
+{
+	DDSURFACEDESC2 ddsd;
+	memset(&ddsd, 0, sizeof(ddsd));
+	ddsd.dwSize = sizeof(ddsd);
+	ddsd.dwFlags = DDSD_CAPS;
+	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+	HRESULT ddrval = lpDD->CreateSurface(&ddsd, &lpFrontBuffer, NULL);
+	if (ddrval != DD_OK)
+	{
+		DEBUGMSG(TRUE, (TEXT("CreateSurface FrontBuffer Failed!\r\n")));
+		ReleaseResources();
+		return -1;
+	}
+	lpBlitSurface = lpFrontBuffer;
+	return 0;
+}
+
+int Client_DDraw::Initialize()
+{
+	if (Client_WinCE::Initialize() < 0)
+	{
+		return -1;
+	}
+	LPDIRECTDRAW pDD;
+	HRESULT ddrval = DirectDrawCreate(NULL, &pDD, NULL);
+	if (ddrval != DD_OK)
+	{
+		DEBUGMSG(TRUE, (TEXT("DirectDrawCreate Failed!\r\n")));
+		ReleaseResources();
+		return -1;
+	}
+	/* Fetch DirectDraw4 interface */
+	ddrval = pDD->QueryInterface(IID_IDirectDraw4, (LPVOID*) &lpDD);
+	if (ddrval != DD_OK)
+	{
+		DEBUGMSG(TRUE, (TEXT("QueryInterface Failed!\r\n")));
+		ReleaseResources();
+		return -1;
+	}
+	pDD->Release();
+	pDD = NULL;
+
+	/* windowed mode, so we can switch to other GDI aps */
+	ddrval = lpDD->SetCooperativeLevel(m_hWnd, m_CooperativeLevel);
+	if (ddrval != DD_OK)
+	{
+		DEBUGMSG(TRUE, (TEXT("SetCooperativeLevel Failed!\r\n")));
+		ReleaseResources();
+		return -1;
+	}
+	/* Create surface */
+	if (CreateSurface() < 0)
+	{
+		return -1;
+	}
+	if (SetupClipper() < 0)
+	{
+		return -1;
+	}
+	m_Initialized = true;
 	return 0;
 }
 
@@ -155,7 +192,8 @@ void Client_DDraw::ReleaseResources(void)
 void Client_DDraw::OnActivate(bool isActive)
 {
 	Client_WinCE::OnActivate(isActive);
-	if (isActive)
+	DEBUGMSG(TRUE, (TEXT("OnActivate isActive %d m_Initialized %d!\r\n"), isActive, m_Initialized));
+	if (isActive && m_Initialized)
 	{
 		/* framebuffer might already have been updated */
 		Blit(m_WindowRect.left, m_WindowRect.top, m_WindowRect.right - m_WindowRect.left,
