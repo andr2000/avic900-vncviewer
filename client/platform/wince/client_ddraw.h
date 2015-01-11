@@ -16,22 +16,29 @@
 class Client_DDraw : public Client_WinCE
 {
 public:
+	Client_DDraw();
+
 	int Initialize();
 	void OnActivate(bool isActive);
-	void OnPaint(void);
+	virtual void OnPaint(void);
 
 protected:
-	void OnFinishedFrameBufferUpdate(rfbClient *client);
-	void OnShutdown();
-
-private:
 	LPDIRECTDRAW4 lpDD;
+	LPDIRECTDRAWSURFACE4 lpBlitSurface;
 	LPDIRECTDRAWSURFACE4 lpFrontBuffer;
 	LPDIRECTDRAWCLIPPER lpClipper;
 
+	DWORD m_CooperativeLevel;
+	bool m_Initialized;
+
+	virtual void OnFinishedFrameBufferUpdate(rfbClient *client);
+	void OnShutdown();
+
 	bool RestoreSurfaces(void);
-	void ReleaseResources(void);
-	void Blit(int x, int y, int w, int h);
+	virtual void ReleaseResources(void);
+	virtual BOOL Blit(int x, int y, int w, int h);
+	virtual int CreateSurface();
+	virtual int SetupClipper();
 };
 
 #endif

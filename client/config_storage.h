@@ -8,6 +8,12 @@
 class ConfigStorage : public INIReader
 {
 public:
+	enum DRAWING_METHOD
+	{
+		GDI,
+		DDRAW_WINDOWED,
+		DDRAW_EXCLUSIVE
+	};
 	ConfigStorage();
 	virtual ~ConfigStorage();
 
