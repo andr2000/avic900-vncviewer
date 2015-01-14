@@ -62,6 +62,8 @@ protected:
 	static void Logger(const char *format, ...);
 	int ShowMessage(DWORD type, wchar_t *caption, wchar_t *format, ...);
 
+	virtual void ShowFullScreen(bool fullScreen);
+
 private:
 	static const int CONNECT_MAX_TRY = 3;
 
@@ -109,8 +111,6 @@ private:
 
 	void SetHotkeyHandler(bool set);
 	void HandleMapKey(bool long_press);
-
-	void ShowFullScreen();
 
 	void SetLogging();
 };
