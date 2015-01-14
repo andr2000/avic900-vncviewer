@@ -53,6 +53,7 @@ long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			if (g_Client)
 			{
 				g_Client->OnActivate(wParam != WA_INACTIVE);
+				return 0;
 			}
 			break;
 		}

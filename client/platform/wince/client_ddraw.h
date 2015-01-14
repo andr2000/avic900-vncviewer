@@ -39,6 +39,7 @@ protected:
 	virtual BOOL Blit(int x, int y, int w, int h);
 	virtual int CreateSurface();
 	virtual int SetupClipper();
+	void ShowFullScreen(bool fullScreen);
 };
 
 #endif

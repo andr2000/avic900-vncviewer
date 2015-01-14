@@ -383,25 +383,24 @@ void Client_WinCE::OnPaint(void)
 
 void Client_WinCE::OnActivate(bool isActive)
 {
-	DEBUGMSG(TRUE, (TEXT("====================================\r\nOnActivate %d\r\n"),
-		isActive));
+	DEBUGMSG(TRUE, (TEXT("====================================\r\nOnActivate %d\r\n"), isActive));
 	m_Active = isActive;
 	SetHotkeyHandler(m_Active);
-	if (m_Active)
-	{
-		ShowFullScreen();
-	}
+	ShowFullScreen(m_Active);
 }
 
-void Client_WinCE::ShowFullScreen()
+void Client_WinCE::ShowFullScreen(bool fullScreen)
 {
+	if (fullScreen)
+	{
 #ifdef WINCE
-	SHFullScreen(m_hWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
-	::ShowWindow(SHFindMenuBar(m_hWnd), SW_HIDE);
-	MoveWindow(m_hWnd, m_WindowRect.left, m_WindowRect.top,
-		m_WindowRect.left + m_WindowRect.right,
-		m_WindowRect.top + m_WindowRect.bottom, false);
+		SHFullScreen(m_hWnd, SHFS_HIDETASKBAR | SHFS_HIDESTARTICON | SHFS_HIDESIPBUTTON);
+		::ShowWindow(SHFindMenuBar(m_hWnd), SW_HIDE);
+		MoveWindow(m_hWnd, m_WindowRect.left, m_WindowRect.top,
+			m_WindowRect.left + m_WindowRect.right,
+			m_WindowRect.top + m_WindowRect.bottom, false);
 #endif
+	}
 }
 
 void Client_WinCE::OnShutdown()

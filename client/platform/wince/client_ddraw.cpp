@@ -135,7 +135,6 @@ int Client_DDraw::Initialize()
 	pDD->Release();
 	pDD = NULL;
 
-	/* windowed mode, so we can switch to other GDI aps */
 	ddrval = lpDD->SetCooperativeLevel(m_hWnd, m_CooperativeLevel);
 	if (ddrval != DD_OK)
 	{
@@ -184,6 +183,7 @@ void Client_DDraw::ReleaseResources(void)
 	}
 	if (lpDD != NULL)
 	{
+		lpDD->SetCooperativeLevel(m_hWnd, DDSCL_NORMAL);
 		lpDD->Release();
 		lpDD = NULL;
 	}
@@ -215,4 +215,23 @@ void Client_DDraw::OnPaint(void)
 	h = ps.rcPaint.bottom - ps.rcPaint.top;
 	Blit(x, y, w, h);
 	EndPaint(m_hWnd, &ps);
+}
+
+void Client_DDraw::ShowFullScreen(bool fullScreen)
+{
+	if ((lpDD == NULL) || (!m_Initialized))
+	{
+		return;
+	}
+	if (fullScreen)
+	{
+		HRESULT ddrval = lpDD->SetCooperativeLevel(m_hWnd, m_CooperativeLevel);
+		DEBUGMSG(ddrval != DD_OK, (TEXT("SetCooperativeLevel Failed!\r\n")));
+		bool result = RestoreSurfaces();
+		DEBUGMSG(!result, (TEXT("RestoreSurfaces Failed!\r\n")));
+	}
+	else
+	{
+		lpDD->SetCooperativeLevel(m_hWnd, DDSCL_NORMAL);
+	}
 }
