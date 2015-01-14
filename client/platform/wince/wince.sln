@@ -9,8 +9,6 @@ Global
 		Debug|Win32 = Debug|Win32
 		Release|Pocket PC 2003 (ARMV4) = Release|Pocket PC 2003 (ARMV4)
 		Release|Win32 = Release|Win32
-		win32|Pocket PC 2003 (ARMV4) = win32|Pocket PC 2003 (ARMV4)
-		win32|Win32 = win32|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
@@ -23,11 +21,6 @@ Global
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Pocket PC 2003 (ARMV4).Deploy.0 = Release|Pocket PC 2003 (ARMV4)
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Win32.ActiveCfg = Release|Win32
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Win32.Build.0 = Release|Win32
-		{63C91301-9B76-454C-85DE-D500B81793CE}.win32|Pocket PC 2003 (ARMV4).ActiveCfg = win32|Pocket PC 2003 (ARMV4)
-		{63C91301-9B76-454C-85DE-D500B81793CE}.win32|Pocket PC 2003 (ARMV4).Build.0 = win32|Pocket PC 2003 (ARMV4)
-		{63C91301-9B76-454C-85DE-D500B81793CE}.win32|Pocket PC 2003 (ARMV4).Deploy.0 = win32|Pocket PC 2003 (ARMV4)
-		{63C91301-9B76-454C-85DE-D500B81793CE}.win32|Win32.ActiveCfg = win32|Win32
-		{63C91301-9B76-454C-85DE-D500B81793CE}.win32|Win32.Build.0 = win32|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
