@@ -40,6 +40,18 @@ void Cleanup(void)
 #endif
 }
 
+#ifdef WIN32
+void activateNotepad()
+{
+	HWND hWnd = FindWindow(0, TEXT("Untitled - Notepad"));
+	DEBUGMSG(hWnd == INVALID_HANDLE_VALUE, (TEXT("Couldn't find Notepad window\r\n")));
+	if (hWnd != INVALID_HANDLE_VALUE)
+	{
+		SetForegroundWindow(hWnd);
+	}
+}
+#endif
+
 long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
@@ -123,6 +135,17 @@ long FAR PASCAL MainWndproc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			PostQuitMessage(0);
 			return 0;
 		}
+#ifdef WIN32
+		case WM_KEYUP:
+		{
+			if (wParam == VK_SPACE)
+			{
+				activateNotepad();
+				return 0;
+			}
+			break;
+		}
+#endif
 		default:
 		{
 			break;
