@@ -35,7 +35,7 @@ void Cleanup(void)
 		g_Client = NULL;
 	}
 	DestroyWindow(g_hWndMain);
-#ifndef WINCE
+#if !defined(WINCE) && defined(DEBUG)
 	FreeConsole();
 #endif
 }
@@ -281,7 +281,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		return 0;
 	}
-#ifndef WINCE
+#if !defined(WINCE) && defined(DEBUG)
 	AllocConsole();
 	freopen("CONOUT$","w",stdout);
 #endif
