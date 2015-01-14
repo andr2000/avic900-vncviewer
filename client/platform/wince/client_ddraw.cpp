@@ -7,7 +7,7 @@ Client_DDraw::Client_DDraw() : Client_WinCE()
 	lpFrontBuffer = NULL;
 	lpClipper = NULL;
 	m_Initialized = false;
-	m_CooperativeLevel = DDSCL_NORMAL;
+	m_CooperativeLevel = DDSCL_FULLSCREEN;
 }
 
 BOOL Client_DDraw::Blit(int x, int y, int w, int h)
@@ -94,7 +94,7 @@ int Client_DDraw::SetupClipper()
 
 int Client_DDraw::CreateSurface()
 {
-	DDSURFACEDESC2 ddsd;
+	DDSURFACEDESC ddsd;
 	memset(&ddsd, 0, sizeof(ddsd));
 	ddsd.dwSize = sizeof(ddsd);
 	ddsd.dwFlags = DDSD_CAPS;
@@ -116,32 +116,21 @@ int Client_DDraw::Initialize()
 	{
 		return -1;
 	}
-	LPDIRECTDRAW pDD;
-	HRESULT ddrval = DirectDrawCreate(NULL, &pDD, NULL);
+	HRESULT ddrval = DirectDrawCreate(NULL, &lpDD, NULL);
 	if (ddrval != DD_OK)
 	{
 		DEBUGMSG(TRUE, (TEXT("DirectDrawCreate Failed!\r\n")));
 		ReleaseResources();
 		return -1;
 	}
-	/* Fetch DirectDraw4 interface */
-	ddrval = pDD->QueryInterface(IID_IDirectDraw4, (LPVOID*) &lpDD);
+		ddrval = lpDD->SetCooperativeLevel(m_hWnd, m_CooperativeLevel);
 	if (ddrval != DD_OK)
 	{
-		DEBUGMSG(TRUE, (TEXT("QueryInterface Failed!\r\n")));
+		DEBUGMSG(TRUE, (TEXT("SetCooperativeLevel Failed! - 0x%x\r\n"), ddrval));
 		ReleaseResources();
 		return -1;
 	}
-	pDD->Release();
-	pDD = NULL;
 
-	ddrval = lpDD->SetCooperativeLevel(m_hWnd, m_CooperativeLevel);
-	if (ddrval != DD_OK)
-	{
-		DEBUGMSG(TRUE, (TEXT("SetCooperativeLevel Failed!\r\n")));
-		ReleaseResources();
-		return -1;
-	}
 	/* Create surface */
 	if (CreateSurface() < 0)
 	{

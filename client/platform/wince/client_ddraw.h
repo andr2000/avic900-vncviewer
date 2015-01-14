@@ -23,9 +23,9 @@ public:
 	virtual void OnPaint(void);
 
 protected:
-	LPDIRECTDRAW4 lpDD;
-	LPDIRECTDRAWSURFACE4 lpBlitSurface;
-	LPDIRECTDRAWSURFACE4 lpFrontBuffer;
+	LPDIRECTDRAW lpDD;
+	LPDIRECTDRAWSURFACE lpBlitSurface;
+	LPDIRECTDRAWSURFACE lpFrontBuffer;
 	LPDIRECTDRAWCLIPPER lpClipper;
 
 	DWORD m_CooperativeLevel;

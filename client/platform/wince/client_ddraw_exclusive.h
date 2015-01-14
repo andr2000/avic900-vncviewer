@@ -16,7 +16,7 @@ protected:
 	int SetupClipper();
 
 private:
-	LPDIRECTDRAWSURFACE4 lpBackBuffer;
+	LPDIRECTDRAWSURFACE lpBackBuffer;
 
 	void BlitFrontToBack(LPRECT rect);
 };

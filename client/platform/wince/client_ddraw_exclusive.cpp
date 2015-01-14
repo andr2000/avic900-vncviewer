@@ -3,14 +3,14 @@
 Client_DDraw_Exclusive::Client_DDraw_Exclusive() : Client_DDraw()
 {
 	lpBackBuffer = NULL;
-	m_CooperativeLevel = DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN;
+	m_CooperativeLevel = DDSCL_FULLSCREEN;
 }
 
 void Client_DDraw_Exclusive::BlitFrontToBack(LPRECT rect) {
 	while (true)
 	{
-		HRESULT ddrval = lpBackBuffer->BltFast(rect->left, rect->top,
-			lpFrontBuffer, rect, DDBLTFAST_NOCOLORKEY);
+		HRESULT ddrval = lpBackBuffer->Blt(rect,
+			lpFrontBuffer, rect, DDCKEY_SRCBLT, NULL);
 		if (ddrval == DD_OK)
 		{
 			break;
@@ -105,11 +105,11 @@ int Client_DDraw_Exclusive::SetupClipper()
 
 int Client_DDraw_Exclusive::CreateSurface()
 {
-	DDSURFACEDESC2 ddsd;
+	DDSURFACEDESC ddsd;
 	memset(&ddsd, 0, sizeof(ddsd));
 	ddsd.dwSize = sizeof( ddsd );
 	ddsd.dwFlags = DDSD_CAPS | DDSD_BACKBUFFERCOUNT;
-	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_FLIP | DDSCAPS_COMPLEX;
+	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_FLIP;
 	ddsd.dwBackBufferCount = 1;
 	HRESULT ddrval = lpDD->CreateSurface(&ddsd, &lpFrontBuffer, NULL);
 	if (ddrval != DD_OK)
@@ -125,8 +125,9 @@ int Client_DDraw_Exclusive::CreateSurface()
 		return -1;
 	}
 	/* get a pointer to the back buffer */
-	DDSCAPS2 ddscaps;
+	DDSCAPS ddscaps;
 	ddscaps.dwCaps = DDSCAPS_BACKBUFFER;
+#if 0
 	ddrval = lpFrontBuffer->GetAttachedSurface(&ddscaps, &lpBackBuffer);
 	if (ddrval != DD_OK)
 	{
@@ -135,6 +136,7 @@ int Client_DDraw_Exclusive::CreateSurface()
 		return -1;
 	}
 	lpBlitSurface = lpBackBuffer;
+#endif
 	return 0;
 }
 
