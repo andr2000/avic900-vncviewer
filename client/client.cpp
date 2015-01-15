@@ -19,6 +19,7 @@ Client::Client()
 	m_NeedScaling = false;
 	m_LastRefreshTimeMs = -1L;
 	m_ForceRefreshToMs = 0;
+	m_WaitForMessageToUs = 0;
 	m_IsScreenRotated = false;
 	memset(&m_UpdateRect, 0, sizeof(m_UpdateRect));
 	m_Instance = this;
@@ -73,6 +74,8 @@ int Client::Initialize()
 	m_ForceRefreshToMs = m_ConfigStorage->ForceRefreshToMs();
 	/* is the screen rotated? If so handle Arrows differently */
 	m_IsScreenRotated = m_ConfigStorage->IsScreenRotated();
+	/* get wait fot message timeout (select), us */
+	m_WaitForMessageToUs = m_ConfigStorage->WaitForMessageToUs();;
 	rfbClientLog("Initializing VNC Client\n");
 	/* get new RFB client */
 	m_Client = rfbGetClient(5, 3, 2);
@@ -271,7 +274,7 @@ int Client::Poll()
 	int result, evt_count;
 	event_t evt;
 
-	result = WaitForMessage(m_Client, 500);
+	result = WaitForMessage(m_Client, m_WaitForMessageToUs);
 	if (result < 0)
 	{
 		/* terminating due to error */

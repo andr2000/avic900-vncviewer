@@ -85,3 +85,8 @@ long ConfigStorage::GetDrawingMethod()
 {
 	return GetInteger(SECTION_NAME, "DrawingMethod", 0);
 }
+
+long ConfigStorage::WaitForMessageToUs()
+{
+	return GetInteger(SECTION_NAME, "WaitForMessageToUs", 5000);
+}

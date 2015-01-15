@@ -63,6 +63,7 @@ protected:
 	rfbClient* m_Client;
 	Thread *m_Thread;
 	Mutex *m_Mutex;
+	long m_WaitForMessageToUs;
 	/* message queue */
 	std::deque<event_t> m_MessageQueue;
 	static const int MAX_EVT_PROCESS_AT_ONCE = 20;
