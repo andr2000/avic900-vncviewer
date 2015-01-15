@@ -284,6 +284,23 @@ LRESULT CALLBACK Client_WinCE::ClientSubWndProc(HWND hWnd, UINT message, WPARAM 
 				/* eat the key */
 				return 1;
 			}
+			case HW_BTN_MENU:
+			{
+				if (LOWORD(lParam) == 0x0)
+				{
+					/* pressed */
+					if (m_ConfigStorage->GetDrawingMethod() != ConfigStorage::GDI)
+					{
+						/* FIXME: if we run ddraw fullscreen then hide the window manually,
+						 * because MainMenu won't be able to show up */
+						DEBUGMSG(true, (TEXT("MENU pressed\r\n")));
+						OnActivate(false);
+						ShowWindow(m_hWnd, SW_HIDE);
+					}
+				}
+				/* pass the key to the original handler */
+				break;
+			}
 			default:
 			{
 				break;
