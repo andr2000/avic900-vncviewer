@@ -4,8 +4,9 @@
 
 Client *Client::m_Instance = NULL;
 
-const char Client::VERSION[] = "AVIC-F900BT VNC client 0.1alpha " __DATE__;
-const char Client::COPYRIGHT[] = "(c) 2014 Andrushchenko, Oleksandr andr2000@gmail.com";
+#include "version.inc"
+const char Client::VERSION[] = "AVIC-F900BT VNC client 0.2 " __DATE__ " (" COMMIT_ID ")";
+const char Client::COPYRIGHT[] = "(c) 2014-2015 Andrushchenko, Oleksandr andr2000@gmail.com";
 
 Client::Client()
 {
