@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 2.8.11)
 
+#get latest commit hash for this build
+execute_process(
+	COMMAND git rev-parse --short HEAD
+	WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+	OUTPUT_VARIABLE GIT_COMMIT_ID
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# compiler option
+add_definitions("-DCOMMIT_ID=\"${GIT_COMMIT_ID}\"")
+
 set(ARTIFACT vncviewer)
 
 set(SOURCES
