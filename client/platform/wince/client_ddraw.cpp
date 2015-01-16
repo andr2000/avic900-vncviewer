@@ -94,7 +94,11 @@ int Client_DDraw::SetupClipper()
 
 int Client_DDraw::CreateSurface()
 {
+#ifdef WINMOB
+	DDSURFACEDESC ddsd;
+#else
 	DDSURFACEDESC2 ddsd;
+#endif
 	memset(&ddsd, 0, sizeof(ddsd));
 	ddsd.dwSize = sizeof(ddsd);
 	ddsd.dwFlags = DDSD_CAPS;
@@ -116,6 +120,15 @@ int Client_DDraw::Initialize()
 	{
 		return -1;
 	}
+#ifdef WINMOB
+	HRESULT ddrval = DirectDrawCreate(NULL, &lpDD, NULL);
+	if (ddrval != DD_OK)
+	{
+		DEBUGMSG(TRUE, (TEXT("DirectDrawCreate Failed!\r\n")));
+		ReleaseResources();
+		return -1;
+	}
+#else
 	LPDIRECTDRAW pDD;
 	HRESULT ddrval = DirectDrawCreate(NULL, &pDD, NULL);
 	if (ddrval != DD_OK)
@@ -134,7 +147,7 @@ int Client_DDraw::Initialize()
 	}
 	pDD->Release();
 	pDD = NULL;
-
+#endif
 	ddrval = lpDD->SetCooperativeLevel(m_hWnd, m_CooperativeLevel);
 	if (ddrval != DD_OK)
 	{

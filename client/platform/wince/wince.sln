@@ -7,8 +7,10 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Pocket PC 2003 (ARMV4) = Debug|Pocket PC 2003 (ARMV4)
 		Debug|Win32 = Debug|Win32
+		Debug|Windows Mobile 6 Professional SDK (ARMV4I) = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
 		Release|Pocket PC 2003 (ARMV4) = Release|Pocket PC 2003 (ARMV4)
 		Release|Win32 = Release|Win32
+		Release|Windows Mobile 6 Professional SDK (ARMV4I) = Release|Windows Mobile 6 Professional SDK (ARMV4I)
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
@@ -16,11 +18,17 @@ Global
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Debug|Pocket PC 2003 (ARMV4).Deploy.0 = Debug|Pocket PC 2003 (ARMV4)
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Debug|Win32.ActiveCfg = Debug|Win32
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Debug|Win32.Build.0 = Debug|Win32
+		{63C91301-9B76-454C-85DE-D500B81793CE}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).ActiveCfg = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{63C91301-9B76-454C-85DE-D500B81793CE}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).Build.0 = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{63C91301-9B76-454C-85DE-D500B81793CE}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).Deploy.0 = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Release|Pocket PC 2003 (ARMV4)
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Pocket PC 2003 (ARMV4).Build.0 = Release|Pocket PC 2003 (ARMV4)
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Pocket PC 2003 (ARMV4).Deploy.0 = Release|Pocket PC 2003 (ARMV4)
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Win32.ActiveCfg = Release|Win32
 		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Win32.Build.0 = Release|Win32
+		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Windows Mobile 6 Professional SDK (ARMV4I).ActiveCfg = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Windows Mobile 6 Professional SDK (ARMV4I).Build.0 = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+		{63C91301-9B76-454C-85DE-D500B81793CE}.Release|Windows Mobile 6 Professional SDK (ARMV4I).Deploy.0 = Release|Windows Mobile 6 Professional SDK (ARMV4I)
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

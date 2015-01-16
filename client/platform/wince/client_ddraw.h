@@ -23,9 +23,15 @@ public:
 	virtual void OnPaint(void);
 
 protected:
+#ifdef WINMOB
+	LPDIRECTDRAW lpDD;
+	LPDIRECTDRAWSURFACE lpBlitSurface;
+	LPDIRECTDRAWSURFACE lpFrontBuffer;
+#else
 	LPDIRECTDRAW4 lpDD;
 	LPDIRECTDRAWSURFACE4 lpBlitSurface;
 	LPDIRECTDRAWSURFACE4 lpFrontBuffer;
+#endif
 	LPDIRECTDRAWCLIPPER lpClipper;
 
 	DWORD m_CooperativeLevel;

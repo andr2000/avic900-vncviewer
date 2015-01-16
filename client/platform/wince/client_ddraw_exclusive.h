@@ -16,9 +16,18 @@ protected:
 	int SetupClipper();
 
 private:
+#ifdef WINMOB
+	LPDIRECTDRAWSURFACE lpBackBuffer;
+	bool m_SingleBuffer;
+#else
 	LPDIRECTDRAWSURFACE4 lpBackBuffer;
+#endif
 
 	void BlitFrontToBack(LPRECT rect);
+#ifdef WINMOB
+	static HRESULT PASCAL EnumFunction(LPDIRECTDRAWSURFACE pSurface,
+		LPDDSURFACEDESC lpSurfaceDesc, LPVOID  lpContext);
+#endif
 };
 
 #endif

@@ -3,14 +3,25 @@
 Client_DDraw_Exclusive::Client_DDraw_Exclusive() : Client_DDraw()
 {
 	lpBackBuffer = NULL;
+#ifdef WINMOB
+	m_CooperativeLevel = DDSCL_FULLSCREEN;
+	m_SingleBuffer = false;
+#else
 	m_CooperativeLevel = DDSCL_EXCLUSIVE | DDSCL_FULLSCREEN;
+#endif
 }
 
 void Client_DDraw_Exclusive::BlitFrontToBack(LPRECT rect) {
 	while (true)
 	{
+#ifdef WINMOB
+		/* TODO: for some reason E_INVALIDARG returnded if DDCKEY_SRCBLT passed */
+		HRESULT ddrval = lpBackBuffer->Blt(rect,
+			lpFrontBuffer, rect, /*DDCKEY_SRCBLT*/0, NULL);
+#else
 		HRESULT ddrval = lpBackBuffer->BltFast(rect->left, rect->top,
 			lpFrontBuffer, rect, DDBLTFAST_NOCOLORKEY);
+#endif
 		if (ddrval == DD_OK)
 		{
 			break;
@@ -78,7 +89,20 @@ BOOL Client_DDraw_Exclusive::Blit(int x, int y, int w, int h)
 	/* now flip */
 	while (true)
 	{
-		HRESULT ddrval = lpFrontBuffer->Flip(NULL, 0);
+		HRESULT ddrval;
+#ifdef WINMOB
+		if (m_SingleBuffer)
+		{
+			SetRect(&rect, x, y, x + w, y + h);
+			/* TODO: for some reason E_INVALIDARG returnded if DDCKEY_SRCBLT passed */
+            ddrval = lpFrontBuffer->Blt(&rect, lpBackBuffer, &rect, /*DDBLT_KEYSRC*/0, NULL);
+		}
+		else
+#else
+		{
+			ddrval = lpFrontBuffer->Flip(NULL, 0);
+		}
+#endif
 		if (ddrval == DD_OK)
 		{
 			break;
@@ -103,6 +127,98 @@ int Client_DDraw_Exclusive::SetupClipper()
 	return 0;
 }
 
+#ifdef WINMOB
+HRESULT PASCAL Client_DDraw_Exclusive::EnumFunction(LPDIRECTDRAWSURFACE pSurface,
+	LPDDSURFACEDESC lpSurfaceDesc, LPVOID  lpContext)
+{
+	static bool bCalled = false;
+	if (!bCalled)
+	{
+		*(static_cast<LPDIRECTDRAWSURFACE *>(lpContext)) = pSurface;
+		bCalled = true;
+		return DDENUMRET_OK;
+	}
+	else
+	{
+		DEBUGMSG(TRUE, (TEXT("DDEX4: Enumerated more than surface?")));
+		pSurface->Release();
+		return DDENUMRET_CANCEL;
+	}
+}
+
+int Client_DDraw_Exclusive::CreateSurface()
+{
+	DDCAPS ddCaps;
+	DDCAPS ddHelCaps;
+	HRESULT ddrval = lpDD->GetCaps(&ddCaps, &ddHelCaps);
+	if (ddrval != DD_OK)
+	{
+		DEBUGMSG(TRUE, (TEXT("GetCaps Failed!\r\n")));
+		ReleaseResources();
+		return -1;
+	}
+
+	if (!(ddCaps.ddsCaps.dwCaps & DDSCAPS_BACKBUFFER) || !(ddCaps.ddsCaps.dwCaps & DDSCAPS_FLIP))
+	{
+		m_SingleBuffer = true;
+		DEBUGMSG(TRUE, (TEXT("Using single buffer, no flipping\r\n")));
+	}
+
+	DDSURFACEDESC ddsd;
+	memset(&ddsd, 0, sizeof(ddsd));
+	ddsd.dwSize = sizeof(ddsd);
+	if (m_SingleBuffer)
+	{
+		ddsd.dwFlags = DDSD_CAPS;
+		ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+	}
+	else
+	{
+		ddsd.dwFlags = DDSD_CAPS | DDSD_BACKBUFFERCOUNT;
+		ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE | DDSCAPS_FLIP;
+		ddsd.dwBackBufferCount = 1;
+	}
+	ddrval = lpDD->CreateSurface(&ddsd, &lpFrontBuffer, NULL);
+	if (ddrval != DD_OK)
+	{
+		if (ddrval == DDERR_NOFLIPHW)
+		{
+			DEBUGMSG(TRUE, (TEXT("Display driver doesn't support flipping surfaces!\r\n")));
+			ReleaseResources();
+			return -1;
+		}
+		DEBUGMSG(TRUE, (TEXT("CreateSurface FrontBuffer Failed!\r\n")));
+		ReleaseResources();
+		return -1;
+	}
+	/* get a pointer to the back buffer */
+	if (m_SingleBuffer)
+	{
+		ddsd.dwFlags = DDSD_WIDTH | DDSD_HEIGHT;
+		ddsd.dwWidth = m_WindowRect.right - m_WindowRect.left;
+		ddsd.dwHeight = m_WindowRect.bottom - m_WindowRect.top;
+		ddrval = lpDD->CreateSurface(&ddsd, &lpBackBuffer, NULL);
+		if (ddrval != DD_OK)
+		{
+			DEBUGMSG(TRUE, (TEXT("CreateSurface lpBackBuffer Failed!\r\n")));
+			ReleaseResources();
+			return -1;
+		}
+	}
+    else
+    {
+		ddrval = lpFrontBuffer->EnumAttachedSurfaces(&lpBackBuffer, EnumFunction);
+		if (ddrval != DD_OK)
+		{
+			DEBUGMSG(TRUE, (TEXT("EnumAttachedSurfaces Failed!\r\n")));
+			ReleaseResources();
+			return -1;
+		}
+	}
+	lpBlitSurface = lpBackBuffer;
+	return 0;
+}
+#else
 int Client_DDraw_Exclusive::CreateSurface()
 {
 	DDSURFACEDESC2 ddsd;
@@ -137,6 +253,7 @@ int Client_DDraw_Exclusive::CreateSurface()
 	lpBlitSurface = lpBackBuffer;
 	return 0;
 }
+#endif
 
 void Client_DDraw_Exclusive::ReleaseResources(void)
 {
