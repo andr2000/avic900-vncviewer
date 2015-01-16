@@ -37,6 +37,8 @@ protected:
 	DWORD m_CooperativeLevel;
 	bool m_Initialized;
 
+	Mutex_WinCE m_DrawLock;
+
 	virtual void OnFinishedFrameBufferUpdate(rfbClient *client);
 	void OnShutdown();
 

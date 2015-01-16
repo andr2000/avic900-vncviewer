@@ -95,7 +95,7 @@ BOOL Client_DDraw_Exclusive::Blit(int x, int y, int w, int h)
 		{
 			SetRect(&rect, x, y, x + w, y + h);
 			/* TODO: for some reason E_INVALIDARG returnded if DDCKEY_SRCBLT passed */
-            ddrval = lpFrontBuffer->Blt(&rect, lpBackBuffer, &rect, /*DDBLT_KEYSRC*/0, NULL);
+			ddrval = lpFrontBuffer->Blt(&rect, lpBackBuffer, &rect, /*DDBLT_KEYSRC*/0, NULL);
 		}
 		else
 #else

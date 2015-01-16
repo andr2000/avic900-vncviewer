@@ -54,7 +54,9 @@ void Client_DDraw::OnFinishedFrameBufferUpdate(rfbClient *client)
 		DEBUGMSG(TRUE, (TEXT("OnFinishedFrameBufferUpdate: x=%d y=%d w=%d h=%d\r\n"),
 			m_UpdateRect.x1, m_UpdateRect.y1, w, h));
 		/* blit the update we have just received */
+		m_DrawLock.lock();
 		Blit(m_UpdateRect.x1, m_UpdateRect.y1, w, h);
+		m_DrawLock.unlock();
 	}
 	Client_WinCE::OnFinishedFrameBufferUpdate(client);
 }
@@ -209,8 +211,10 @@ void Client_DDraw::OnActivate(bool isActive)
 	if (isActive && m_Initialized)
 	{
 		/* framebuffer might already have been updated */
+		m_DrawLock.lock();
 		Blit(m_WindowRect.left, m_WindowRect.top, m_WindowRect.right - m_WindowRect.left,
 			m_WindowRect.bottom - m_WindowRect.top);
+		m_DrawLock.unlock();
 	}
 }
 
@@ -226,7 +230,9 @@ void Client_DDraw::OnPaint(void)
 	y = ps.rcPaint.top;
 	w = ps.rcPaint.right - ps.rcPaint.left;
 	h = ps.rcPaint.bottom - ps.rcPaint.top;
+	m_DrawLock.lock();
 	Blit(x, y, w, h);
+	m_DrawLock.unlock();
 	EndPaint(m_hWnd, &ps);
 }
 
