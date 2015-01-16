@@ -32,10 +32,10 @@ void Client_DDraw_Exclusive::BlitFrontToBack(LPRECT rect) {
 			{
 				return;
 			}
-			if (ddrval != DDERR_WASSTILLDRAWING)
-			{
-				return;
-			}
+		}
+		if (ddrval != DDERR_WASSTILLDRAWING)
+		{
+			return;
 		}
 	}
 }
