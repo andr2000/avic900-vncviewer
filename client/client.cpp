@@ -94,13 +94,16 @@ int Client::Initialize()
 	m_Client->listenPort = -1;
 	m_Client->listen6Port = -1;
 
-	/* TODO: for some reason even if I set RGB565 (converted
-	 * with reverse shift order to BGR565) it doesn't work.
-	 * So, it seems to be 15-bit, but how does it
-	 * work on win bgr565 then? */
-	m_Client->format.redShift = 10;
+	/* set RGB565 */
+	m_Client->format.trueColour = 1;
+
+	m_Client->format.redShift = 11;
 	m_Client->format.greenShift = 5;
 	m_Client->format.blueShift = 0;
+
+	m_Client->format.redMax = 31;
+	m_Client->format.greenMax = 63;
+	m_Client->format.blueMax = 31;
 	return 0;
 }
 

@@ -441,21 +441,30 @@ rfbBool Client_WinCE::OnMallocFrameBuffer(rfbClient *client)
 
 	/* create frambuffer */
 	/* For Windows bitmap is BGR565/BGR888, upside down - see -height below */
-	BITMAPINFO bm_info;
-	memset(&bm_info, 0, sizeof(BITMAPINFO));
+	struct _BITMAPINFO
+	{
+		/* BITMAPINFOHEADER is DWORD aligned */
+		BITMAPINFOHEADER bmiHeader;
+		DWORD bmiColors[3];
+    } bm_info;
+	memset(&bm_info, 0, sizeof(bm_info));
 	bm_info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	bm_info.bmiHeader.biWidth = client->width;
 	bm_info.bmiHeader.biHeight = -client->height;
 	bm_info.bmiHeader.biPlanes = 1;
 	bm_info.bmiHeader.biBitCount = client->format.bitsPerPixel;
-	bm_info.bmiHeader.biCompression = BI_RGB;
-	bm_info.bmiHeader.biSizeImage = 0;
+	bm_info.bmiHeader.biCompression = BI_BITFIELDS;
+	bm_info.bmiHeader.biSizeImage = client->width * client->height * 2;
 	bm_info.bmiHeader.biXPelsPerMeter = 0;
 	bm_info.bmiHeader.biYPelsPerMeter = 0;
 	bm_info.bmiHeader.biClrUsed = 0;
 	bm_info.bmiHeader.biClrImportant = 0;
+	bm_info.bmiColors[2] = 31 << 0;
+	bm_info.bmiColors[1] = 63 << 5;
+	bm_info.bmiColors[0] = 31 << 11;
 
-	m_hBmp = CreateDIBSection(CreateCompatibleDC(GetDC(m_hWnd)), &bm_info, DIB_RGB_COLORS,
+	m_hBmp = CreateDIBSection(CreateCompatibleDC(GetDC(m_hWnd)),
+		reinterpret_cast<BITMAPINFO *>(&bm_info), DIB_RGB_COLORS,
 		reinterpret_cast<void**>(&m_FrameBuffer), NULL, NULL);
 	client->frameBuffer = m_FrameBuffer;
 	hdcImage = CreateCompatibleDC(NULL);
