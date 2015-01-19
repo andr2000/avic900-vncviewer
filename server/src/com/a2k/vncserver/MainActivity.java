@@ -10,10 +10,8 @@ import java.util.List;
 import org.apache.http.conn.util.InetAddressUtils;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
@@ -139,10 +137,11 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private TextureRender m_TextureRender;
 	private SurfaceTexture m_SurfaceTexture;
 
+	private int m_CurrentRotation = -1;
+
 	private MediaProjectionManager m_ProjectionManager;
 	private MediaProjection m_MediaProjection;
 	private VirtualDisplay m_VirtualDisplay;
-	private ConfigurationChangedReceiver m_ConfigReceiver;
 
 	private Button m_ButtonStartStop;
 	private Button m_ButtonDisplayOff;
@@ -170,10 +169,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 		m_LogView = (TextView)findViewById(R.id.textViewIP);
 		m_LogView.setMovementMethod(new ScrollingMovementMethod());
-
-		IntentFilter intentFilter = new IntentFilter("android.intent.action.CONFIGURATION_CHANGED");
-		m_ConfigReceiver = new ConfigurationChangedReceiver();
-		registerReceiver(m_ConfigReceiver, intentFilter);
 
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setEnabled(false);
@@ -229,16 +224,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private void cleanupOnExit()
 	{
 		cleanup();
-		unregisterReceiver(m_ConfigReceiver);
-	}
-
-	class ConfigurationChangedReceiver extends BroadcastReceiver
-	{
-		@Override
-		public void onReceive(Context context, Intent arg1)
-		{
-			setRotation();
-		}
 	}
 
 	public void onNotification(int what, String message)
@@ -406,6 +391,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		if (m_SurfaceTexture != null)
 		{
+			setRotation();
 			m_SurfaceTexture.updateTexImage();
 			m_TextureRender.drawFrame();
 			m_TextureRender.swapBuffers();
@@ -483,21 +469,25 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private void setRotation()
 	{
 		int rotation = getWindowManager().getDefaultDisplay().getRotation();
-		if (rotation == Surface.ROTATION_0)
+		if (rotation != m_CurrentRotation)
 		{
-			m_VncJni.setRotation(VncJni.ROTATION_0);
-		}
-		else if (rotation == Surface.ROTATION_90)
-		{
-			m_VncJni.setRotation(VncJni.ROTATION_90);
-		}
-		else if (rotation == Surface.ROTATION_180)
-		{
-			m_VncJni.setRotation(VncJni.ROTATION_180);
-		}
-		else if (rotation == Surface.ROTATION_270)
-		{
-			m_VncJni.setRotation(VncJni.ROTATION_270);
+			if (rotation == Surface.ROTATION_0)
+			{
+				m_VncJni.setRotation(VncJni.ROTATION_0);
+			}
+			else if (rotation == Surface.ROTATION_90)
+			{
+				m_VncJni.setRotation(VncJni.ROTATION_90);
+			}
+			else if (rotation == Surface.ROTATION_180)
+			{
+				m_VncJni.setRotation(VncJni.ROTATION_180);
+			}
+			else if (rotation == Surface.ROTATION_270)
+			{
+				m_VncJni.setRotation(VncJni.ROTATION_270);
+			}
+			m_CurrentRotation = rotation;
 		}
 	}
 
