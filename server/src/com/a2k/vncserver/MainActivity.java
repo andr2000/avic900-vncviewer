@@ -30,6 +30,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.text.method.ScrollingMovementMethod;
 import android.util.DisplayMetrics;
@@ -156,6 +157,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private boolean m_DisplayOff = false;
 	private boolean m_SendFullUpdates = false;
 	private boolean m_ActivateHotspot = true;
+	private boolean m_ActivateAutoRotate = true;
 	private int m_CurBrightnessValue = 100;
 	private static PowerManager.WakeLock m_WakeLock = null;
 
@@ -532,11 +534,21 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 	}
 
+	private void setAutoOrientationEnabled(boolean enabled)
+	{
+		Settings.System.putInt(this.getContentResolver(),
+			Settings.System.ACCELEROMETER_ROTATION, enabled ? 1 : 0);
+	}
+
 	private void enableUtilities(boolean enable)
 	{
 		if (m_ActivateHotspot)
 		{
 			setWifiApState(enable);
+		}
+		if (m_ActivateAutoRotate)
+		{
+			setAutoOrientationEnabled(enable);
 		}
 	}
 
@@ -608,6 +620,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_DisplayOff = prefs.getBoolean("displayOff", false) && m_Rooted;
 		m_SendFullUpdates = prefs.getBoolean("sendFullUpdates", false);
 		m_ActivateHotspot = prefs.getBoolean("activateHotspot", true);
+		m_ActivateAutoRotate = prefs.getBoolean("activateAutoRotate", true);
 		m_LogView.append("Using framebuffer: " + m_DisplayWidth + "x" + m_DisplayHeight +"\n");
 	}
 

@@ -30,6 +30,12 @@
 			android:title="Activate hotspot"
 			android:summary="If enabled this will activate WiFi hotspot on start"
 			android:key="activateHotspot" android:defaultValue="@bool/activateHotspot"/>
+		<CheckBoxPreference
+			android:title="Activate auto-rotation"
+			android:summary="If enabled this will activate auto screen rotation on start"
+			android:key="activateAutoRotate" android:defaultValue="@bool/activateAutoRotate"/>
+
+
 	</PreferenceCategory>
 
 </PreferenceScreen>
