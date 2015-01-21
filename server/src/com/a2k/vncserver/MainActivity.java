@@ -1,5 +1,7 @@
 package com.a2k.vncserver;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -19,6 +21,8 @@ import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.opengl.GLES20;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -97,6 +101,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 						}
 					});
 					setupRootPermissions();
+					enableUtilities(true);
 					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat, m_SendFullUpdates);
 					break;
 				}
@@ -150,6 +155,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private boolean m_KeepScreenOn = false;
 	private boolean m_DisplayOff = false;
 	private boolean m_SendFullUpdates = false;
+	private boolean m_ActivateHotspot = true;
 	private int m_CurBrightnessValue = 100;
 	private static PowerManager.WakeLock m_WakeLock = null;
 
@@ -219,6 +225,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		releaseScreenOn();
 		m_VncJni.stopServer();
 		restoreRootPermissions();
+		enableUtilities(false);
 	}
 
 	private void cleanupOnExit()
@@ -491,6 +498,48 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 	}
 
+	private void setWifiApState(boolean isOn)
+	{
+		WifiManager wifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+
+		try
+		{
+			if (wifiManager.isWifiEnabled())
+			{
+				wifiManager.setWifiEnabled(false);
+			}
+
+			/* reflection to get "SetWifiAPEnabled" method */
+			Method method = wifiManager.getClass().getMethod("setWifiApEnabled",
+				WifiConfiguration.class, boolean.class);
+			method.invoke(wifiManager, null, isOn);
+		}
+		catch (NoSuchMethodException e)
+		{
+			e.printStackTrace();
+		}
+		catch (IllegalArgumentException e)
+		{
+			e.printStackTrace();
+		}
+		catch (IllegalAccessException e)
+		{
+			e.printStackTrace();
+		}
+		catch (InvocationTargetException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
+	private void enableUtilities(boolean enable)
+	{
+		if (m_ActivateHotspot)
+		{
+			setWifiApState(enable);
+		}
+	}
+
 	public boolean onCreateOptionsMenu(Menu menu)
 	{
 		MenuInflater inflater = getMenuInflater();
@@ -558,6 +607,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_KeepScreenOn = prefs.getBoolean("keepScreenOn", false);
 		m_DisplayOff = prefs.getBoolean("displayOff", false) && m_Rooted;
 		m_SendFullUpdates = prefs.getBoolean("sendFullUpdates", false);
+		m_ActivateHotspot = prefs.getBoolean("activateHotspot", true);
 		m_LogView.append("Using framebuffer: " + m_DisplayWidth + "x" + m_DisplayHeight +"\n");
 	}
 

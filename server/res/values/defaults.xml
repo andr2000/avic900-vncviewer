@@ -4,4 +4,5 @@
 	<bool name="keepScreenOn">false</bool>
 	<bool name="displayOff">false</bool>
 	<bool name="sendFullUpdates">false</bool>
+	<bool name="activateHotspot">true</bool>
 </resources>

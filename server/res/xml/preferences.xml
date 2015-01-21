@@ -6,14 +6,6 @@
 			android:title="Use 16-bit color depth"
 			android:key="use16bit" android:defaultValue="@bool/use16bit"/>
 		<CheckBoxPreference
-			android:title="Keep awake"
-			android:summary="If enabled this will prevent device from sleeping, so projection does not stop"
-			android:key="keepScreenOn" android:defaultValue="@bool/keepScreenOn"/>
-		<CheckBoxPreference
-			android:title="Switch display off"
-			android:summary="Root: if enabled this will switch the display off completely when a client connected"
-			android:key="displayOff" android:defaultValue="@bool/displayOff"/>
-		<CheckBoxPreference
 			android:title="Send full frame updates"
 			android:summary="If enabled this will send full screen updates. Saves memory, CPU, but more traffic"
 			android:key="sendFullUpdates" android:defaultValue="@bool/sendFullUpdates"/>
@@ -24,4 +16,20 @@
 			android:summary="Allows selecting display size reported to the remote end"
 			android:title="Display size" android:defaultValue="@string/displaySize"/>
 	</PreferenceCategory>
+	<PreferenceCategory
+		android:title="Utilities" >
+		<CheckBoxPreference
+			android:title="Keep awake"
+			android:summary="If enabled this will prevent device from sleeping, so projection does not stop"
+			android:key="keepScreenOn" android:defaultValue="@bool/keepScreenOn"/>
+		<CheckBoxPreference
+			android:title="Switch display off"
+			android:summary="Root: if enabled this will switch the display off completely when a client connected"
+			android:key="displayOff" android:defaultValue="@bool/displayOff"/>
+		<CheckBoxPreference
+			android:title="Activate hotspot"
+			android:summary="If enabled this will activate WiFi hotspot on start"
+			android:key="activateHotspot" android:defaultValue="@bool/activateHotspot"/>
+	</PreferenceCategory>
+
 </PreferenceScreen>
