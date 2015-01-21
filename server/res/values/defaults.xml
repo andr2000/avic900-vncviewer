@@ -6,4 +6,5 @@
 	<bool name="sendFullUpdates">false</bool>
 	<bool name="activateHotspot">true</bool>
 	<bool name="activateAutoRotate">true</bool>
+	<bool name="activateGPS">true</bool>
 </resources>

@@ -19,6 +19,7 @@ import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
+import android.location.LocationManager;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.wifi.WifiConfiguration;
@@ -158,6 +159,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private boolean m_SendFullUpdates = false;
 	private boolean m_ActivateHotspot = true;
 	private boolean m_ActivateAutoRotate = true;
+	private boolean m_ActivateGPS = true;
 	private int m_CurBrightnessValue = 100;
 	private static PowerManager.WakeLock m_WakeLock = null;
 
@@ -540,6 +542,19 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			Settings.System.ACCELEROMETER_ROTATION, enabled ? 1 : 0);
 	}
 
+	private void setGPSEnabled(boolean enabled)
+	{
+		LocationManager locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
+
+		boolean providerEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+		if ((enabled && !providerEnabled) || (!enabled && providerEnabled))
+		{
+			Intent I = new Intent(
+				android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+			startActivity(I);
+		}
+	}
+
 	private void enableUtilities(boolean enable)
 	{
 		if (m_ActivateHotspot)
@@ -549,6 +564,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		if (m_ActivateAutoRotate)
 		{
 			setAutoOrientationEnabled(enable);
+		}
+		if (m_ActivateGPS)
+		{
+			setGPSEnabled(enable);
 		}
 	}
 
@@ -621,6 +640,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_SendFullUpdates = prefs.getBoolean("sendFullUpdates", false);
 		m_ActivateHotspot = prefs.getBoolean("activateHotspot", true);
 		m_ActivateAutoRotate = prefs.getBoolean("activateAutoRotate", true);
+		m_ActivateGPS = prefs.getBoolean("activateGPS", true);
 		m_LogView.append("Using framebuffer: " + m_DisplayWidth + "x" + m_DisplayHeight +"\n");
 	}
 

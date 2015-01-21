@@ -34,8 +34,9 @@
 			android:title="Activate auto-rotation"
 			android:summary="If enabled this will activate auto screen rotation on start"
 			android:key="activateAutoRotate" android:defaultValue="@bool/activateAutoRotate"/>
-
-
+		<CheckBoxPreference
+			android:title="Auto open location setting"
+			android:summary="If enabled this will open location settings on start if GPS is off"
+			android:key="activateGPS" android:defaultValue="@bool/activateGPS"/>
 	</PreferenceCategory>
-
 </PreferenceScreen>
