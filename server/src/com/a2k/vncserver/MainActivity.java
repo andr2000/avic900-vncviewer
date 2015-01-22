@@ -117,23 +117,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					cleanup();
 					break;
 				}
-				case BACKGROUND_TASK_ZERO_BRIGHTNESS:
-				{
-					if (m_VncJni != null)
-					{
-						try
-						{
-							/* FIXME: ugly */
-							Thread.sleep(1000);
-						}
-						catch (InterruptedException e)
-						{
-							e.printStackTrace();
-						}
-						m_VncJni.setBrightness(0);
-					}
-					break;
-				}
 				default:
 				{
 					break;
@@ -150,7 +133,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private static final int BACKGROUND_TASK_INIT = 0;
 	private static final int BACKGROUND_TASK_START_SERVER = 1;
 	private static final int BACKGROUND_TASK_STOP_SERVER = 2;
-	private static final int BACKGROUND_TASK_ZERO_BRIGHTNESS = 3;
 
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
@@ -507,8 +489,19 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			if (getBrightness() != 0)
 			{
 				/* FIXME: setting change comes BEFORE the system changes the brightness,
-				 * so off-load it */
-				(new BackgroundTask()).execute(BACKGROUND_TASK_ZERO_BRIGHTNESS);
+				 * so delay it */
+				(new Handler()).postDelayed(
+					new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							if (m_VncJni != null)
+							{
+								m_VncJni.setBrightness(0);
+							}
+						}
+					}, 1000);
 			}
 		}
 	}
