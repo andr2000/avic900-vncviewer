@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
 import android.hardware.display.DisplayManager;
@@ -100,7 +101,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 							{
 								readPreferences();
 							}
-							m_ButtonDisplayOff.setEnabled(m_Rooted);
 						}
 					});
 					setupRootPermissions();
@@ -114,15 +114,24 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				}
 				case BACKGROUND_TASK_STOP_SERVER:
 				{
-					runOnUiThread(new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							m_ButtonDisplayOff.setEnabled(false);
-						}
-					});
 					cleanup();
+					break;
+				}
+				case BACKGROUND_TASK_ZERO_BRIGHTNESS:
+				{
+					if (m_VncJni != null)
+					{
+						try
+						{
+							/* FIXME: ugly */
+							Thread.sleep(1000);
+						}
+						catch (InterruptedException e)
+						{
+							e.printStackTrace();
+						}
+						m_VncJni.setBrightness(0);
+					}
 					break;
 				}
 				default:
@@ -141,6 +150,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private static final int BACKGROUND_TASK_INIT = 0;
 	private static final int BACKGROUND_TASK_START_SERVER = 1;
 	private static final int BACKGROUND_TASK_STOP_SERVER = 2;
+	private static final int BACKGROUND_TASK_ZERO_BRIGHTNESS = 3;
 
 	private int m_DisplayWidth = 800;
 	private int m_DisplayHeight = 480;
@@ -156,16 +166,16 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private VirtualDisplay m_VirtualDisplay;
 
 	private Button m_ButtonStartStop;
-	private Button m_ButtonDisplayOff;
 	private boolean m_ProjectionStarted;
 	private int m_NumClientsConnected = 0;
 	private boolean m_KeepScreenOn = false;
 	private boolean m_DisplayOff = false;
+	private SettingsContentObserver m_SettingsContentObserver;
 	private boolean m_SendFullUpdates = false;
 	private boolean m_ActivateHotspot = true;
 	private boolean m_ActivateAutoRotate = true;
 	private boolean m_ActivateGPS = true;
-	private int m_CurBrightnessValue = 100;
+	private int m_SavedBrightnessValue;
 	private static PowerManager.WakeLock m_WakeLock = null;
 
 	private TextView m_LogView;
@@ -194,7 +204,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		{
 			public void onClick(View v)
 			{
-				m_ButtonDisplayOff.setEnabled(false);
 				if (m_ProjectionStarted)
 				{
 					(new BackgroundTask()).execute(BACKGROUND_TASK_STOP_SERVER);
@@ -209,18 +218,11 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 		});
 
-		m_ButtonDisplayOff = (Button)findViewById(R.id.buttonDisplayOff);
-		m_ButtonDisplayOff.setEnabled(false);
-		m_ButtonDisplayOff.setOnClickListener(new View.OnClickListener()
-		{
-			public void onClick(View v)
-			{
-				setDisplayOff();
-			}
-		});
-
 		/* do heavy tasks in background, so we don't freeze the UI thread */
 		(new BackgroundTask()).execute(BACKGROUND_TASK_INIT);
+
+		m_SettingsContentObserver = new SettingsContentObserver(new Handler());
+		m_SavedBrightnessValue = getBrightness();
 	}
 
 	@Override
@@ -282,7 +284,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				{
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
-					m_ButtonDisplayOff.setEnabled(true);
 					break;
 				}
 				case VncJni.SERVER_STOPPED:
@@ -292,7 +293,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					m_NumClientsConnected = 0;
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
-					m_ButtonDisplayOff.setEnabled(true);
 					break;
 				}
 				case VncJni.CLIENT_CONNECTED:
@@ -455,6 +455,20 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 	}
 
+	private int getBrightness()
+	{
+		int brightness = 0;
+		try
+		{
+			brightness = android.provider.Settings.System.getInt(
+				getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
+		}
+		catch (SettingNotFoundException e)
+		{
+		}
+		return brightness;
+	}
+
 	private void keepScreenOn()
 	{
 		if (m_KeepScreenOn)
@@ -465,26 +479,38 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 		if (m_DisplayOff)
 		{
-			setDisplayOff();
+			if (m_VncJni != null)
+			{
+				m_VncJni.setBrightness(0);
+				this.getApplicationContext().getContentResolver().registerContentObserver(
+					android.provider.Settings.System.CONTENT_URI, true, m_SettingsContentObserver);
+			}
+			m_SavedBrightnessValue = getBrightness();
 		}
 	}
 
-	private void setDisplayOff()
+	private class SettingsContentObserver extends ContentObserver
 	{
-		if (m_VncJni == null)
+		public SettingsContentObserver(Handler handler)
 		{
-			return;
+			super(handler);
 		}
-		try
+		@Override
+		public boolean deliverSelfNotifications()
 		{
-			m_CurBrightnessValue = android.provider.Settings.System.getInt(
-				getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
+			return super.deliverSelfNotifications();
 		}
-		catch (SettingNotFoundException e)
+		@Override
+		public void onChange(boolean selfChange)
 		{
-			Log.e(TAG, "Failed to get brightness level");
+			super.onChange(selfChange);
+			if (getBrightness() != 0)
+			{
+				/* FIXME: setting change comes BEFORE the system changes the brightness,
+				 * so off-load it */
+				(new BackgroundTask()).execute(BACKGROUND_TASK_ZERO_BRIGHTNESS);
+			}
 		}
-		m_VncJni.setBrightness(0);
 	}
 
 	private void releaseScreenOn()
@@ -495,7 +521,9 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 		if (m_DisplayOff)
 		{
-			m_VncJni.setBrightness(m_CurBrightnessValue);
+			m_VncJni.setBrightness(m_SavedBrightnessValue);
+			this.getApplicationContext().getContentResolver().unregisterContentObserver(
+				m_SettingsContentObserver);
 		}
 	}
 
