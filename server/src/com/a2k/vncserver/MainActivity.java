@@ -106,6 +106,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					setupRootPermissions();
 					enableUtilities(true);
 					m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat, m_SendFullUpdates);
+					/* listen for tethering changes */
+					IntentFilter intentFilter = new IntentFilter("android.net.conn.TETHER_STATE_CHANGED");
+					m_NetworkChangeReceiver = new NetworkChangeReceiver();
+					registerReceiver(m_NetworkChangeReceiver, intentFilter);
 					break;
 				}
 				case BACKGROUND_TASK_STOP_SERVER:
@@ -170,7 +174,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	private VncJni m_VncJni = null;
 
-	private NetworkChangeReceiver m_NetworkChangeReceiver;
+	private NetworkChangeReceiver m_NetworkChangeReceiver = null;
 	private int m_TetheringNumActive = -1;
 
 	@Override
@@ -183,10 +187,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 		m_LogView = (TextView)findViewById(R.id.textViewIP);
 		m_LogView.setMovementMethod(new ScrollingMovementMethod());
-
-		IntentFilter intentFilter = new IntentFilter("android.net.conn.TETHER_STATE_CHANGED");
-		m_NetworkChangeReceiver = new NetworkChangeReceiver();
-		registerReceiver(m_NetworkChangeReceiver, intentFilter);
 
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setEnabled(false);
@@ -228,7 +228,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		/* TODO: this is not always called!!! */
 		super.onDestroy();
-		cleanupOnExit();
+		cleanup();
 	}
 
 	private void cleanup()
@@ -238,12 +238,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		m_VncJni.stopServer();
 		restoreRootPermissions();
 		enableUtilities(false);
-	}
-
-	private void cleanupOnExit()
-	{
-		cleanup();
-		unregisterReceiver(m_NetworkChangeReceiver);
+		if (m_NetworkChangeReceiver != null)
+		{
+			unregisterReceiver(m_NetworkChangeReceiver);
+		}
 	}
 
 	class NetworkChangeReceiver extends BroadcastReceiver
@@ -614,7 +612,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 			case R.id.itemMenuExit:
 			{
-				cleanupOnExit();
+				cleanup();
 				System.exit(1);
 				return true;
 			}
