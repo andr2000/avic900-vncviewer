@@ -225,6 +225,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		if (m_NetworkChangeReceiver != null)
 		{
 			unregisterReceiver(m_NetworkChangeReceiver);
+			m_NetworkChangeReceiver = null;
 		}
 	}
 
