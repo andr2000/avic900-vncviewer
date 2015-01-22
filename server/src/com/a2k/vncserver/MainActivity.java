@@ -12,8 +12,10 @@ import java.util.List;
 import org.apache.http.conn.util.InetAddressUtils;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Point;
 import android.graphics.SurfaceTexture;
@@ -81,7 +83,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 								{
 									m_LogView.append("This device is NOT rooted\n");
 								}
-								printIPs();
 							}
 							m_ButtonStartStop.setEnabled(true);
 						}
@@ -169,6 +170,9 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	private VncJni m_VncJni = null;
 
+	private NetworkChangeReceiver m_NetworkChangeReceiver;
+	private int m_TetheringNumActive = -1;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -179,6 +183,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 		m_LogView = (TextView)findViewById(R.id.textViewIP);
 		m_LogView.setMovementMethod(new ScrollingMovementMethod());
+
+		IntentFilter intentFilter = new IntentFilter("android.net.conn.TETHER_STATE_CHANGED");
+		m_NetworkChangeReceiver = new NetworkChangeReceiver();
+		registerReceiver(m_NetworkChangeReceiver, intentFilter);
 
 		m_ButtonStartStop = (Button)findViewById(R.id.buttonStartStop);
 		m_ButtonStartStop.setEnabled(false);
@@ -235,6 +243,22 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private void cleanupOnExit()
 	{
 		cleanup();
+		unregisterReceiver(m_NetworkChangeReceiver);
+	}
+
+	class NetworkChangeReceiver extends BroadcastReceiver
+	{
+		@Override
+		public void onReceive(Context context, Intent intent)
+		{
+			ArrayList<String> activeTetherList = intent.getStringArrayListExtra("activeArray");
+			int active = activeTetherList.size();
+			if (active != m_TetheringNumActive)
+			{
+				printIPs();
+				m_TetheringNumActive = active;
+			}
+		}
 	}
 
 	public void onNotification(int what, String message)
