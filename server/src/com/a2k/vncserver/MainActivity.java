@@ -217,16 +217,16 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 
 	private void cleanup()
 	{
-		stopScreenSharing();
-		releaseScreenOn();
-		m_VncJni.stopServer();
-		restoreRootPermissions();
-		enableUtilities(false);
 		if (m_NetworkChangeReceiver != null)
 		{
 			unregisterReceiver(m_NetworkChangeReceiver);
 			m_NetworkChangeReceiver = null;
 		}
+		stopScreenSharing();
+		releaseScreenOn();
+		m_VncJni.stopServer();
+		restoreRootPermissions();
+		enableUtilities(false);
 	}
 
 	class NetworkChangeReceiver extends BroadcastReceiver
@@ -634,8 +634,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			}
 			case R.id.itemMenuExit:
 			{
-				cleanup();
-				System.exit(1);
+				finish();
 				return true;
 			}
 			default:
