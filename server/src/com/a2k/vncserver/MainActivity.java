@@ -593,9 +593,9 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		boolean providerEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
 		if ((enabled && !providerEnabled) || (!enabled && providerEnabled))
 		{
-			Intent I = new Intent(
+			Intent intent = new Intent(
 				android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-			startActivity(I);
+			startActivity(intent);
 		}
 	}
 
