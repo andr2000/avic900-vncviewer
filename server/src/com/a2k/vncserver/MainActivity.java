@@ -34,7 +34,6 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.provider.Settings.SettingNotFoundException;
 import android.text.method.ScrollingMovementMethod;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -64,9 +63,10 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				{
 					m_VncJni = new VncJni();
 					m_VncJni.setNotificationListener(MainActivity.this);
-					m_VncJni.init(getFilesDir().getParent());
+					m_VncJni.init();
 					Log.d(TAG, m_VncJni.protoGetVersion());
 					m_Rooted = Shell.isSuAvailable();
+					m_VncHelper = new VncHelper();
 					setRotation();
 					runOnUiThread(new Runnable()
 					{
@@ -149,7 +149,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private boolean m_ActivateHotspot = true;
 	private boolean m_ActivateAutoRotate = true;
 	private boolean m_ActivateGPS = true;
-	private int m_SavedBrightnessValue;
 	private static PowerManager.WakeLock m_WakeLock = null;
 	private Thread m_HelperThread = null;
 	private boolean m_HelperThreadRunning = false;
@@ -159,6 +158,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private boolean m_Rooted = false;
 
 	private VncJni m_VncJni = null;
+	private VncHelper m_VncHelper = null;
 
 	private NetworkChangeReceiver m_NetworkChangeReceiver = null;
 	private int m_TetheringNumActive = -1;
@@ -215,6 +215,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 		stopScreenSharing();
 		releaseScreenOn();
+		m_VncHelper.stop();
 		m_VncJni.stopServer();
 		restoreRootPermissions();
 		enableUtilities(false);
@@ -224,6 +225,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		setupRootPermissions();
 		enableUtilities(true);
+		m_VncHelper.init(MainActivity.this, m_VncJni);
 		m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat, m_SendFullUpdates);
 		/* listen for tethering changes */
 		IntentFilter intentFilter = new IntentFilter("android.net.conn.TETHER_STATE_CHANGED");
@@ -352,31 +354,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				m_VirtualDisplay = createVirtualDisplay();
 			}
 		}
-		/* run helper thread */
-		m_HelperThread = new Thread(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				m_HelperThreadRunning = true;
-				while (m_HelperThreadRunning)
-				{
-					try
-					{
-						Thread.sleep(1000);
-						if (m_DisplayOff && (getBrightness() != 0))
-						{
-							m_VncJni.setBrightness(0);
-						}
-						setRotation();
-					}
-					catch (InterruptedException e)
-					{
-					}
-				}
-			}
-		});
-		m_HelperThread.start();
 	}
 
 	synchronized private void stopScreenSharing()
@@ -437,6 +414,31 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			m_Surface, null /*Callbacks*/, null /*Handler*/);
 		if (vd != null)
 		{
+			/* run helper thread */
+			m_HelperThread = new Thread(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					m_HelperThreadRunning = true;
+					while (m_HelperThreadRunning)
+					{
+						try
+						{
+							Thread.sleep(1000);
+							if (m_DisplayOff)
+							{
+								m_VncHelper.setBrightness(0);
+							}
+							setRotation();
+						}
+						catch (InterruptedException e)
+						{
+						}
+					}
+				}
+			});
+			m_HelperThread.start();
 			keepScreenOn();
 		}
 		return vd;
@@ -476,20 +478,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 	}
 
-	private int getBrightness()
-	{
-		int brightness = 0;
-		try
-		{
-			brightness = android.provider.Settings.System.getInt(
-				getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS);
-		}
-		catch (SettingNotFoundException e)
-		{
-		}
-		return brightness;
-	}
-
 	private void keepScreenOn()
 	{
 		if (m_KeepScreenOn)
@@ -497,14 +485,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 			m_WakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "vncserver");
 			m_WakeLock.acquire();
-		}
-		if (m_DisplayOff)
-		{
-			if (m_VncJni != null)
-			{
-				m_VncJni.setBrightness(0);
-			}
-			m_SavedBrightnessValue = getBrightness();
 		}
 	}
 
@@ -516,7 +496,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 		if (m_DisplayOff)
 		{
-			m_VncJni.setBrightness(m_SavedBrightnessValue);
+			/* restore brightness to some level */
+			m_VncHelper.setBrightness(100);
 		}
 	}
 

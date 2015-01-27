@@ -3,7 +3,8 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES += \
 	main.cpp \
-	brightness.cpp
+	brightness.cpp \
+	vnchelper.cpp
 
 LOCAL_CFLAGS  += -Wall -O3
 
@@ -12,7 +13,7 @@ LOCAL_LDLIBS +=  -llog -ldl
 LOCAL_C_INCLUDES += \
 	$(LOCAL_PATH)
 
-LOCAL_MODULE := brightness
+LOCAL_MODULE := vnchelper
 
 include $(BUILD_EXECUTABLE)
 

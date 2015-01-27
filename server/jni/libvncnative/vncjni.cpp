@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "AndroidGraphicBuffer.h"
 #include "log.h"
@@ -23,16 +25,12 @@ extern "C"
 		return JNI_VERSION_1_4;
 	}
 
-	void Java_com_a2k_vncserver_VncJni_init(JNIEnv *env, jobject thiz,
-		jstring packagePath)
+	void Java_com_a2k_vncserver_VncJni_init(JNIEnv *env, jobject thiz)
 	{
-		const char *nativePath = env->GetStringUTFChars(packagePath, JNI_FALSE);
 		jclass clazz = env->GetObjectClass(thiz);
 		VncServer::getInstance().setupNotificationClb(env,
 			(jobject)(env->NewGlobalRef(thiz)),
 			(jclass)(env->NewGlobalRef(clazz)));
-		VncServer::getInstance().setPackagePath(nativePath);
-		env->ReleaseStringUTFChars(packagePath, nativePath);
 	}
 
 	JNIEXPORT jstring JNICALL Java_com_a2k_vncserver_VncJni_protoGetVersion(JNIEnv *env, jobject obj)
@@ -74,9 +72,28 @@ extern "C"
 		VncServer::getInstance().onRotation(rotation);
 	}
 
-	JNIEXPORT void JNICALL Java_com_a2k_vncserver_VncJni_setBrightness(JNIEnv *env, jobject obj,
-		int level)
+	JNIEXPORT jint JNICALL Java_com_a2k_vncserver_VncJni_mkfifo(JNIEnv *env, jobject, jstring path)
 	{
-		VncServer::getInstance().setBrightness(level);
+		const char *cpath = env->GetStringUTFChars(path, NULL);
+		struct stat buf;
+		int res = 0;
+		if (stat(cpath, &buf) < 0)
+		{
+			if (mkfifo(cpath, S_IRWXU) < 0 )
+			{
+				LOGD("Cannot create a pipe");
+				res = -1;
+			}
+			else
+			{
+				LOGD("The pipe was created");
+			}
+		}
+		else
+		{
+			LOGD("Pipe already exists");
+		}
+		env->ReleaseStringUTFChars(path, cpath);
+		return res;
 	}
 }

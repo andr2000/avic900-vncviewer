@@ -4,15 +4,7 @@
 #include <stdlib.h>
 
 #include "brightness.h"
-
-extern "C"
-{
-	#define MODULE_NAME "brightness"
-
-	#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO,  MODULE_NAME, __VA_ARGS__))
-	#define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, MODULE_NAME, __VA_ARGS__))
-	#define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, MODULE_NAME, __VA_ARGS__))
-}
+#include "log.h"
 
 #define ANDROID_LIBHW_PATH "libhardware.so"
 #define LIGHTS_HARDWARE_MODULE_ID "lights"

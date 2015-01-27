@@ -29,7 +29,6 @@ void VncServer::cleanup()
 	m_PixelFormat = 0;
 	m_FrameAvailable = false;
 	m_EventInjector.reset();
-	m_Brightness.reset();
 }
 
 void VncServer::setJavaVM(JavaVM *javaVM)
@@ -293,11 +292,6 @@ int VncServer::startServer(bool root, int width, int height, int pixelFormat, bo
 		{
 			LOGE("Failed to initialize event injector");
 		}
-		m_Brightness.reset(new BrightnessHelper());
-		if (!m_Brightness->initialize(m_PackagePath))
-		{
-			LOGE("Failed to initialize brightness module");
-		}
 	}
 	m_Terminated = false;
 	m_WorkerThread = std::thread(&VncServer::worker, this);
@@ -327,14 +321,6 @@ void VncServer::onRotation(int rotation)
 	m_Rotation = rotation;
 }
 
-void VncServer::setBrightness(int level)
-{
-	if (m_Brightness)
-	{
-		m_Brightness->setBrightness(level);
-	}
-}
-
 void VncServer::dumpFrame(char *buffer)
 {
 	const char *fName = "/sdcard/framebuffer.data";
@@ -350,11 +336,6 @@ void VncServer::dumpFrame(char *buffer)
 	{
 		LOGE("Failed to save frame at %s", fName);
 	}
-}
-
-void VncServer::setPackagePath(const char *packagePath)
-{
-	m_PackagePath = packagePath;
 }
 
 void VncServer::compare(int width, int shift, uint32_t *buffer0, uint32_t *buffer1)
