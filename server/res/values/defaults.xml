@@ -1,8 +1,8 @@
 <resources >
-	<bool name="use16bit">true</bool>
-	<string name="displaySize">"1"</string>
-	<bool name="keepScreenOn">false</bool>
-	<bool name="displayOff">false</bool>
+	<bool name="use16bit">false</bool>
+	<string name="displaySize">1</string>
+	<bool name="keepScreenOn">true</bool>
+	<bool name="displayOff">true</bool>
 	<bool name="sendFullUpdates">false</bool>
 	<bool name="activateHotspot">true</bool>
 	<bool name="activateAutoRotate">true</bool>

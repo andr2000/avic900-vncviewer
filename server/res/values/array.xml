@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-	<resources>
+<resources>
 	<string-array name="displaySizeOptions">
 		<item>Native resolution</item>
 		<item>800x480</item>
@@ -10,5 +10,5 @@
 		<item>0</item>
 		<item>1</item>
 		<item>2</item>
-			</string-array>
+	</string-array>
 </resources>
