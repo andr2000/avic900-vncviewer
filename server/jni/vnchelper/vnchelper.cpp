@@ -43,7 +43,6 @@ void VncHelper::close()
 
 void VncHelper::processMessage(const VncHelper::packet_t &packet)
 {
-	LOGD("Got command %d, data %d", packet.id, packet.data);
 	switch (packet.id)
 	{
 		case SHUTDOWN:
