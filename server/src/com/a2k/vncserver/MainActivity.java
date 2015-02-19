@@ -1,10 +1,12 @@
 package com.a2k.vncserver;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -163,6 +165,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private NetworkChangeReceiver m_NetworkChangeReceiver = null;
 	private int m_TetheringNumActive = -1;
 
+	private ArrayList<String> m_ConnectedList = new ArrayList<String>();
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
 	{
@@ -264,11 +268,11 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		public void handleMessage(Message msg)
 		{
 			Bundle bundle = msg.getData();
-			m_LogView.append(bundle.getString(MESSAGE_KEY) + "\n");
 			switch (msg.what)
 			{
 				case VncJni.SERVER_STARTED:
 				{
+					m_LogView.append(bundle.getString(MESSAGE_KEY) + "\n");
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
 					break;
@@ -278,6 +282,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					/* as we might stop vnc server before receiving disconnect
 					 * notifications, so clean up here, so projection can be started */
 					m_NumClientsConnected = 0;
+					m_ConnectedList.clear();
+					m_LogView.append(bundle.getString(MESSAGE_KEY) + "\n");
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
 					break;
@@ -289,8 +295,13 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 						startScreenSharing();
 					}
 					m_NumClientsConnected++;
-					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
-						Toast.LENGTH_SHORT).show();
+					String ip = bundle.getString(MESSAGE_KEY);
+					if (!m_ConnectedList.contains(ip)) {
+						m_ConnectedList.add(ip);
+					}
+					String text = "Client " + ip + " connected";
+					m_LogView.append(text + "\n");
+					Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
 					break;
 				}
 				case VncJni.CLIENT_DISCONNECTED:
@@ -301,12 +312,18 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 						releaseScreenOn();
 						stopScreenSharing();
 					}
-					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
-						Toast.LENGTH_SHORT).show();
+					String ip = bundle.getString(MESSAGE_KEY);
+					if (m_ConnectedList.contains(ip)) {
+						m_ConnectedList.remove(ip);
+					}
+					String text = "Client " + ip + " disconnected";
+					m_LogView.append(text + "\n");
+					Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show();
 					break;
 				}
 				default:
 				{
+					m_LogView.append(bundle.getString(MESSAGE_KEY) + "\n");
 					Toast.makeText(MainActivity.this, bundle.getString(MESSAGE_KEY),
 						Toast.LENGTH_SHORT).show();
 					Log.d(TAG, "what = " + msg.what + " text = " + bundle.getString(MESSAGE_KEY));
@@ -403,6 +420,19 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 	}
 
+	private class LogRunnable implements Runnable {
+		private String mText;
+
+		public LogRunnable(String text) {
+			this.mText = text;
+		}
+
+		@Override
+		public void run() {
+			m_LogView.append(mText + "\n");
+		}
+	}
+
 	private VirtualDisplay createVirtualDisplay()
 	{
 		DisplayMetrics metrics = new DisplayMetrics();
@@ -421,12 +451,33 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 				public void run()
 				{
 					m_HelperThreadRunning = true;
+					int checkIpCounter = 0;
+					boolean displayOff = m_DisplayOff;
 					while (m_HelperThreadRunning)
 					{
 						try
 						{
 							Thread.sleep(1000);
-							if (m_DisplayOff)
+							checkIpCounter++;
+							if (checkIpCounter == 5) {
+								checkIpCounter = 0;
+								for (String s : m_ConnectedList) {
+									try {
+										boolean alive = InetAddress.getByName(s).isReachable(5000);
+										if (!alive) {
+											m_ConnectedList.remove(s);
+											runOnUiThread(new LogRunnable("Client " + s + " is not alive"));
+											if (m_ConnectedList.isEmpty()) {
+												displayOff = false;
+												m_VncHelper.setBrightness(100);
+											}
+										}
+									} catch (IOException e) {
+										e.printStackTrace();
+									}
+								}
+							}
+							if (displayOff)
 							{
 								m_VncHelper.setBrightness(0);
 							}

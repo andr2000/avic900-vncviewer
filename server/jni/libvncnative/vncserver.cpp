@@ -189,7 +189,7 @@ void clientGoneClb(rfbClientPtr cl)
 void VncServer::clientGone(rfbClientPtr cl)
 {
 	LOGD("Client disconnected: %s", cl->host);
-	postEventToUI(CLIENT_DISCONNECTED, "Client " + std::string(cl->host) + " disconnected");
+	postEventToUI(CLIENT_DISCONNECTED, std::string(cl->host));
 }
 
 rfbNewClientAction clientHookClb(rfbClientPtr cl)
@@ -201,7 +201,7 @@ rfbNewClientAction clientHookClb(rfbClientPtr cl)
 rfbNewClientAction VncServer::clientHook(rfbClientPtr cl)
 {
 	LOGD("Client connected: %s", cl->host);
-	postEventToUI(CLIENT_CONNECTED, "Client " + std::string(cl->host) + " connected");
+	postEventToUI(CLIENT_CONNECTED, std::string(cl->host));
 	return RFB_CLIENT_ACCEPT;
 }
 
