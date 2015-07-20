@@ -45,7 +45,6 @@ public:
 	void bindNextProducerBuffer();
 	void frameAvailable();
 	void onRotation(int rotation);
-	void setBrightness(int level);
 
 	rfbNewClientAction clientHook(rfbClientPtr cl);
 	void clientGone(rfbClientPtr cl);

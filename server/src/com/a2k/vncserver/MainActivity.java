@@ -68,7 +68,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 					m_VncJni.init();
 					Log.d(TAG, m_VncJni.protoGetVersion());
 					m_Rooted = Shell.isSuAvailable();
-					m_VncHelper = new VncHelper();
 					setRotation();
 					runOnUiThread(new Runnable()
 					{
@@ -125,6 +124,8 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private static final int PERMISSION_CODE = 1;
 	private static final String MESSAGE_KEY = "text";
 
+	private static final String BRIGHTNESS_SYS_NAME = "/sys/class/leds/lcd-backlight/brightness";
+
 	private static final int BACKGROUND_TASK_INIT = 0;
 	private static final int BACKGROUND_TASK_START_SERVER = 1;
 	private static final int BACKGROUND_TASK_STOP_SERVER = 2;
@@ -160,7 +161,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	private boolean m_Rooted = false;
 
 	private VncJni m_VncJni = null;
-	private VncHelper m_VncHelper = null;
 
 	private NetworkChangeReceiver m_NetworkChangeReceiver = null;
 	private int m_TetheringNumActive = -1;
@@ -219,7 +219,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 		stopScreenSharing();
 		releaseScreenOn();
-		m_VncHelper.stop();
 		m_VncJni.stopServer();
 		restoreRootPermissions();
 		enableUtilities(false);
@@ -229,7 +228,6 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 	{
 		setupRootPermissions();
 		enableUtilities(true);
-		m_VncHelper.init(MainActivity.this, m_VncJni);
 		m_VncJni.startServer(m_Rooted, m_DisplayWidth, m_DisplayHeight, m_PixelFormat, m_SendFullUpdates);
 		/* listen for tethering changes */
 		IntentFilter intentFilter = new IntentFilter("android.net.conn.TETHER_STATE_CHANGED");
@@ -469,7 +467,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 											runOnUiThread(new LogRunnable("Client " + s + " is not alive"));
 											if (m_ConnectedList.isEmpty()) {
 												displayOff = false;
-												m_VncHelper.setBrightness(100);
+												setBrightness(100);
 											}
 										}
 									} catch (IOException e) {
@@ -479,7 +477,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 							}
 							if (displayOff)
 							{
-								m_VncHelper.setBrightness(0);
+								setBrightness(0);
 							}
 							setRotation();
 						}
@@ -529,6 +527,14 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		}
 	}
 
+	private void setBrightness(int level)
+	{
+		if (m_Rooted)
+		{
+			Shell.runCommand("echo " + level + " > " + BRIGHTNESS_SYS_NAME);
+		}
+	}
+
 	private void keepScreenOn()
 	{
 		if (m_KeepScreenOn)
@@ -548,7 +554,7 @@ public class MainActivity extends Activity implements SurfaceTexture.OnFrameAvai
 		if (m_DisplayOff)
 		{
 			/* restore brightness to some level */
-			m_VncHelper.setBrightness(100);
+			setBrightness(100);
 		}
 	}
 

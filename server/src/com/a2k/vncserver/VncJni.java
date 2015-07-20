@@ -49,8 +49,6 @@ public class VncJni
 
 	public native void onRotation(int rotation);
 
-	public native int mkfifo(String pipe);
-
 	static
 	{
 		System.loadLibrary("vncnative");

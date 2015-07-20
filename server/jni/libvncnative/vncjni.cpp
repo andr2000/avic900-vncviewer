@@ -71,29 +71,4 @@ extern "C"
 	{
 		VncServer::getInstance().onRotation(rotation);
 	}
-
-	JNIEXPORT jint JNICALL Java_com_a2k_vncserver_VncJni_mkfifo(JNIEnv *env, jobject, jstring path)
-	{
-		const char *cpath = env->GetStringUTFChars(path, NULL);
-		struct stat buf;
-		int res = 0;
-		if (stat(cpath, &buf) < 0)
-		{
-			if (mkfifo(cpath, S_IRWXU) < 0 )
-			{
-				LOGD("Cannot create a pipe");
-				res = -1;
-			}
-			else
-			{
-				LOGD("The pipe was created");
-			}
-		}
-		else
-		{
-			LOGD("Pipe already exists");
-		}
-		env->ReleaseStringUTFChars(path, cpath);
-		return res;
-	}
 }
